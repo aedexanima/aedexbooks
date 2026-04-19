@@ -208,6 +208,7 @@ textarea{resize:vertical;min-height:60px}
   <!-- SIDEBAR -->
   <nav class="sidebar">
     <div class="sb-logo">
+      <img id="sb-logo-img" src="" style="max-height:40px;max-width:148px;width:auto;display:none;margin-bottom:8px;border-radius:3px">
       <div class="sb-name" id="nav-biz">AEDEXBOOKS</div>
       <div class="sb-sub">BUSINESS MANAGER</div>
     </div>
@@ -953,6 +954,7 @@ function showApp(){
   document.getElementById('setup-screen').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('nav-biz').textContent=DB.settings.bizName||'AEDEXBOOKS';
+  updateLogoPreview(DB.settings.logoDataUrl||'');
   document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   renderAll();loadSettingsForm();
 }
@@ -3155,12 +3157,18 @@ function updateLogoPreview(dataUrl){
   const img=document.getElementById('logo-img-preview');
   const placeholder=document.getElementById('logo-placeholder');
   const removeBtn=document.getElementById('logo-remove-btn');
+  const sbImg=document.getElementById('sb-logo-img');
+  const sbName=document.getElementById('nav-biz');
   if(dataUrl){
     img.src=dataUrl;img.style.display='block';
     placeholder.style.display='none';removeBtn.style.display='';
+    sbImg.src=dataUrl;sbImg.style.display='block';
+    sbName.style.display='none';
   }else{
     img.src='';img.style.display='none';
     placeholder.style.display='';removeBtn.style.display='none';
+    sbImg.src='';sbImg.style.display='none';
+    sbName.style.display='';
   }
 }
 
