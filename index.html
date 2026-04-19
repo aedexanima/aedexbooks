@@ -1433,6 +1433,7 @@ async function loadFromSheet(){
     DB.activity  =parse(dataRes[5].result.values,HEADERS.ActivityLog);
     DB.sentLog   =parse(dataRes[6]?.result.values,HEADERS.SentLog)||[];
     DB.contractors=parse(dataRes[7]?.result.values,HEADERS.Contractors)||[];
+    const catalogWasEmpty=!(dataRes[9]?.result.values?.length);
     DB.catalog    =parse(dataRes[9]?.result.values,HEADERS.ServiceCatalog).map(i=>({...i,price:+i.price||0}));
     // Load business settings from sheet (overrides localStorage so they roam across devices)
     const settingsRows=dataRes[8]?.result.values||[];
@@ -1496,6 +1497,8 @@ async function loadFromSheet(){
 
     seedTestClient();seedCatalog();
     saveLocal();renderAll();
+    // If catalog tab was empty (new user), write defaults to sheet now
+    if(catalogWasEmpty&&DB.catalog.length) syncToSheet();
     setSyncStatus('🟢 Synced '+new Date().toLocaleTimeString());
     toast('Data loaded from Google Sheets','success');
     // If Settings tab was empty but we have settings locally, push them up now
