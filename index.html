@@ -1155,12 +1155,12 @@ const HEADERS={
 };
 
 async function registerSheet(sheetId){
-  if(!accessToken||!sheetId)return;
+  if(!sheetId||!DB.settings.userEmail)return;
   try{
     await fetch('/api/register-sheet',{
       method:'POST',
-      headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'},
-      body:JSON.stringify({sheetId})
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:DB.settings.userEmail,sheetId})
     });
   }catch(e){console.warn('Sheet registration failed:',e.message);}
 }
