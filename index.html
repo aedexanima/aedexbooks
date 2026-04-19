@@ -1040,7 +1040,7 @@ function formatPhone(input){
 }
 
 const GOOGLE_CLIENT_ID='44604318754-j48brnn15erhh1jqtme85r2fd5dpgrah.apps.googleusercontent.com';
-const SCOPES='https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/gmail.send email profile';
+const SCOPES='https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/gmail.send email profile';
 const TABS=['Clients','Properties','Jobs','Documents','Expenses','ActivityLog','SentLog','Contractors','Settings','ServiceCatalog'];
 
 // ============================================================
@@ -1309,25 +1309,10 @@ async function registerSheet(sheetId){
 }
 
 async function findOrCreateSheet(){
-  setSyncStatus('🔍 Looking for your data...');
-  try{
-    // Search Drive for an existing AEDEXBOOKS sheet
-    const q=`name='AEDEXBOOKS — Business Data' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`;
-    const r=await driveRequest('GET',`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc&pageSize=1`);
-    const found=r.files?.[0];
-    if(found){
-      DB.settings.sheetId=found.id;
-      saveSettingsLocal();
-      registerSheet(found.id);
-      toast('Found your existing data — loading...','success');
-      loadFromSheet();
-    } else {
-      createSheet();
-    }
-  }catch(e){
-    console.warn('Sheet search failed, creating new:',e);
-    createSheet();
-  }
+  // sheetId comes from KV via check-access in onSignedIn().
+  // This function only runs when KV has no sheetId — i.e. a genuinely new user.
+  // drive.file scope cannot search pre-existing files, so we go straight to createSheet().
+  createSheet();
 }
 
 async function createSheet(){
@@ -1505,7 +1490,18 @@ async function loadFromSheet(){
     if(!settingsInSheet&&DB.settings.bizName&&DB.settings.bizName!=='AEDEXBOOKS'){
       syncToSheet();
     }
-  }catch(e){setSyncStatus('⚠ Load error');console.error(e);toast('Failed to load data: '+e.message,'error');}
+  }catch(e){
+    // 404 means the sheet was deleted — clear stale ID so user gets a fresh sheet on next load
+    if(e.status===404||(e.result?.error?.code===404)||(e.message||'').includes('404')){
+      console.warn('Sheet not found (deleted?), clearing sheetId');
+      DB.settings.sheetId='';saveSettingsLocal();
+      registerSheet(''); // clear from KV too
+      setSyncStatus('⚠ Sheet not found');
+      toast('Your data sheet could not be found. A new one will be created — please reload.','error');
+      return;
+    }
+    setSyncStatus('⚠ Load error');console.error(e);toast('Failed to load data: '+e.message,'error');
+  }
 }
 
 function seedCatalog(){
