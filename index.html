@@ -1510,53 +1510,9 @@ async function loadFromSheet(){
 
 function seedCatalog(){
   // Idempotent — only adds items whose ID doesn't already exist in DB.catalog
+  // New users get one sample to show them the format; they build their own catalog from there
   const defaults=[
-    {id:'cat-001',name:'Smart lock installation',      type:'labor',price:65, cat:'Electrical'},
-    {id:'cat-002',name:'Smart switch installation',    type:'labor',price:40, cat:'Electrical'},
-    {id:'cat-003',name:'GFI outlet installation',      type:'labor',price:40, cat:'Electrical'},
-    {id:'cat-004',name:'Outlet covers',                type:'labor',price:15, cat:'Electrical'},
-    {id:'cat-005',name:'Lightbulb replacement',        type:'labor',price:15, cat:'Electrical'},
-    {id:'cat-006',name:'Bathroom faucet installation', type:'labor',price:65, cat:'Plumbing'},
-    {id:'cat-007',name:'Kitchen sink faucet repair',   type:'labor',price:65, cat:'Plumbing'},
-    {id:'cat-008',name:'Shower head installation',     type:'labor',price:50, cat:'Plumbing'},
-    {id:'cat-009',name:'Toilet repair',                type:'labor',price:100,cat:'Plumbing'},
-    {id:'cat-010',name:'Water leak / pressure valve',  type:'labor',price:150,cat:'Plumbing'},
-    {id:'cat-011',name:'Garbage disposal installation',type:'labor',price:100,cat:'Plumbing'},
-    {id:'cat-012',name:'Sprinkler repair',             type:'labor',price:150,cat:'Plumbing'},
-    {id:'cat-013',name:'Pipe repair',                  type:'labor',price:120,cat:'Plumbing'},
-    {id:'cat-014',name:'HVAC maintenance',             type:'labor',price:150,cat:'HVAC'},
-    {id:'cat-015',name:'AC fan replacement',           type:'labor',price:200,cat:'HVAC'},
-    {id:'cat-016',name:'AC repair',                    type:'labor',price:175,cat:'HVAC'},
-    {id:'cat-017',name:'Microwave installation',       type:'labor',price:75, cat:'Appliances'},
-    {id:'cat-018',name:'Microwave removal',            type:'labor',price:50, cat:'Appliances'},
-    {id:'cat-019',name:'Dishwasher repair',            type:'labor',price:150,cat:'Appliances'},
-    {id:'cat-020',name:'Washer machine repair',        type:'labor',price:100,cat:'Appliances'},
-    {id:'cat-021',name:'Dryer repair',                 type:'labor',price:100,cat:'Appliances'},
-    {id:'cat-022',name:'Refrigerator repair',          type:'labor',price:100,cat:'Appliances'},
-    {id:'cat-023',name:'Fix door',                     type:'labor',price:55, cat:'Carpentry'},
-    {id:'cat-024',name:'Door handle installation',     type:'labor',price:35, cat:'Carpentry'},
-    {id:'cat-025',name:'Door lock installation',       type:'labor',price:45, cat:'Carpentry'},
-    {id:'cat-026',name:'Trim installation',            type:'labor',price:65, cat:'Carpentry'},
-    {id:'cat-027',name:'Drywall patch',                type:'labor',price:90, cat:'Carpentry'},
-    {id:'cat-028',name:'Garage door repair',           type:'labor',price:150,cat:'Carpentry'},
-    {id:'cat-029',name:'Garage door trim repair',      type:'labor',price:85, cat:'Carpentry'},
-    {id:'cat-030',name:'Deck repair',                  type:'labor',price:200,cat:'Carpentry'},
-    {id:'cat-031',name:'Fence repair',                 type:'labor',price:200,cat:'Carpentry'},
-    {id:'cat-032',name:'Baseboard replacement',        type:'labor',price:80, cat:'Carpentry'},
-    {id:'cat-033',name:'Paint doors and trim',         type:'labor',price:110,cat:'Painting'},
-    {id:'cat-034',name:'Paint touch-up',               type:'labor',price:150,cat:'Painting'},
-    {id:'cat-035',name:'Full room paint',              type:'labor',price:300,cat:'Painting'},
-    {id:'cat-036',name:'Caulking',                     type:'labor',price:50, cat:'Painting'},
-    {id:'cat-037',name:'Yard maintenance / mow lawn',  type:'labor',price:100,cat:'Yard'},
-    {id:'cat-038',name:'Tree trimming',                type:'labor',price:200,cat:'Yard'},
-    {id:'cat-039',name:'Tree removal',                 type:'labor',price:500,cat:'Yard'},
-    {id:'cat-040',name:'Trash and debris removal',     type:'labor',price:150,cat:'Yard'},
-    {id:'cat-041',name:'Gutter cleaning',              type:'labor',price:100,cat:'Yard'},
-    {id:'cat-042',name:'Mirrors installation',         type:'labor',price:40, cat:'General'},
-    {id:'cat-043',name:'Smoke detector replacement',   type:'labor',price:30, cat:'General'},
-    {id:'cat-044',name:'Basketball hoop installation', type:'labor',price:45, cat:'General'},
-    {id:'cat-045',name:'Flooring installation',        type:'labor',price:500,cat:'General'},
-    {id:'cat-046',name:'Materials',                    type:'material',price:0,cat:'Materials'}
+    {id:'cat-001',name:'Sample service',type:'labor',price:100,cat:'General'}
   ];
   const existing=new Set(DB.catalog.map(i=>i.id));
   defaults.forEach(d=>{if(!existing.has(d.id))DB.catalog.push(d);});
