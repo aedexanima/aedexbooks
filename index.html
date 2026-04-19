@@ -1052,7 +1052,7 @@ const HEADERS={
   Jobs:['id','clientId','propertyId','title','status','startDate','endDate','value','materials','photoNotes','notes','estRef','createdAt','updatedAt','workDetails','contractorIds','archived','photos'],
   Documents:['id','number','estRef','type','clientId','propertyId','date','dueDate','paymentMethod','notes','lineItems','taxRate','subtotal','taxAmt','total','paid','createdAt','updatedAt','paymentTerms','laborDisclaimer','archived','jobId'],
   Expenses:['id','date','amount','desc','category','jobId','createdAt','updatedAt','receiptFileId','receiptFileName','receiptWebViewLink'],
-  ActivityLog:['id','timestamp','action','recordType','recordId','detail'],
+  ActivityLog:['id','ts','action','recordType','recordId','detail'],
   SentLog:['id','docId','docNumber','clientId','clientName','propertyId','propertyAddr','toEmail','ccEmail','subject','message','sentAt'],
   Contractors:['id','name','trade','phone','email','notes','createdAt','updatedAt'],
   Settings:['key','value']
@@ -1966,8 +1966,11 @@ function saveJob(){
     archived:existing?.archived||false,
     createdAt:existing?.createdAt||ts,updatedAt:ts
   };
-  if(currentJobId) DB.jobs=DB.jobs.map(j=>j.id===currentJobId?job:j);
-  else DB.jobs.push(job);
+  if(currentJobId){
+    DB.jobs=DB.jobs.map(j=>j.id===currentJobId?job:j);
+    // Invalidate cached Drive folder so renames/client changes get a fresh folder path
+    delete _jobFolderCache[currentJobId];
+  } else DB.jobs.push(job);
   logActivity(currentJobId?'Updated':'Created','Job',job.id,`${job.title} — ${clientFullName(getClient(job.clientId))}`);
   saveAndSync();renderPipeline();renderJobs();renderDashboard();
   closeModal('job-modal');toast('Job saved','success');
@@ -3519,7 +3522,7 @@ function parseImportDocuments(data,get){
       number,date:get(r,'date')||today(),dueDate:get(r,'duedate'),
       paymentMethod:get(r,'paymentmethod'),paymentTerms:get(r,'notes').startsWith('Net')?get(r,'notes'):'',
       notes:get(r,'notes').startsWith('Net')?'':get(r,'notes'),
-      lineItems,taxRate,subtotal,taxAmt,total:amount,paid,status,statusNote,total};
+      lineItems,taxRate,subtotal,taxAmt,total:amount,paid,status,statusNote};
   });
 }
 
