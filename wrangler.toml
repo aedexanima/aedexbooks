@@ -1,0 +1,6 @@
+name = "aedexbooks"
+pages_build_output_dir = "."
+
+[[kv_namespaces]]
+binding = "ACCESS_LIST"
+id = "20d2c2856c0748c59c544da10f98876d"

@@ -202,6 +202,23 @@ textarea{resize:vertical;min-height:60px}
   </div>
 </div>
 
+<!-- ACCESS GATE -->
+<div id="gate-screen" style="display:none">
+  <div class="setup">
+    <div class="setup-card">
+      <div style="font-size:36px;text-align:center;margin-bottom:14px">🔒</div>
+      <h2 style="font-size:20px;font-weight:700;text-align:center;margin-bottom:8px">License Required</h2>
+      <p style="font-size:13px;color:var(--text2);text-align:center;margin-bottom:6px;line-height:1.6">AEDEXBOOKS is a paid product.<br>Purchase a license to get access.</p>
+      <div id="gate-email" style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:24px"></div>
+      <a id="gate-buy-btn" href="https://aedexanima.com" target="_blank" class="btn accent" style="width:100%;justify-content:center;padding:13px;font-size:15px;text-decoration:none;display:flex">
+        Purchase AEDEXBOOKS
+      </a>
+      <button onclick="handleAuth()" class="btn" style="width:100%;justify-content:center;margin-top:10px;font-size:13px">Sign out</button>
+      <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:18px;line-height:1.6">Already purchased? Make sure you're signing in<br>with the email you used at checkout.</p>
+    </div>
+  </div>
+</div>
+
 <!-- MAIN APP -->
 <div id="app" style="display:none">
 <div class="shell">
@@ -1009,20 +1026,38 @@ function initTokenClient(){
   }
 }
 
-function onSignedIn(){
+async function onSignedIn(){
   document.getElementById('auth-btn').textContent='Sign out';
   setSyncStatus('🟢 Connected');
-  fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+accessToken}})
-    .then(r=>r.json()).then(u=>{
-      const n=u.name||u.email||'Signed in';
-      // Store email hint for next silent sign-in
-      if(u.email&&u.email!==DB.settings.userEmail){
-        DB.settings.userEmail=u.email;
-        saveSettingsLocal();
+  // Get user info first so we have the email for the access check
+  let userEmail='';
+  try{
+    const u=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+accessToken}}).then(r=>r.json());
+    userEmail=u.email||'';
+    const n=u.name||u.email||'Signed in';
+    if(u.email&&u.email!==DB.settings.userEmail){DB.settings.userEmail=u.email;saveSettingsLocal();}
+    document.getElementById('nav-user').textContent=n;
+    document.getElementById('nav-av').textContent=n[0].toUpperCase();
+  }catch{document.getElementById('nav-user').textContent='Signed in';document.getElementById('nav-av').textContent='✓';}
+
+  // Access gate check
+  if(userEmail){
+    try{
+      const res=await fetch(`/api/check-access?email=${encodeURIComponent(userEmail)}`).then(r=>r.json());
+      if(!res.allowed){
+        document.getElementById('setup-screen').style.display='none';
+        document.getElementById('gate-email').textContent=`Signed in as ${userEmail}`;
+        document.getElementById('gate-screen').style.display='block';
+        return;
       }
-      document.getElementById('nav-user').textContent=n;
-      document.getElementById('nav-av').textContent=n[0].toUpperCase();
-    }).catch(()=>{document.getElementById('nav-user').textContent='Signed in';document.getElementById('nav-av').textContent='✓';});
+    }catch(e){
+      // If the check fails (e.g. local dev), allow through — don't block on network error
+      console.warn('Access check failed, allowing through:',e.message);
+    }
+  }
+
+  // Allowed — proceed
+  document.getElementById('gate-screen').style.display='none';
   if(!DB.settings.sheetId) createSheet();
   else loadFromSheet();
 }
@@ -1035,6 +1070,9 @@ function handleAuth(){
     document.getElementById('nav-user').textContent='Not signed in';
     document.getElementById('nav-av').textContent='?';
     document.getElementById('auth-btn').textContent='Sign in with Google';
+    document.getElementById('gate-screen').style.display='none';
+    document.getElementById('app').style.display='none';
+    document.getElementById('setup-screen').style.display='block';
     setSyncStatus('⚪ Not connected');return;
   }
   if(!tokenClient){toast('Still loading, please wait...','');return;}
