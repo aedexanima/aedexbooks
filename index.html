@@ -176,54 +176,132 @@ textarea{resize:vertical;min-height:60px}
   #preview-modal .btn-row{display:none!important}
 }
 /* ── HAMBURGER BUTTON (mobile only) ── */
-.mob-bar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--text);z-index:60;align-items:center;padding:0 14px;gap:12px}
-.mob-bar-title{font-size:15px;font-weight:700;color:#fff;flex:1}
-.mob-bar-biz{font-size:13px;font-weight:600;color:rgba(255,255,255,.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hamburger{background:none;border:none;cursor:pointer;padding:6px;color:#fff;display:flex;flex-direction:column;gap:4px}
-.hamburger span{display:block;width:20px;height:2px;background:#fff;border-radius:2px;transition:all .2s}
+/* ── OLD TOP BAR (desktop fallback only) ── */
+.mob-bar{display:none}
+.mob-bar-biz{display:none}
+.hamburger{display:none}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:55}
 .sidebar-overlay.open{display:block}
 
+/* ── MOBILE TOP HEADER ── */
+.mob-header{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--text);z-index:60;align-items:center;justify-content:space-between;padding:0 16px}
+.mob-header-title{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.2px}
+.mob-header-right{display:flex;align-items:center;gap:10px}
+.mob-sync{font-size:11px;color:rgba(255,255,255,.5)}
+
+/* ── BOTTOM TAB BAR ── */
+.mob-tabs{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--text);z-index:60;height:60px;padding-bottom:env(safe-area-inset-bottom);flex-direction:row;align-items:stretch;border-top:1px solid rgba(255,255,255,.1)}
+.mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.45);transition:color .15s;padding:6px 2px;-webkit-tap-highlight-color:transparent}
+.mob-tab.active{color:#fff}
+.mob-tab.active .mobt-ico{color:var(--accent)}
+.mobt-ico{font-size:18px;line-height:1}
+.mobt-label{font-size:9px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+
+/* ── MORE DRAWER ── */
+.mob-more-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:70}
+.mob-more-overlay.open{display:block}
+.mob-more-drawer{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:20px 20px 0 0;z-index:71;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,.72,0,1);padding-bottom:env(safe-area-inset-bottom)}
+.mob-more-drawer.open{transform:translateY(0)}
+.mob-more-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 4px}
+.mob-more-user{display:flex;align-items:center;gap:10px;padding:12px 20px 4px}
+.mob-more-user .user-av{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
+.mob-more-user-info{flex:1;min-width:0}
+.mob-more-user-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mob-more-sync{font-size:11px;color:var(--text3);margin-top:1px}
+.mob-more-nav{padding:8px 12px 4px}
+.mob-more-item{display:flex;align-items:center;gap:12px;padding:13px 10px;border-radius:var(--rs);cursor:pointer;color:var(--text);font-size:14px;font-weight:500;background:none;border:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent}
+.mob-more-item:active{background:var(--surface2)}
+.mob-more-item .ico{width:22px;text-align:center;font-size:16px;flex-shrink:0}
+.mob-more-divider{height:1px;background:var(--border);margin:6px 10px}
+.mob-more-signout{display:flex;align-items:center;gap:12px;padding:13px 10px;border-radius:var(--rs);cursor:pointer;color:var(--red);font-size:14px;font-weight:500;background:none;border:none;width:100%;text-align:left;margin-bottom:4px;-webkit-tap-highlight-color:transparent}
+
+/* ── MOBILE JOB CARDS ── */
+.job-card-m{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.job-card-m:active{background:var(--surface2)}
+.job-card-m-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px}
+.job-card-m-client{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+.job-card-m-title{font-size:15px;font-weight:600;margin-bottom:4px;line-height:1.3}
+.job-card-m-meta{font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.job-card-m-val{font-family:'DM Mono',monospace;font-size:13px;color:var(--text);font-weight:500}
+.job-card-m-actions{display:flex;gap:8px;flex-wrap:wrap}
+.show-mobile-only{display:none}
+.job-cards-m{display:none}
+.job-table-d{display:block}
+.doc-cards-m{display:none}
+.doc-table-d{display:block}
+.doc-card-m{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.doc-card-m-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px}
+.doc-card-m-client{font-size:15px;font-weight:600;line-height:1.3}
+.doc-card-m-meta{font-size:12px;color:var(--text2);display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.doc-card-m-amount{font-family:'DM Mono',monospace;font-size:15px;font-weight:600;color:var(--text)}
+.doc-card-m-actions{display:flex;gap:8px;flex-wrap:wrap}
+/* Dashboard mobile */
+.dash-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dash-unpaid-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.dash-unpaid-item:last-child{border-bottom:none}
+.dash-job-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.dash-job-item:last-child{border-bottom:none}
+
 @media(max-width:768px){
-  /* Sidebar becomes a slide-in drawer */
-  .mob-bar{display:flex}
-  .sidebar{transform:translateX(-100%);transition:transform .25s ease;position:fixed;top:0;left:0;height:100vh;z-index:60;width:260px}
-  .sidebar.open{transform:translateX(0)}
-  .main{margin-left:0;padding:14px;padding-top:66px;max-width:100%}
+  /* Hide old top bar, sidebar */
+  .mob-bar{display:none !important}
+  .sidebar{display:none !important}
+
+  /* Show mobile header + bottom tabs */
+  .mob-header{display:flex}
+  .mob-tabs{display:flex}
+
+  /* Main content: account for top header + bottom tabs */
+  .main{margin-left:0;padding:14px;padding-top:66px;padding-bottom:80px;max-width:100%}
 
   /* Dashboard metrics stack to 2 cols */
   .metrics.m4,.metrics.m3{grid-template-columns:1fr 1fr}
 
-  /* Pipeline: horizontal scroll instead of wrapping */
+  /* Pipeline: horizontal scroll */
   .pipeline{display:flex;overflow-x:auto;gap:10px;padding-bottom:8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
   .pipe-col{min-width:220px;flex-shrink:0;scroll-snap-align:start}
 
   /* Grids stack */
   .fg.g2,.fg.g3{grid-template-columns:1fr}
 
-  /* Settings 2-col grid stacks */
+  /* Settings grid stacks */
   #page-settings > div[style*="grid-template-columns"]{grid-template-columns:1fr !important}
 
-  /* Tables: horizontal scroll */
-  .card > table,.card > div > table,table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+  /* Tables: horizontal scroll (fallback for non-card tables) */
+  .card > table,.card > div > table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
   td,th{white-space:nowrap}
 
-  /* Modals: full screen */
+  /* Jobs: show cards, hide table */
+  .job-cards-m{display:block}
+  .job-table-d{display:none}
+  /* Docs: show cards, hide table */
+  .doc-cards-m{display:block}
+  .doc-table-d{display:none}
+  .show-mobile-only{display:block}
+  /* Dashboard: single column */
+  .dash-grid-2{grid-template-columns:1fr}
+
+  /* Modals: full-screen bottom sheet */
   .modal-bg{padding:0;align-items:flex-end}
-  .modal{border-radius:18px 18px 0 0;max-width:100%;width:100%;max-height:92vh;overflow-y:auto;margin:0}
+  .modal{border-radius:20px 20px 0 0;max-width:100%;width:100%;max-height:94vh;overflow-y:auto;margin:0}
 
-  /* Topbar: stack title and actions */
-  .topbar{flex-direction:column;gap:8px}
-  .topbar > div:last-child{display:flex;flex-wrap:wrap;gap:6px}
+  /* Topbar: compact single row on mobile */
+  .topbar{flex-direction:row;gap:6px;flex-wrap:wrap;align-items:center}
+  .topbar .btn{font-size:12px;padding:7px 10px;white-space:nowrap}
 
-  /* Buttons in topbar shrink gracefully */
-  .topbar .btn{font-size:12px;padding:6px 10px}
+  /* Bigger tap targets */
+  .btn{min-height:36px}
+  input:not([type="checkbox"]):not([type="radio"]),select,textarea{min-height:42px}
+  /* Filter rows wrap instead of overflow */
+  .topbar > div:first-child{flex-wrap:wrap}
+  .search-wrap{min-width:120px}
+  /* Hide archived checkboxes on mobile — too cramped */
+  .hide-mobile{display:none !important}
+  /* Filter rows below topbar wrap */
+  [style*="display:flex"][style*="align-items:center"][style*="gap:16px"]{flex-wrap:wrap;gap:8px}
 
-  /* Card padding tighter on mobile */
+  /* Tighter card padding */
   .card{padding:14px}
-
-  /* Sync status in sidebar foot smaller */
-  .sb-foot{padding:10px}
 }
 </style>
 </head>
@@ -265,13 +343,49 @@ textarea{resize:vertical;min-height:60px}
 <!-- MAIN APP -->
 <div id="app" style="display:none">
 <div class="shell">
-  <!-- MOBILE TOP BAR -->
-  <div class="mob-bar">
-    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
-    <div class="mob-bar-biz" id="mob-biz">AEDEXBOOKS</div>
+  <!-- MOBILE HEADER -->
+  <div class="mob-header" id="mob-header">
+    <div class="mob-header-title" id="mob-page-title">Dashboard</div>
+    <div class="mob-header-right">
+      <button id="mob-signin-btn" onclick="handleAuth()" style="background:var(--accent);border:none;color:#fff;font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px;cursor:pointer;display:none">Sign in</button>
+      <div id="mob-user-pill" onclick="openMoreDrawer()" style="display:none;align-items:center;gap:7px;cursor:pointer;background:rgba(255,255,255,.12);border-radius:20px;padding:4px 10px 4px 4px;max-width:180px">
+        <div class="user-av" id="mob-nav-av" style="width:26px;height:26px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">?</div>
+        <span id="mob-nav-email" style="font-size:11px;color:rgba(255,255,255,.85);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px"></span>
+      </div>
+    </div>
   </div>
+
+  <!-- MOBILE BOTTOM TAB BAR -->
+  <nav class="mob-tabs" id="mob-tabs">
+    <button class="mob-tab active" id="mobt-dashboard" onclick="goto('dashboard')"><span class="mobt-ico">🏠</span><span class="mobt-label">Home</span></button>
+    <button class="mob-tab" id="mobt-jobs" onclick="goto('jobs')"><span class="mobt-ico">🔧</span><span class="mobt-label">Jobs</span></button>
+    <button class="mob-tab" id="mobt-clients" onclick="goto('clients')"><span class="mobt-ico">👥</span><span class="mobt-label">Clients</span></button>
+    <button class="mob-tab" id="mobt-documents" onclick="goto('documents')"><span class="mobt-ico">📄</span><span class="mobt-label">Docs</span></button>
+    <button class="mob-tab" id="mobt-more" onclick="openMoreDrawer()"><span class="mobt-ico">☰</span><span class="mobt-label">More</span></button>
+  </nav>
+
+  <!-- MORE DRAWER -->
+  <div class="mob-more-overlay" id="mob-more-overlay" onclick="closeMoreDrawer()"></div>
+  <div class="mob-more-drawer" id="mob-more-drawer">
+    <div class="mob-more-handle"></div>
+    <div class="mob-more-user">
+      <div class="user-av" id="mob-drawer-av">?</div>
+      <div class="mob-more-user-info">
+        <div class="mob-more-user-name" id="mob-drawer-user">Not signed in</div>
+        <div class="mob-more-sync" id="mob-drawer-sync">⚪ Not connected</div>
+      </div>
+    </div>
+    <div class="mob-more-nav">
+      <button class="mob-more-item" onclick="goto('pipeline');closeMoreDrawer()"><span class="ico">⇢</span>Pipeline</button>
+      <button class="mob-more-item" onclick="goto('expenses');closeMoreDrawer()"><span class="ico">↓</span>Expenses</button>
+      <button class="mob-more-item" onclick="goto('contractors');closeMoreDrawer()"><span class="ico">👷</span>Contractors</button>
+      <button class="mob-more-item" onclick="goto('activity');closeMoreDrawer()"><span class="ico">◷</span>Activity Log</button>
+      <button class="mob-more-item" onclick="goto('settings');closeMoreDrawer()"><span class="ico">⚙</span>Settings</button>
+      <div class="mob-more-divider"></div>
+      <button class="mob-more-signout" id="mob-auth-btn" onclick="if(Date.now()-_drawerOpenedAt>500){handleAuth();closeMoreDrawer();}">Sign in with Google</button>
+    </div>
+  </div>
+
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
   <!-- SIDEBAR -->
@@ -310,19 +424,19 @@ textarea{resize:vertical;min-height:60px}
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
       <div class="topbar">
-        <div><div class="pg-title">Dashboard</div><div class="pg-sub" id="dash-date"></div></div>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div class="hide-mobile"><div class="pg-title">Dashboard</div><div class="pg-sub" id="dash-date"></div></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <select id="dash-year" onchange="renderDashboard()" class="input" style="width:110px;padding:6px 10px;font-size:13px"></select>
           <button class="btn" onclick="downloadTaxReport()" title="Download tax-ready CSV for selected year">⬇ Tax Report</button>
           <button class="btn accent" onclick="goto('documents');openNewDoc()">+ New Document</button>
         </div>
       </div>
       <div class="metrics m4" id="dash-metrics"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="dash-grid-2">
         <div class="card"><div class="card-title">Recent jobs</div><div id="dash-jobs"></div></div>
         <div class="card"><div class="card-title">Unpaid invoices</div><div id="dash-unpaid"></div></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+      <div class="dash-grid-2" style="margin-top:16px">
         <div class="card"><div class="card-title">Revenue by client</div><div id="dash-clients"></div></div>
         <div class="card"><div class="card-title">Monthly P&amp;L</div><div id="dash-pnl"></div></div>
       </div>
@@ -344,8 +458,8 @@ textarea{resize:vertical;min-height:60px}
         <button class="btn accent" onclick="openClientModal()">+ New Client</button>
       </div>
       <div style="display:flex;align-items:center;gap:16px">
-        <div class="search-wrap" style="flex:1"><span class="search-ico">🔍</span><input type="text" placeholder="Search clients..." oninput="filterClients(this.value)" id="client-search"></div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);white-space:nowrap;cursor:pointer"><input type="checkbox" id="client-show-archived" onchange="renderClients()"> Show archived</label>
+        <div class="search-wrap" style="flex:1;min-width:120px"><span class="search-ico">🔍</span><input type="text" placeholder="Search clients..." oninput="filterClients(this.value)" id="client-search"></div>
+        <label class="hide-mobile" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);white-space:nowrap;cursor:pointer"><input type="checkbox" id="client-show-archived" onchange="renderClients()"> Show archived</label>
       </div>
       <div id="clients-list"></div>
     </div>
@@ -357,9 +471,9 @@ textarea{resize:vertical;min-height:60px}
         <button class="btn accent" onclick="openJobModal()">+ New Job</button>
       </div>
       <div style="display:flex;align-items:center;gap:16px">
-        <div class="search-wrap" style="flex:1"><span class="search-ico">🔍</span><input type="text" placeholder="Search jobs..." oninput="filterJobs(this.value)"></div>
-        <button id="job-pastdue-btn" class="btn sm" onclick="togglePastDueFilter()" style="white-space:nowrap">⚠ Past Due</button>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);white-space:nowrap;cursor:pointer"><input type="checkbox" id="job-show-archived" onchange="renderJobs()"> Show archived</label>
+        <div class="search-wrap" style="flex:1;min-width:120px"><span class="search-ico">🔍</span><input type="text" placeholder="Search jobs..." oninput="filterJobs(this.value)"></div>
+        <button id="job-pastdue-btn" class="btn sm" onclick="togglePastDueFilter()" style="white-space:nowrap;flex-shrink:0">⚠ Past Due</button>
+        <label class="hide-mobile" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);white-space:nowrap;cursor:pointer"><input type="checkbox" id="job-show-archived" onchange="renderJobs()"> Show archived</label>
       </div>
       <div class="card"><div id="jobs-table"></div></div>
     </div>
@@ -375,9 +489,10 @@ textarea{resize:vertical;min-height:60px}
         <button class="tab" onclick="filterDocs('estimate',this)">Estimates</button>
         <button class="tab" onclick="filterDocs('invoice',this)">Invoices</button>
         <button class="tab" onclick="filterDocs('unpaid',this)">Unpaid</button>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);white-space:nowrap;cursor:pointer;margin-left:auto"><input type="checkbox" id="doc-show-archived" onchange="renderDocs()"> Show archived</label>
+        <label class="hide-mobile" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);white-space:nowrap;cursor:pointer;margin-left:auto"><input type="checkbox" id="doc-show-archived" onchange="renderDocs()"> Show archived</label>
       </div>
-      <div class="card"><div id="docs-table"></div></div>
+      <div id="docs-cards-m" class="doc-cards-m"></div>
+      <div class="card doc-table-d"><div id="docs-table"></div></div>
     </div>
 
     <!-- EXPENSES -->
@@ -781,7 +896,7 @@ textarea{resize:vertical;min-height:60px}
 <!-- EXPENSE MODAL -->
 <div class="modal-bg" id="expense-modal">
 <div class="modal" style="max-width:480px">
-  <div class="modal-title">Log Expense</div>
+  <div class="modal-title" id="em-title">Log Expense</div>
   <div class="fg g2" style="margin-bottom:12px">
     <div class="field"><label>Date</label><input type="date" id="em-date"></div>
     <div class="field"><label>Amount ($)</label><input type="number" id="em-amount" placeholder="0.00" step="0.01"></div>
@@ -807,8 +922,9 @@ textarea{resize:vertical;min-height:60px}
     <button type="button" id="em-receipt-btn" class="btn sm" onclick="document.getElementById('em-receipt-input').click()">+ Attach Receipt</button>
   </div>
   <div class="btn-row">
-    <button class="btn accent" onclick="saveExpense()">Save expense</button>
+    <button class="btn accent" id="em-save-btn" onclick="saveExpense()">Save expense</button>
     <button class="btn" onclick="closeModal('expense-modal')">Cancel</button>
+    <button class="btn danger" id="em-delete-btn" style="display:none" onclick="deleteExpenseFromModal()">Delete</button>
   </div>
 </div>
 </div>
@@ -908,57 +1024,9 @@ textarea{resize:vertical;min-height:60px}
 // Expense: {id, date, amount, desc, category, jobId, createdAt, updatedAt}
 // Activity: {id, ts, action, recordType, recordId, detail}
 
-let DB={clients:[],properties:[],jobs:[],docs:[],expenses:[],activity:[],sentLog:[],contractors:[],
-  settings:{bizName:'AEDEXBOOKS',yourName:'',phone:'',email:'',addr:'',license:'',taxRate:0,clientId:'',sheetId:'',logoFileId:'',customClientTypes:[],
-    catalog:[
-      {id:'cat-001',name:'Smart lock installation',      type:'labor',price:65, cat:'Electrical'},
-      {id:'cat-002',name:'Smart switch installation',    type:'labor',price:40, cat:'Electrical'},
-      {id:'cat-003',name:'GFI outlet installation',      type:'labor',price:40, cat:'Electrical'},
-      {id:'cat-004',name:'Outlet covers',                type:'labor',price:15, cat:'Electrical'},
-      {id:'cat-005',name:'Lightbulb replacement',        type:'labor',price:15, cat:'Electrical'},
-      {id:'cat-006',name:'Bathroom faucet installation', type:'labor',price:65, cat:'Plumbing'},
-      {id:'cat-007',name:'Kitchen sink faucet repair',   type:'labor',price:65, cat:'Plumbing'},
-      {id:'cat-008',name:'Shower head installation',     type:'labor',price:50, cat:'Plumbing'},
-      {id:'cat-009',name:'Toilet repair',                type:'labor',price:100,cat:'Plumbing'},
-      {id:'cat-010',name:'Water leak / pressure valve',  type:'labor',price:150,cat:'Plumbing'},
-      {id:'cat-011',name:'Garbage disposal installation',type:'labor',price:100,cat:'Plumbing'},
-      {id:'cat-012',name:'Sprinkler repair',             type:'labor',price:150,cat:'Plumbing'},
-      {id:'cat-013',name:'Pipe repair',                  type:'labor',price:120,cat:'Plumbing'},
-      {id:'cat-014',name:'HVAC maintenance',             type:'labor',price:150,cat:'HVAC'},
-      {id:'cat-015',name:'AC fan replacement',           type:'labor',price:200,cat:'HVAC'},
-      {id:'cat-016',name:'AC repair',                    type:'labor',price:175,cat:'HVAC'},
-      {id:'cat-017',name:'Microwave installation',       type:'labor',price:75, cat:'Appliances'},
-      {id:'cat-018',name:'Microwave removal',            type:'labor',price:50, cat:'Appliances'},
-      {id:'cat-019',name:'Dishwasher repair',            type:'labor',price:150,cat:'Appliances'},
-      {id:'cat-020',name:'Washer machine repair',        type:'labor',price:100,cat:'Appliances'},
-      {id:'cat-021',name:'Dryer repair',                 type:'labor',price:100,cat:'Appliances'},
-      {id:'cat-022',name:'Refrigerator repair',          type:'labor',price:100,cat:'Appliances'},
-      {id:'cat-023',name:'Fix door',                     type:'labor',price:55, cat:'Carpentry'},
-      {id:'cat-024',name:'Door handle installation',     type:'labor',price:35, cat:'Carpentry'},
-      {id:'cat-025',name:'Door lock installation',       type:'labor',price:45, cat:'Carpentry'},
-      {id:'cat-026',name:'Trim installation',            type:'labor',price:65, cat:'Carpentry'},
-      {id:'cat-027',name:'Drywall patch',                type:'labor',price:90, cat:'Carpentry'},
-      {id:'cat-028',name:'Garage door repair',           type:'labor',price:150,cat:'Carpentry'},
-      {id:'cat-029',name:'Garage door trim repair',      type:'labor',price:85, cat:'Carpentry'},
-      {id:'cat-030',name:'Deck repair',                  type:'labor',price:200,cat:'Carpentry'},
-      {id:'cat-031',name:'Fence repair',                 type:'labor',price:200,cat:'Carpentry'},
-      {id:'cat-032',name:'Baseboard replacement',        type:'labor',price:80, cat:'Carpentry'},
-      {id:'cat-033',name:'Paint doors and trim',         type:'labor',price:110,cat:'Painting'},
-      {id:'cat-034',name:'Paint touch-up',               type:'labor',price:150,cat:'Painting'},
-      {id:'cat-035',name:'Full room paint',              type:'labor',price:300,cat:'Painting'},
-      {id:'cat-036',name:'Caulking',                     type:'labor',price:50, cat:'Painting'},
-      {id:'cat-037',name:'Yard maintenance / mow lawn',  type:'labor',price:100,cat:'Yard'},
-      {id:'cat-038',name:'Tree trimming',                type:'labor',price:200,cat:'Yard'},
-      {id:'cat-039',name:'Tree removal',                 type:'labor',price:500,cat:'Yard'},
-      {id:'cat-040',name:'Trash and debris removal',     type:'labor',price:150,cat:'Yard'},
-      {id:'cat-041',name:'Gutter cleaning',              type:'labor',price:100,cat:'Yard'},
-      {id:'cat-042',name:'Mirrors installation',         type:'labor',price:40, cat:'General'},
-      {id:'cat-043',name:'Smoke detector replacement',   type:'labor',price:30, cat:'General'},
-      {id:'cat-044',name:'Basketball hoop installation', type:'labor',price:45, cat:'General'},
-      {id:'cat-045',name:'Flooring installation',        type:'labor',price:500,cat:'General'},
-      {id:'cat-046',name:'Materials',                    type:'material',price:0,cat:'Materials'}
-    ]}};
-let currentClientId=null,currentJobId=null,currentDocId=null;
+let DB={clients:[],properties:[],jobs:[],docs:[],expenses:[],activity:[],sentLog:[],contractors:[],catalog:[],
+  settings:{bizName:'AEDEXBOOKS',yourName:'',phone:'',email:'',addr:'',license:'',taxRate:0,clientId:'',sheetId:'',logoFileId:'',customClientTypes:[]}};
+let currentClientId=null,currentJobId=null,currentDocId=null,_editingExpenseId=null;
 let docLineItems=[],docFilter='all',clientSearch='',jobSearch='',jobPastDueFilter=false,_sendingReminder=false;
 let propFields=[]; // temp property fields in client modal
 let accessToken=null,signedIn=false,gapiReady=false;
@@ -972,8 +1040,8 @@ function formatPhone(input){
 }
 
 const GOOGLE_CLIENT_ID='44604318754-j48brnn15erhh1jqtme85r2fd5dpgrah.apps.googleusercontent.com';
-const SCOPES='https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/gmail.send';
-const TABS=['Clients','Properties','Jobs','Documents','Expenses','ActivityLog','SentLog','Contractors','Settings'];
+const SCOPES='https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/gmail.send email profile';
+const TABS=['Clients','Properties','Jobs','Documents','Expenses','ActivityLog','SentLog','Contractors','Settings','ServiceCatalog'];
 
 // ============================================================
 // ============================================================
@@ -1015,7 +1083,7 @@ function init(){
   const s=localStorage.getItem('ab_settings');
   if(s){ const parsed=JSON.parse(s); DB.settings=Object.assign({},DB.settings,parsed); }
   const d=localStorage.getItem('ab_data');
-  if(d){const p=JSON.parse(d);DB.clients=p.clients||[];DB.properties=p.properties||[];DB.jobs=p.jobs||[];DB.docs=p.docs||[];DB.expenses=p.expenses||[];DB.activity=p.activity||[];DB.sentLog=p.sentLog||[];DB.contractors=p.contractors||[];migrateNames();saveLocal();}
+  if(d){const p=JSON.parse(d);DB.clients=p.clients||[];DB.properties=p.properties||[];DB.jobs=p.jobs||[];DB.docs=p.docs||[];DB.expenses=p.expenses||[];DB.activity=p.activity||[];DB.sentLog=p.sentLog||[];DB.contractors=p.contractors||[];DB.catalog=p.catalog||[];migrateNames();seedCatalog();saveLocal();}
   showApp();loadGapi();
 }
 
@@ -1024,7 +1092,10 @@ function showApp(){
   document.getElementById('app').style.display='block';
   const _bn=DB.settings.bizName||'AEDEXBOOKS';
   document.getElementById('nav-biz').textContent=_bn;
-  document.getElementById('mob-biz').textContent=_bn;
+  // mob-biz removed
+  // Default header to sign-in button until auth completes
+  document.getElementById('mob-user-pill').style.display='none';
+  document.getElementById('mob-signin-btn').style.display='block';
   if(DB.settings.logoFileId){getDriveImageUrl(DB.settings.logoFileId).then(updateLogoPreview).catch(()=>{});}
   document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   renderAll();loadSettingsForm();
@@ -1034,17 +1105,25 @@ function showApp(){
 // GOOGLE AUTH (Modern GIS)
 // ============================================================
 function loadGapi(){
+  // Load GIS (sign-in) immediately — doesn't need Sheets to be ready
+  const gis=document.createElement('script');
+  gis.src='https://accounts.google.com/gsi/client';
+  gis.onload=initTokenClient;
+  document.head.appendChild(gis);
+
+  // Load GAPI + Sheets in parallel
   const s=document.createElement('script');
   s.src='https://apis.google.com/js/api.js';
   s.onload=()=>{
     gapi.load('client',()=>{
       gapi.client.init({}).then(()=>gapi.client.load('https://sheets.googleapis.com/$discovery/rest?version=v4'))
       .then(()=>{gapiReady=true;setSyncStatus('⚪ Not connected');
-        const s2=document.createElement('script');
-        s2.src='https://accounts.google.com/gsi/client';
-        s2.onload=initTokenClient;
-        document.head.appendChild(s2);
-      }).catch(e=>{setSyncStatus('⚠ Load error');console.error(e);});
+        // If user already signed in before Sheets was ready, load now
+        if(signedIn){
+          if(!DB.settings.sheetId) findOrCreateSheet();
+          else loadFromSheet();
+        }
+      }).catch(e=>{setSyncStatus('⚠ Load error');toast('⚠ Sheets load error: '+e.message,'');console.error(e);});
     });
   };
   document.head.appendChild(s);
@@ -1060,23 +1139,47 @@ function scheduleTokenRefresh(){
   }, 55*60*1000);
 }
 
+let _manualSignIn=false;
+let _signInPending=false; // user tapped sign-in before tokenClient was ready
+
 function initTokenClient(){
   tokenClient=google.accounts.oauth2.initTokenClient({
     client_id:GOOGLE_CLIENT_ID,scope:SCOPES,
     callback:(resp)=>{
       if(resp.error){
-        // Silent auth failed — only show error if user manually clicked sign-in
-        if(resp.error!=='access_denied'&&resp.error!=='user_cancelled') setSyncStatus('⚠ Auth error: '+resp.error);
+        if(_manualSignIn){
+          if(resp.error==='access_denied'){
+            toast('Sign-in blocked. If you saw an "unverified app" warning, tap Advanced → Continue to proceed.','');
+          } else if(resp.error!=='user_cancelled'){
+            setSyncStatus('⚠ Auth error: '+resp.error);
+          }
+        }
+        _manualSignIn=false;
         return;
       }
+      _manualSignIn=false;
       accessToken=resp.access_token;
       gapi.client.setToken({access_token:accessToken});
-      signedIn=true;onSignedIn();scheduleTokenRefresh();
+      signedIn=true;
+      // Immediately update all sign-in UI so no button reads "Sign in" during async onSignedIn()
+      document.getElementById('mob-signin-btn').style.display='none';
+      document.getElementById('mob-nav-email').textContent='Signing in…';
+      document.getElementById('mob-user-pill').style.display='flex';
+      document.getElementById('mob-auth-btn').textContent='Sign out';
+      document.getElementById('auth-btn').textContent='Sign out';
+      onSignedIn();scheduleTokenRefresh();
     }
   });
-  // Try silent sign-in using stored email hint
-  if(DB.settings.clientId){
-    tokenClient.requestAccessToken({prompt:'',login_hint:DB.settings.userEmail||''});
+  // If user tapped sign-in before we were ready, prompt them to tap again
+  // (can't fire popup from a script load callback — browser blocks it)
+  if(_signInPending){
+    _signInPending=false;
+    toast('Ready — tap Sign in again','');
+    return;
+  }
+  // Try silent sign-in for returning users (no popup, uses stored session)
+  if(DB.settings.userEmail){
+    tokenClient.requestAccessToken({prompt:'',login_hint:DB.settings.userEmail});
   }
 }
 
@@ -1087,12 +1190,36 @@ async function onSignedIn(){
   let userEmail='';
   try{
     const u=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+accessToken}}).then(r=>r.json());
-    userEmail=u.email||'';
-    const n=u.name||u.email||'Signed in';
+    if(!u.email) throw new Error('No user info');
+    userEmail=u.email;
+    const n=u.name||u.email||'?';
     if(u.email&&u.email!==DB.settings.userEmail){DB.settings.userEmail=u.email;saveSettingsLocal();}
     document.getElementById('nav-user').textContent=n;
     document.getElementById('nav-av').textContent=n[0].toUpperCase();
-  }catch{document.getElementById('nav-user').textContent='Signed in';document.getElementById('nav-av').textContent='✓';}
+    // Sync to mobile header pill + More drawer
+    const av=n[0].toUpperCase();
+    document.getElementById('mob-nav-av').textContent=av;
+    document.getElementById('mob-nav-email').textContent=userEmail||n;
+    document.getElementById('mob-user-pill').style.display='flex';
+    document.getElementById('mob-signin-btn').style.display='none';
+    document.getElementById('mob-drawer-av').textContent=av;
+    document.getElementById('mob-drawer-user').textContent=userEmail||n;
+    document.getElementById('mob-auth-btn').textContent='Sign out';
+  }catch{
+    // userinfo failed — use stored email if available, else show generic connected state
+    userEmail=DB.settings.userEmail||'';
+    const n=userEmail||'Connected';
+    const av=(n[0]||'?').toUpperCase();
+    document.getElementById('nav-user').textContent=userEmail||'Connected';
+    document.getElementById('nav-av').textContent=av;
+    document.getElementById('mob-nav-av').textContent=av;
+    document.getElementById('mob-nav-email').textContent=userEmail||'Connected';
+    document.getElementById('mob-user-pill').style.display='flex';
+    document.getElementById('mob-signin-btn').style.display='none';
+    document.getElementById('mob-drawer-av').textContent=av;
+    document.getElementById('mob-drawer-user').textContent=userEmail||'Connected';
+    document.getElementById('mob-auth-btn').textContent='Sign out';
+  }
 
   // Access gate check + sheet lookup
   if(userEmail){
@@ -1104,8 +1231,8 @@ async function onSignedIn(){
         document.getElementById('gate-screen').style.display='block';
         return;
       }
-      // Use sheetId from KV if we don't have one locally
-      if(res.sheetId&&!DB.settings.sheetId){
+      // KV is the canonical source — always prefer it over stale localStorage
+      if(res.sheetId&&res.sheetId!==DB.settings.sheetId){
         DB.settings.sheetId=res.sheetId;
         saveSettingsLocal();
       }
@@ -1116,6 +1243,11 @@ async function onSignedIn(){
 
   // Allowed — proceed
   document.getElementById('gate-screen').style.display='none';
+  if(!gapiReady){
+    // Sheets API still loading — wait for it (loadGapi will call loadSheet() when ready)
+    setSyncStatus('⏳ Loading Sheets API...');
+    return;
+  }
   if(!DB.settings.sheetId) findOrCreateSheet();
   else loadFromSheet();
 }
@@ -1128,16 +1260,26 @@ function handleAuth(){
     document.getElementById('nav-user').textContent='Not signed in';
     document.getElementById('nav-av').textContent='?';
     document.getElementById('auth-btn').textContent='Sign in with Google';
+    document.getElementById('mob-user-pill').style.display='none';
+    document.getElementById('mob-signin-btn').style.display='block';
+    document.getElementById('mob-drawer-av').textContent='?';
+    document.getElementById('mob-drawer-user').textContent='Not signed in';
+    document.getElementById('mob-auth-btn').textContent='Sign in with Google';
     document.getElementById('gate-screen').style.display='none';
     document.getElementById('app').style.display='none';
     document.getElementById('setup-screen').style.display='block';
     setSyncStatus('⚪ Not connected');return;
   }
-  if(!tokenClient){toast('Still loading, please wait...','');return;}
+  if(!tokenClient){_signInPending=true;return;}
+  _manualSignIn=true;
   tokenClient.requestAccessToken({prompt:'select_account'});
 }
 
-function setSyncStatus(m){document.getElementById('sync-status').textContent=m;}
+function setSyncStatus(m){
+  document.getElementById('sync-status').textContent=m;
+  const ds=document.getElementById('mob-drawer-sync');
+  if(ds)ds.textContent=m;
+}
 
 // ============================================================
 // SHEET OPERATIONS
@@ -1151,7 +1293,8 @@ const HEADERS={
   ActivityLog:['id','ts','action','recordType','recordId','detail'],
   SentLog:['id','docId','docNumber','clientId','clientName','propertyId','propertyAddr','toEmail','ccEmail','subject','message','sentAt'],
   Contractors:['id','name','trade','phone','email','notes','createdAt','updatedAt'],
-  Settings:['key','value']
+  Settings:['key','value'],
+  ServiceCatalog:['id','name','type','price','cat']
 };
 
 async function registerSheet(sheetId){
@@ -1206,7 +1349,8 @@ async function createSheet(){
 async function ensureSheetTabs(){
   // Creates any tabs that exist in TABS/HEADERS but are missing from the actual sheet.
   // Safe to call every sync — exits immediately once flag is set.
-  if(DB.settings.allTabsCreated)return;
+  // catalogTabCreated flag forces re-check for users who had allTabsCreated before ServiceCatalog was added.
+  if(DB.settings.allTabsCreated&&DB.settings.catalogTabCreated)return;
   try{
     const meta=await gapi.client.sheets.spreadsheets.get({spreadsheetId:DB.settings.sheetId,fields:'sheets.properties.title'});
     const existing=new Set((meta.result.sheets||[]).map(s=>s.properties.title));
@@ -1221,6 +1365,7 @@ async function ensureSheetTabs(){
       }
     }
     DB.settings.allTabsCreated=true;
+    DB.settings.catalogTabCreated=true;
     saveSettingsLocal();
   }catch(e){console.warn('ensureSheetTabs error:',e);}
 }
@@ -1247,9 +1392,9 @@ async function syncToSheet(){
         ['addr',DB.settings.addr||''],
         ['license',DB.settings.license||''],
         ['taxRate',String(DB.settings.taxRate||0)],
-        ['catalog',JSON.stringify(DB.settings.catalog||[])],
         ['logoFileId',DB.settings.logoFileId||'']
-      ]
+      ],
+      ServiceCatalog:DB.catalog.map(i=>[i.id,i.name,i.type,i.price,i.cat])
     };
     for(const [tab,rows] of Object.entries(writes)){
       await gapi.client.sheets.spreadsheets.values.clear({spreadsheetId:DB.settings.sheetId,range:`${tab}!A2:Z9999`});
@@ -1288,11 +1433,14 @@ async function loadFromSheet(){
     DB.activity  =parse(dataRes[5].result.values,HEADERS.ActivityLog);
     DB.sentLog   =parse(dataRes[6]?.result.values,HEADERS.SentLog)||[];
     DB.contractors=parse(dataRes[7]?.result.values,HEADERS.Contractors)||[];
+    DB.catalog    =parse(dataRes[9]?.result.values,HEADERS.ServiceCatalog).map(i=>({...i,price:+i.price||0}));
     // Load business settings from sheet (overrides localStorage so they roam across devices)
     const settingsRows=dataRes[8]?.result.values||[];
+    let settingsInSheet=false;
     if(settingsRows.length){
       const sm={};settingsRows.forEach(r=>{if(r[0])sm[r[0]]=r[1]||'';});
       if(sm.bizName!==undefined){
+        settingsInSheet=true;
         DB.settings.bizName=sm.bizName||DB.settings.bizName;
         DB.settings.yourName=sm.yourName||DB.settings.yourName;
         DB.settings.phone=sm.phone||DB.settings.phone;
@@ -1300,9 +1448,18 @@ async function loadFromSheet(){
         DB.settings.addr=sm.addr||DB.settings.addr;
         DB.settings.license=sm.license||DB.settings.license;
         DB.settings.taxRate=parseFloat(sm.taxRate)||DB.settings.taxRate||0;
-        if(sm.catalog)DB.settings.catalog=safeJSON(sm.catalog,DB.settings.catalog||[]);
         if(sm.logoFileId!==undefined)DB.settings.logoFileId=sm.logoFileId||'';
+        // Migrate old catalog blob from Settings tab into DB.catalog if ServiceCatalog tab is empty
+        if(sm.catalog){
+          const oldCatalog=safeJSON(sm.catalog,[]);
+          if(oldCatalog.length&&!DB.catalog.length) DB.catalog=oldCatalog;
+        }
         saveSettingsLocal();
+        // Update sidebar biz name now that settings have roamed in from sheet
+        const _bn=DB.settings.bizName||'AEDEXBOOKS';
+        document.getElementById('nav-biz').textContent=_bn;
+        // mob-biz removed
+        loadSettingsForm();
         // Load logo into sidebar/preview after settings sync
         if(DB.settings.logoFileId){
           getDriveImageUrl(DB.settings.logoFileId).then(updateLogoPreview).catch(()=>{});
@@ -1311,19 +1468,23 @@ async function loadFromSheet(){
     }
 
     if(needsMigration){
-      // Write new headers and migrated data back to sheet — runs once, then flag is set
-      const clientRows=DB.clients.map(c=>[c.id,c.firstName||'',c.lastName||'',c.phone,c.email,c.billingAddr,c.ref,c.notes,c.createdAt,c.updatedAt]);
-      const propRows  =DB.properties.map(p=>[p.id,p.clientId,p.address,p.type,p.tenantFirstName||'',p.tenantLastName||'',p.tenantPhone,p.tenantEmail,p.notes,p.moveInDate||'',p.createdAt,p.updatedAt]);
-      await Promise.all(['Clients','Properties'].map((tab,i)=>
-        gapi.client.sheets.spreadsheets.values.update({spreadsheetId:DB.settings.sheetId,range:`${tab}!A1`,valueInputOption:'RAW',resource:{values:[HEADERS[tab]]}})
-      ));
-      for(const [tab,rows] of [['Clients',clientRows],['Properties',propRows]]){
-        await gapi.client.sheets.spreadsheets.values.clear({spreadsheetId:DB.settings.sheetId,range:`${tab}!A2:Z9999`});
-        if(rows.length) await gapi.client.sheets.spreadsheets.values.update({spreadsheetId:DB.settings.sheetId,range:`${tab}!A2`,valueInputOption:'RAW',resource:{values:rows}});
+      // Only rewrite if headers use old format (name → firstName/lastName migration)
+      const needsClientRewrite=clientKeys.includes('name')&&!clientKeys.includes('firstName');
+      const needsPropRewrite=propKeys.includes('tenantName')&&!propKeys.includes('tenantFirstName');
+      if(needsClientRewrite||needsPropRewrite){
+        const clientRows=DB.clients.map(c=>[c.id,c.firstName||'',c.lastName||'',c.phone,c.email,c.billingAddr,c.ref,c.notes,c.createdAt,c.updatedAt]);
+        const propRows  =DB.properties.map(p=>[p.id,p.clientId,p.address,p.type,p.tenantFirstName||'',p.tenantLastName||'',p.tenantPhone,p.tenantEmail,p.notes,p.moveInDate||'',p.createdAt,p.updatedAt]);
+        await Promise.all(['Clients','Properties'].map((tab,i)=>
+          gapi.client.sheets.spreadsheets.values.update({spreadsheetId:DB.settings.sheetId,range:`${tab}!A1`,valueInputOption:'RAW',resource:{values:[HEADERS[tab]]}})
+        ));
+        for(const [tab,rows] of [['Clients',clientRows],['Properties',propRows]]){
+          await gapi.client.sheets.spreadsheets.values.clear({spreadsheetId:DB.settings.sheetId,range:`${tab}!A2:Z9999`});
+          if(rows.length) await gapi.client.sheets.spreadsheets.values.update({spreadsheetId:DB.settings.sheetId,range:`${tab}!A2`,valueInputOption:'RAW',resource:{values:rows}});
+        }
+        toast('Database updated to new format','success');
       }
       DB.settings.sheetMigrated=true;
       saveSettingsLocal();
-      toast('Database updated to new format','success');
     }
 
     // One-time: update Clients header row to include clientType + company columns
@@ -1333,11 +1494,69 @@ async function loadFromSheet(){
       saveSettingsLocal();
     }
 
-    seedTestClient();
+    seedTestClient();seedCatalog();
     saveLocal();renderAll();
     setSyncStatus('🟢 Synced '+new Date().toLocaleTimeString());
-    if(!needsMigration) toast('Data loaded from Google Sheets','success');
-  }catch(e){setSyncStatus('⚠ Load error');console.error(e);}
+    toast('Data loaded from Google Sheets','success');
+    // If Settings tab was empty but we have settings locally, push them up now
+    if(!settingsInSheet&&DB.settings.bizName&&DB.settings.bizName!=='AEDEXBOOKS'){
+      syncToSheet();
+    }
+  }catch(e){setSyncStatus('⚠ Load error');console.error(e);toast('Failed to load data: '+e.message,'error');}
+}
+
+function seedCatalog(){
+  // Idempotent — only adds items whose ID doesn't already exist in DB.catalog
+  const defaults=[
+    {id:'cat-001',name:'Smart lock installation',      type:'labor',price:65, cat:'Electrical'},
+    {id:'cat-002',name:'Smart switch installation',    type:'labor',price:40, cat:'Electrical'},
+    {id:'cat-003',name:'GFI outlet installation',      type:'labor',price:40, cat:'Electrical'},
+    {id:'cat-004',name:'Outlet covers',                type:'labor',price:15, cat:'Electrical'},
+    {id:'cat-005',name:'Lightbulb replacement',        type:'labor',price:15, cat:'Electrical'},
+    {id:'cat-006',name:'Bathroom faucet installation', type:'labor',price:65, cat:'Plumbing'},
+    {id:'cat-007',name:'Kitchen sink faucet repair',   type:'labor',price:65, cat:'Plumbing'},
+    {id:'cat-008',name:'Shower head installation',     type:'labor',price:50, cat:'Plumbing'},
+    {id:'cat-009',name:'Toilet repair',                type:'labor',price:100,cat:'Plumbing'},
+    {id:'cat-010',name:'Water leak / pressure valve',  type:'labor',price:150,cat:'Plumbing'},
+    {id:'cat-011',name:'Garbage disposal installation',type:'labor',price:100,cat:'Plumbing'},
+    {id:'cat-012',name:'Sprinkler repair',             type:'labor',price:150,cat:'Plumbing'},
+    {id:'cat-013',name:'Pipe repair',                  type:'labor',price:120,cat:'Plumbing'},
+    {id:'cat-014',name:'HVAC maintenance',             type:'labor',price:150,cat:'HVAC'},
+    {id:'cat-015',name:'AC fan replacement',           type:'labor',price:200,cat:'HVAC'},
+    {id:'cat-016',name:'AC repair',                    type:'labor',price:175,cat:'HVAC'},
+    {id:'cat-017',name:'Microwave installation',       type:'labor',price:75, cat:'Appliances'},
+    {id:'cat-018',name:'Microwave removal',            type:'labor',price:50, cat:'Appliances'},
+    {id:'cat-019',name:'Dishwasher repair',            type:'labor',price:150,cat:'Appliances'},
+    {id:'cat-020',name:'Washer machine repair',        type:'labor',price:100,cat:'Appliances'},
+    {id:'cat-021',name:'Dryer repair',                 type:'labor',price:100,cat:'Appliances'},
+    {id:'cat-022',name:'Refrigerator repair',          type:'labor',price:100,cat:'Appliances'},
+    {id:'cat-023',name:'Fix door',                     type:'labor',price:55, cat:'Carpentry'},
+    {id:'cat-024',name:'Door handle installation',     type:'labor',price:35, cat:'Carpentry'},
+    {id:'cat-025',name:'Door lock installation',       type:'labor',price:45, cat:'Carpentry'},
+    {id:'cat-026',name:'Trim installation',            type:'labor',price:65, cat:'Carpentry'},
+    {id:'cat-027',name:'Drywall patch',                type:'labor',price:90, cat:'Carpentry'},
+    {id:'cat-028',name:'Garage door repair',           type:'labor',price:150,cat:'Carpentry'},
+    {id:'cat-029',name:'Garage door trim repair',      type:'labor',price:85, cat:'Carpentry'},
+    {id:'cat-030',name:'Deck repair',                  type:'labor',price:200,cat:'Carpentry'},
+    {id:'cat-031',name:'Fence repair',                 type:'labor',price:200,cat:'Carpentry'},
+    {id:'cat-032',name:'Baseboard replacement',        type:'labor',price:80, cat:'Carpentry'},
+    {id:'cat-033',name:'Paint doors and trim',         type:'labor',price:110,cat:'Painting'},
+    {id:'cat-034',name:'Paint touch-up',               type:'labor',price:150,cat:'Painting'},
+    {id:'cat-035',name:'Full room paint',              type:'labor',price:300,cat:'Painting'},
+    {id:'cat-036',name:'Caulking',                     type:'labor',price:50, cat:'Painting'},
+    {id:'cat-037',name:'Yard maintenance / mow lawn',  type:'labor',price:100,cat:'Yard'},
+    {id:'cat-038',name:'Tree trimming',                type:'labor',price:200,cat:'Yard'},
+    {id:'cat-039',name:'Tree removal',                 type:'labor',price:500,cat:'Yard'},
+    {id:'cat-040',name:'Trash and debris removal',     type:'labor',price:150,cat:'Yard'},
+    {id:'cat-041',name:'Gutter cleaning',              type:'labor',price:100,cat:'Yard'},
+    {id:'cat-042',name:'Mirrors installation',         type:'labor',price:40, cat:'General'},
+    {id:'cat-043',name:'Smoke detector replacement',   type:'labor',price:30, cat:'General'},
+    {id:'cat-044',name:'Basketball hoop installation', type:'labor',price:45, cat:'General'},
+    {id:'cat-045',name:'Flooring installation',        type:'labor',price:500,cat:'General'},
+    {id:'cat-046',name:'Materials',                    type:'material',price:0,cat:'Materials'}
+  ];
+  const existing=new Set(DB.catalog.map(i=>i.id));
+  defaults.forEach(d=>{if(!existing.has(d.id))DB.catalog.push(d);});
 }
 
 function seedTestClient(){
@@ -1358,7 +1577,7 @@ function showSheetLink(){
 // ============================================================
 // LOCAL PERSISTENCE
 // ============================================================
-function saveLocal(){localStorage.setItem('ab_data',JSON.stringify({clients:DB.clients,properties:DB.properties,jobs:DB.jobs,docs:DB.docs,expenses:DB.expenses,activity:DB.activity,sentLog:DB.sentLog,contractors:DB.contractors}));}
+function saveLocal(){localStorage.setItem('ab_data',JSON.stringify({clients:DB.clients,properties:DB.properties,jobs:DB.jobs,docs:DB.docs,expenses:DB.expenses,activity:DB.activity,sentLog:DB.sentLog,contractors:DB.contractors,catalog:DB.catalog}));}
 function saveSettingsLocal(){localStorage.setItem('ab_settings',JSON.stringify(DB.settings));}
 function saveAndSync(){saveLocal();syncToSheet();}
 
@@ -1403,13 +1622,24 @@ function logActivity(action,recordType,recordId,detail){
 // ============================================================
 // NAVIGATION
 // ============================================================
+const PAGE_TITLES={dashboard:'Dashboard',pipeline:'Pipeline',clients:'Clients',jobs:'Jobs',documents:'Documents',expenses:'Expenses',contractors:'Contractors',activity:'Activity',settings:'Settings'};
+const MOB_TABS=['dashboard','jobs','clients','documents'];
+
 function goto(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.mob-tab').forEach(t=>t.classList.remove('active'));
   const pg=document.getElementById('page-'+page);
   const nv=document.getElementById('nav-'+page);
+  const mt=document.getElementById('mobt-'+page);
   if(pg)pg.classList.add('active');
   if(nv)nv.classList.add('active');
+  // Highlight matching tab; if not a primary tab, highlight More
+  if(mt) mt.classList.add('active');
+  else if(!MOB_TABS.includes(page)){const more=document.getElementById('mobt-more');if(more)more.classList.add('active');}
+  // Update mobile header title
+  const titleEl=document.getElementById('mob-page-title');
+  if(titleEl) titleEl.textContent=PAGE_TITLES[page]||page;
   if(page==='dashboard')renderDashboard();
   if(page==='pipeline')renderPipeline();
   if(page==='clients')renderClients();
@@ -1420,6 +1650,17 @@ function goto(page){
   if(page==='activity')renderActivity();
   if(page==='settings'){loadSettingsForm();showSheetLink();renderCatalogSettings();}
   closeSidebar();
+}
+
+let _drawerOpenedAt=0;
+function openMoreDrawer(){
+  _drawerOpenedAt=Date.now();
+  document.getElementById('mob-more-drawer').classList.add('open');
+  document.getElementById('mob-more-overlay').classList.add('open');
+}
+function closeMoreDrawer(){
+  document.getElementById('mob-more-drawer').classList.remove('open');
+  document.getElementById('mob-more-overlay').classList.remove('open');
 }
 
 function renderAll(){renderDashboard();renderPipeline();renderClients();renderJobs();renderDocs();renderExpenses();renderContractors();renderActivity();}
@@ -1473,24 +1714,39 @@ function renderDashboard(){
     <div class="metric"><div class="met-label">Net Profit</div><div class="met-val ${profit>=0?'green':'red'}">${fmt(profit)}</div></div>`;
 
   // --- Recent jobs ---
-  const recentJobs=[...DB.jobs].sort((a,b)=>b.updatedAt?.localeCompare(a.updatedAt||'')||0).slice(0,6);
-  document.getElementById('dash-jobs').innerHTML=recentJobs.length?`<table><thead><tr><th>Client</th><th>Property</th><th>Job</th><th>Status</th></tr></thead><tbody>${recentJobs.map(j=>`<tr><td>${clientFullName(getClient(j.clientId))}</td><td style="color:var(--text3);font-size:12px">${getProperty(j.propertyId).address||'—'}</td><td>${j.title}</td><td><span class="badge ${j.status}">${STAGE_LABEL[j.status]||j.status}</span></td></tr>`).join('')}</tbody></table>`:'<div class="empty"><div class="empty-ico">🔧</div>No jobs yet</div>';
+  const recentJobs=[...DB.jobs].filter(j=>!j.archived).sort((a,b)=>b.updatedAt?.localeCompare(a.updatedAt||'')||0).slice(0,6);
+  document.getElementById('dash-jobs').innerHTML=recentJobs.length?recentJobs.map(j=>`
+    <div class="dash-job-item" onclick="goto('jobs');editJob('${j.id}')" style="cursor:pointer">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${j.title}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--text3)">${clientFullName(getClient(j.clientId))}</span>
+          <span class="badge ${j.status}" style="font-size:10px">${STAGE_LABEL[j.status]||j.status}</span>
+        </div>
+      </div>
+      <span style="color:var(--text3);font-size:16px;flex-shrink:0;margin-left:6px">›</span>
+    </div>`).join('')+`<div style="text-align:center;padding-top:10px;border-top:1px solid var(--border);margin-top:4px"><button class="btn sm" onclick="goto('jobs')" style="width:100%">See all jobs</button></div>`
+    :'<div class="empty"><div class="empty-ico">🔧</div>No jobs yet</div>';
 
   // --- Unpaid invoices ---
   const unpaid=unpaidInvs.slice(0,6);
-  document.getElementById('dash-unpaid').innerHTML=unpaid.length?`<table><thead><tr><th>Client</th><th>Total</th><th>Due</th><th></th></tr></thead><tbody>${unpaid.map(d=>{
+  document.getElementById('dash-unpaid').innerHTML=unpaid.length?unpaid.map(d=>{
     const wasSent=DB.sentLog.some(s=>s.docId===d.id);
     const overdue=d.dueDate&&new Date(d.dueDate)<new Date();
-    return`<tr>
-      <td>${clientFullName(getClient(d.clientId))}</td>
-      <td><strong>${fmt(d.total)}</strong></td>
-      <td${overdue?' style="color:var(--red);font-weight:600"':''}>${fmtDate(d.dueDate)||'—'}${overdue?' ⚠':''}</td>
-      <td><div class="btn-row">
-        ${wasSent?`<button class="btn sm" onclick="openReminderModal('${d.id}')">Remind</button>`:''}
-        <button class="btn sm success" onclick="markPaid('${d.id}')">Mark paid</button>
-      </div></td>
-    </tr>`;
-  }).join('')}</tbody></table>`:'<div class="empty"><div class="empty-ico">✓</div>All invoices paid!</div>';
+    return`<div class="dash-unpaid-item">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${clientFullName(getClient(d.clientId))}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
+          <strong style="font-family:'DM Mono',monospace;font-size:12px">${fmt(d.total)}</strong>
+          <span style="font-size:11px;color:${overdue?'var(--red)':'var(--text3)'}">${fmtDate(d.dueDate)||'No due date'}${overdue?' ⚠':''}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;flex-shrink:0;margin-left:8px">
+        <button class="btn sm success" onclick="event.stopPropagation();markPaid('${d.id}')">Paid</button>
+        ${wasSent?`<button class="btn sm" onclick="event.stopPropagation();openReminderModal('${d.id}')">Remind</button>`:''}
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty"><div class="empty-ico">✓</div>All invoices paid!</div>';
 
   // --- Revenue by client ---
   const revMap={};
@@ -1519,16 +1775,26 @@ function renderDashboard(){
     const mExp=DB.expenses.filter(e=>e.date?.startsWith(pfx)).reduce((a,e)=>a+e.amount,0);
     return{m,mIncome,mExp,mProfit:mIncome-mExp,has:mIncome||mExp};
   }).filter(r=>r.has);
-  document.getElementById('dash-pnl').innerHTML=monthRows.length
-    ?`<table><thead><tr><th>Month</th><th>Income</th><th>Expenses</th><th>Profit</th></tr></thead><tbody>${
-      monthRows.map(r=>`<tr>
-        <td style="font-weight:500">${r.m} ${pnlYear}</td>
-        <td style="color:var(--accent)">${fmt(r.mIncome)}</td>
-        <td style="color:var(--red)">${fmt(r.mExp)}</td>
-        <td style="font-weight:600;color:${r.mProfit>=0?'var(--accent)':'var(--red)'}">${fmt(r.mProfit)}</td>
-      </tr>`).join('')
-    }</tbody></table>`
-    :`<div class="empty">No data for ${pnlYear}</div>`;
+  if(!monthRows.length){document.getElementById('dash-pnl').innerHTML=`<div class="empty">No data for ${pnlYear}</div>`;return;}
+  // Desktop: full 4-col table; Mobile: compact rows with bar indicator
+  const desktopPnl=`<table class="hide-mobile"><thead><tr><th>Month</th><th>Income</th><th>Expenses</th><th>Profit</th></tr></thead><tbody>${
+    monthRows.map(r=>`<tr>
+      <td style="font-weight:500">${r.m} ${pnlYear}</td>
+      <td style="color:var(--accent)">${fmt(r.mIncome)}</td>
+      <td style="color:var(--red)">${fmt(r.mExp)}</td>
+      <td style="font-weight:600;color:${r.mProfit>=0?'var(--accent)':'var(--red)'}">${fmt(r.mProfit)}</td>
+    </tr>`).join('')
+  }</tbody></table>`;
+  const maxAbs=Math.max(...monthRows.map(r=>Math.abs(r.mProfit)),1);
+  const mobilePnl=`<div class="show-mobile-only">${monthRows.map(r=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px;font-weight:500;min-width:52px">${r.m}</span>
+      <div style="flex:1;margin:0 10px;background:var(--border);border-radius:3px;height:5px;overflow:hidden">
+        <div style="height:5px;border-radius:3px;width:${Math.round(Math.abs(r.mProfit)/maxAbs*100)}%;background:${r.mProfit>=0?'var(--accent)':'var(--red)'}"></div>
+      </div>
+      <span style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:${r.mProfit>=0?'var(--accent)':'var(--red)'};">${r.mProfit>=0?'+':''}${fmt(r.mProfit)}</span>
+    </div>`).join('')}</div>`;
+  document.getElementById('dash-pnl').innerHTML=desktopPnl+mobilePnl;
 }
 
 function downloadTaxReport(){
@@ -1730,7 +1996,7 @@ function renderClients(){
             <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
               ${clientFullName(c)}
               ${c.archived?' <span class="badge" style="font-size:10px;background:#e0e0e0;color:#666">Archived</span>':''}
-              <span class="badge" style="font-size:10px;background:${tc.bg};color:${tc.color}">${tc.label}</span>
+              <span class="badge hide-mobile" style="font-size:10px;background:${tc.bg};color:${tc.color}">${tc.label}</span>
             </div>
             ${c.company?.trim()&&clientContactName(c)?`<div style="font-size:12px;color:var(--text2)">${clientContactName(c)}</div>`:''}
             <div style="font-size:12px;color:var(--text3)">${[c.phone,c.email].filter(Boolean).join(' · ')}</div>
@@ -1979,7 +2245,53 @@ function renderJobs(){
 
   if(search) jobs=jobs.filter(j=>j.title?.toLowerCase().includes(search)||clientFullName(getClient(j.clientId)).toLowerCase().includes(search));
   const stageLabel=STAGE_LABEL;
-  document.getElementById('jobs-table').innerHTML=jobs.length?`<table><thead><tr><th>Client</th><th>Property</th><th>Job</th><th>Status</th><th>Contractors</th><th>Value</th><th>Start</th><th>Updated</th><th></th></tr></thead><tbody>${jobs.map(j=>{
+  const jobDocLinks=(j)=>{
+    let docs=DB.docs.filter(d=>!d.archived&&d.jobId===j.id);
+    if(!docs.length){
+      let loose=DB.docs.filter(d=>!d.archived&&d.clientId===j.clientId&&d.propertyId===j.propertyId);
+      if(!loose.length) loose=DB.docs.filter(d=>!d.archived&&d.clientId===j.clientId);
+      loose.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      const est=loose.find(d=>d.type==='estimate');
+      const inv=loose.find(d=>d.type==='invoice');
+      docs=[est,inv].filter(Boolean);
+    }
+    return docs.map(d=>`<button class="btn sm${d.type==='invoice'?' primary':''}" onclick="viewDoc('${d.id}')">${d.type==='invoice'?'Inv':'Est'} #${d.number||'—'}</button>`).join('');
+  };
+
+  if(!jobs.length){
+    document.getElementById('jobs-table').innerHTML=jobPastDueFilter
+      ?'<div class="empty"><div class="empty-ico">✓</div>No past due jobs</div>'
+      :'<div class="empty"><div class="empty-ico">🔧</div>No jobs yet</div>';
+    return;
+  }
+
+  // Mobile cards
+  const mobileCards=jobs.map(j=>{
+    const overdueDays=getJobOverdueDays(j);
+    const prop=getProperty(j.propertyId);
+    return`<div class="job-card-m${j.archived?' archived':''}">
+      <div class="job-card-m-top" onclick="editJob('${j.id}')">
+        <div style="flex:1;min-width:0">
+          <div class="job-card-m-client">${clientFullName(getClient(j.clientId))}</div>
+          <div class="job-card-m-title">${j.title}${j.photos?.length?` <span style="font-size:11px;color:var(--text3)">📷${j.photos.length}</span>`:''}</div>
+        </div>
+        <span class="badge ${j.status}" style="flex-shrink:0">${stageLabel[j.status]||j.status}</span>
+      </div>
+      <div class="job-card-m-meta" onclick="editJob('${j.id}')">
+        <span>${prop.address||'—'}</span>
+        <span class="job-card-m-val">${j.value?fmt(j.value):''}</span>
+      </div>
+      ${overdueDays!==null?`<div style="margin-bottom:8px"><span class="badge" style="font-size:11px;background:var(--red-light);color:var(--red)">⚠ ${overdueDays}d overdue</span></div>`:''}
+      <div class="job-card-m-actions">
+        <button class="btn sm" onclick="editJob('${j.id}')">Edit</button>
+        ${jobDocLinks(j)}
+        <button class="btn sm success" onclick="newDocForJob('${j.id}')">+ Doc</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Desktop table
+  const desktopTable=`<table><thead><tr><th>Client</th><th>Property</th><th>Job</th><th>Status</th><th>Contractors</th><th>Value</th><th>Start</th><th>Updated</th><th></th></tr></thead><tbody>${jobs.map(j=>{
     const ctrs=(j.contractorIds||[]).map(cid=>{const c=DB.contractors.find(x=>x.id===cid);return c?c.name:null;}).filter(Boolean);
     const overdueDays=getJobOverdueDays(j);
     return`<tr${j.archived?' style="opacity:.5"':''}>
@@ -1991,27 +2303,11 @@ function renderJobs(){
     <td style="font-family:'DM Mono',monospace">${fmt(j.value)}</td>
     <td class="ts">${fmtDate(j.startDate)}</td>
     <td class="ts">${fmtTs(j.updatedAt)}</td>
-    <td><div class="btn-row">
-      <button class="btn sm" onclick="editJob('${j.id}')">Edit</button>
-      ${(()=>{
-        // Docs explicitly linked by jobId (new workflow)
-        let docs=DB.docs.filter(d=>!d.archived&&d.jobId===j.id);
-        // Fallback for docs not linked by jobId (legacy data or orphaned jobId): most recent est + inv for client+property
-        if(!docs.length){
-          // Try client+property first, then client-only if that finds nothing
-          let loose=DB.docs.filter(d=>!d.archived&&d.clientId===j.clientId&&d.propertyId===j.propertyId);
-          if(!loose.length) loose=DB.docs.filter(d=>!d.archived&&d.clientId===j.clientId);
-          loose.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-          const est=loose.find(d=>d.type==='estimate');
-          const inv=loose.find(d=>d.type==='invoice');
-          docs=[est,inv].filter(Boolean);
-        }
-        return docs.map(d=>`<button class="btn sm${d.type==='invoice'?' primary':''}" onclick="viewDoc('${d.id}')" title="View ${d.type} #${d.number||'—'}">${d.type==='invoice'?'Inv':'Est'} #${d.number||'—'}</button>`).join('');
-      })()}
-      <button class="btn sm success" onclick="newDocForJob('${j.id}')">+ Doc</button>
-    </div></td>
-  </tr>`;}).join('')}</tbody></table>`
-  :(jobPastDueFilter?'<div class="empty"><div class="empty-ico">✓</div>No past due jobs</div>':'<div class="empty"><div class="empty-ico">🔧</div>No jobs yet</div>');
+    <td><div class="btn-row"><button class="btn sm" onclick="editJob('${j.id}')">Edit</button>${jobDocLinks(j)}<button class="btn sm success" onclick="newDocForJob('${j.id}')">+ Doc</button></div></td>
+  </tr>`;}).join('')}</tbody></table>`;
+
+  document.getElementById('jobs-table').innerHTML=
+    `<div class="job-cards-m">${mobileCards}</div><div class="job-table-d">${desktopTable}</div>`;
 }
 
 function filterJobs(v){jobSearch=v;renderJobs();}
@@ -2219,6 +2515,41 @@ function renderDocs(){
   if(docFilter==='estimate') docs=docs.filter(d=>d.type==='estimate');
   else if(docFilter==='invoice') docs=docs.filter(d=>d.type==='invoice');
   else if(docFilter==='unpaid') docs=docs.filter(d=>d.type==='invoice'&&!d.paid);
+
+  const empty='<div class="empty"><div class="empty-ico">📄</div>No documents yet</div>';
+
+  // Mobile cards
+  document.getElementById('docs-cards-m').innerHTML=docs.length?docs.map(d=>{
+    const client=clientFullName(getClient(d.clientId));
+    const isInv=d.type==='invoice';
+    const converted=isInv?false:DB.docs.some(x=>x.estRef===d.id);
+    const wasSent=DB.sentLog.some(s=>s.docId===d.id);
+    return`<div class="doc-card-m${d.archived?' archived':''}">
+      <div class="doc-card-m-top">
+        <div style="flex:1;min-width:0">
+          <div class="doc-card-m-client">${client}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">${getProperty(d.propertyId).address||''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+          <span class="badge ${d.type}">${d.type}</span>
+          ${isInv?`<span class="badge ${d.paid?'paid':'unpaid'}">${d.paid?'Paid':'Unpaid'}</span>`:''}
+        </div>
+      </div>
+      <div class="doc-card-m-meta">
+        <span>${fmtDate(d.date)}${d.number?` · #${d.number}`:''}</span>
+        <span class="doc-card-m-amount">${fmt(d.total)}</span>
+      </div>
+      <div class="doc-card-m-actions">
+        <button class="btn sm" onclick="editDoc('${d.id}')">Edit</button>
+        <button class="btn sm" onclick="viewDoc('${d.id}')">View</button>
+        ${!isInv?(converted?'<span class="badge paid" style="font-size:11px">Converted ✓</span>':`<button class="btn sm success" onclick="quickConvert('${d.id}')">→ Invoice</button>`):''}
+        ${isInv&&!d.paid?`<button class="btn sm success" onclick="markPaid('${d.id}')">Mark paid</button>`:''}
+        ${isInv&&!d.paid&&wasSent?`<button class="btn sm" onclick="openReminderModal('${d.id}')">Remind</button>`:''}
+      </div>
+    </div>`;
+  }).join(''):empty;
+
+  // Desktop table
   document.getElementById('docs-table').innerHTML=docs.length?`<table><thead><tr><th>Type</th><th>Client</th><th>Property</th><th>Date</th><th>Total</th><th>Payment</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody>${docs.map(d=>`<tr${d.archived?' style="opacity:.5"':''}>
     <td><span class="badge ${d.type}">${d.type}</span>${d.archived?' <span class="badge" style="font-size:10px;background:#e0e0e0;color:#666">Archived</span>':''}</td>
     <td>${clientFullName(getClient(d.clientId))}</td>
@@ -2235,7 +2566,7 @@ function renderDocs(){
       ${d.type==='invoice'&&!d.paid?`<button class="btn sm success" onclick="markPaid('${d.id}')">Mark paid</button>`:''}
       ${d.type==='invoice'&&!d.paid&&DB.sentLog.some(s=>s.docId===d.id)?`<button class="btn sm" onclick="openReminderModal('${d.id}')">Send Reminder</button>`:''}
     </div></td>
-  </tr>`).join('')}</tbody></table>`:'<div class="empty"><div class="empty-ico">📄</div>No documents yet</div>';
+  </tr>`).join('')}</tbody></table>`:empty;
 }
 
 function filterDocs(f,el){docFilter=f;document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderDocs();}
@@ -2315,10 +2646,8 @@ function quickConvert(id){
   document.getElementById('dm-notes').value=d.notes||'';
   document.getElementById('dm-tax').value=d.taxRate||0;
   document.getElementById('dm-payment').value=d.paymentMethod||'';
-  setPaymentTerms(d.paymentTerms||'Net 30');
-  // default due date: today + 30 days
-  const due=new Date();due.setDate(due.getDate()+30);
-  document.getElementById('dm-due').value=due.toISOString().split('T')[0];
+  setPaymentTerms(d.paymentTerms||'');
+  document.getElementById('dm-due').value=d.dueDate||'';
   docLineItems=JSON.parse(JSON.stringify(d.lineItems||[]));
   renderLineItems();
 }
@@ -2334,9 +2663,8 @@ function convertFromEstimate(id){
   document.getElementById('dm-notes').value=d.notes||'';
   document.getElementById('dm-tax').value=d.taxRate||0;
   document.getElementById('dm-payment').value=d.paymentMethod||'';
-  setPaymentTerms(d.paymentTerms||'Net 30');
-  const due=new Date();due.setDate(due.getDate()+30);
-  document.getElementById('dm-due').value=due.toISOString().split('T')[0];
+  setPaymentTerms(d.paymentTerms||'');
+  document.getElementById('dm-due').value=d.dueDate||'';
   docLineItems=JSON.parse(JSON.stringify(d.lineItems||[]));
   renderLineItems();
 }
@@ -2564,8 +2892,7 @@ ${s.logoFileId&&_blobCache[s.logoFileId] ? '<img src="'+_blobCache[s.logoFileId]
       </div>
       <div style="font-size:12px;line-height:1.8;text-align:right;min-width:160px;margin-top:22px">
         <div><span style="color:#999">Date:</span> <strong>${fmtDate(d.date)||'—'}</strong></div>
-        ${d.dueDate?`<div><span style="color:#999">Due:</span> <strong>${fmtDate(d.dueDate)}</strong></div>`:''}
-        ${d.paymentTerms?`<div><span style="color:#999">Terms:</span> <strong>${d.paymentTerms}</strong></div>`:''}
+        ${!isEst&&d.dueDate?`<div><span style="color:#999">Due:</span> <strong>${fmtDate(d.dueDate)}</strong></div>`:!isEst&&d.paymentTerms?`<div><span style="color:#999">Terms:</span> <strong>${d.paymentTerms}</strong></div>`:''}
         <div style="margin-top:4px;color:#555">${s.yourName||'Levi'}${s.phone?' · '+s.phone:''}</div>
         ${s.license?`<div style="color:#555">Lic# ${s.license}</div>`:''}
       </div>
@@ -2589,9 +2916,7 @@ ${s.logoFileId&&_blobCache[s.logoFileId] ? '<img src="'+_blobCache[s.logoFileId]
       <div style="display:flex;justify-content:space-between;padding:8px 14px;font-size:12px;color:#555;background:#fafafa">
         <span>Subtotal</span><span style="font-family:'DM Sans',sans-serif;font-variant-numeric:tabular-nums;">${fmt(d.subtotal)}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;padding:8px 14px;font-size:12px;color:#555;background:#fafafa;border-top:1px solid #eee">
-        <span>Tax (${d.taxRate||0}%)</span><span style="font-family:'DM Sans',sans-serif;font-variant-numeric:tabular-nums;">${fmt(d.taxAmt||0)}</span>
-      </div>
+      ${(d.taxRate&&d.taxAmt)?`<div style="display:flex;justify-content:space-between;padding:8px 14px;font-size:12px;color:#555;background:#fafafa;border-top:1px solid #eee"><span>Tax (${d.taxRate}%)</span><span style="font-family:'DM Sans',sans-serif;font-variant-numeric:tabular-nums;">${fmt(d.taxAmt)}</span></div>`:''}
       <div style="display:flex;justify-content:space-between;padding:10px 14px;font-size:13px;font-weight:700;color:#fff;background:#222">
         <span>TOTAL</span><span style="font-family:'DM Sans',sans-serif;font-variant-numeric:tabular-nums;">${fmt(d.total)}</span>
       </div>
@@ -3204,26 +3529,30 @@ function renderExpenses(){
       <td style="font-size:12px;color:var(--text2)">${job?job.title:'—'}</td>
       <td><strong style="font-family:'DM Mono',monospace">${fmt(e.amount)}</strong></td>
       <td class="ts">${fmtTs(e.createdAt)}</td>
-      <td><button class="btn sm danger" onclick="deleteExpense('${e.id}')">Delete</button></td>
+      <td style="white-space:nowrap"><button class="btn sm" onclick="openExpenseModal('${e.id}')">Edit</button> <button class="btn sm danger" onclick="deleteExpense('${e.id}')">Delete</button></td>
     </tr>`;
   }).join('')}</tbody></table>`:'<div class="empty"><div class="empty-ico">💰</div>No expenses logged yet</div>';
 }
 
-function openExpenseModal(){
-  _expenseReceipt=null;
-  document.getElementById('em-date').value=today();
-  document.getElementById('em-amount').value='';
-  document.getElementById('em-desc').value='';
-  document.getElementById('em-cat').value='Materials & Supplies';
-  document.getElementById('em-job').innerHTML='<option value="">— none —</option>'+DB.jobs.filter(j=>!j.archived).map(j=>`<option value="${j.id}">${clientFullName(getClient(j.clientId))}: ${j.title}</option>`).join('');
+function openExpenseModal(id=''){
+  _editingExpenseId=id||null;
+  const exp=id?DB.expenses.find(e=>e.id===id):null;
+  _expenseReceipt=exp&&exp.receiptFileId?{fileId:exp.receiptFileId,name:exp.receiptFileName,webViewLink:exp.receiptWebViewLink}:null;
+  document.getElementById('em-title').textContent=exp?'Edit Expense':'Log Expense';
+  document.getElementById('em-save-btn').textContent=exp?'Save changes':'Save expense';
+  document.getElementById('em-delete-btn').style.display=exp?'inline-flex':'none';
+  document.getElementById('em-date').value=exp?exp.date:today();
+  document.getElementById('em-amount').value=exp?exp.amount:'';
+  document.getElementById('em-desc').value=exp?exp.desc:'';
+  document.getElementById('em-cat').value=exp?exp.category:'Materials & Supplies';
+  document.getElementById('em-job').innerHTML='<option value="">— none —</option>'+DB.jobs.filter(j=>!j.archived).map(j=>`<option value="${j.id}"${j.id===(exp?.jobId||'')?'selected':''}>${clientFullName(getClient(j.clientId))}: ${j.title}</option>`).join('');
   renderExpenseReceiptDisplay();
   document.getElementById('expense-modal').classList.add('open');
 }
 
 function saveExpense(){
   const ts=now();
-  const exp={
-    id:uid(),
+  const fields={
     date:document.getElementById('em-date').value,
     amount:parseFloat(document.getElementById('em-amount').value)||0,
     desc:document.getElementById('em-desc').value,
@@ -3232,11 +3561,28 @@ function saveExpense(){
     receiptFileId:_expenseReceipt?.fileId||'',
     receiptFileName:_expenseReceipt?.name||'',
     receiptWebViewLink:_expenseReceipt?.webViewLink||'',
-    createdAt:ts,updatedAt:ts
+    updatedAt:ts
   };
-  DB.expenses.push(exp);
-  logActivity('Created','Expense',exp.id,`${fmt(exp.amount)} — ${exp.category}`);
-  saveAndSync();renderExpenses();closeModal('expense-modal');toast('Expense logged','success');
+  if(_editingExpenseId){
+    const idx=DB.expenses.findIndex(e=>e.id===_editingExpenseId);
+    if(idx!==-1){DB.expenses[idx]=Object.assign({},DB.expenses[idx],fields);}
+    logActivity('Updated','Expense',_editingExpenseId,`${fmt(fields.amount)} — ${fields.category}`);
+    saveAndSync();renderExpenses();closeModal('expense-modal');toast('Expense updated','success');
+  } else {
+    const exp=Object.assign({id:uid(),createdAt:ts},fields);
+    DB.expenses.push(exp);
+    logActivity('Created','Expense',exp.id,`${fmt(exp.amount)} — ${exp.category}`);
+    saveAndSync();renderExpenses();closeModal('expense-modal');toast('Expense logged','success');
+  }
+}
+
+function deleteExpenseFromModal(){
+  if(!_editingExpenseId)return;
+  if(!confirm('Delete this expense?'))return;
+  const e=DB.expenses.find(x=>x.id===_editingExpenseId);
+  logActivity('Deleted','Expense',_editingExpenseId,e?`${fmt(e.amount)} — ${e.category}`:'');
+  DB.expenses=DB.expenses.filter(x=>x.id!==_editingExpenseId);
+  saveAndSync();renderExpenses();closeModal('expense-modal');toast('Expense deleted');
 }
 
 function deleteExpense(id){
@@ -3384,7 +3730,7 @@ function saveSettings(){
   saveSettingsLocal();
   syncToSheet();
   document.getElementById('nav-biz').textContent=DB.settings.bizName;
-  document.getElementById('mob-biz').textContent=DB.settings.bizName||'AEDEXBOOKS';
+  // mob-biz removed
   toast('Settings saved','success');
 }
 
@@ -3591,7 +3937,7 @@ function parseImportClients(data,get){
 }
 
 function parseImportProperties(data,get){
-  const existingPairs=new Set(DB.properties.map(p=>(p.clientId+'|'+p.address.toLowerCase())));
+  const existingPairs=new Set(DB.properties.map(p=>(p.clientId+'|'+(p.address||'').toLowerCase())));
   return data.map(r=>{
     const clientEmail=get(r,'clientemail'),address=get(r,'address')||get(r,'propertyaddress');
     let status='new',statusNote='',clientId='',_clientName='';
@@ -3622,7 +3968,7 @@ function parseImportJobs(data,get){
       clientId=client.id;_clientName=clientFullName(client);
       if(existingTitles.has(clientId+'|'+title.toLowerCase())){status='dupe';statusNote='Already exists';}
       if(propertyAddr){
-        const prop=DB.properties.find(p=>p.clientId===clientId&&p.address.toLowerCase().includes(propertyAddr.toLowerCase()));
+        const prop=DB.properties.find(p=>p.clientId===clientId&&(p.address||'').toLowerCase().includes(propertyAddr.toLowerCase()));
         if(prop){propertyId=prop.id;_propertyAddr=prop.address;}
       }
     }
@@ -3648,7 +3994,7 @@ function parseImportDocuments(data,get){
       else{
         clientId=client.id;_clientName=clientFullName(client);
         if(propertyAddr){
-          const prop=DB.properties.find(p=>p.clientId===clientId&&p.address.toLowerCase().includes(propertyAddr.toLowerCase()));
+          const prop=DB.properties.find(p=>p.clientId===clientId&&(p.address||'').toLowerCase().includes(propertyAddr.toLowerCase()));
           if(prop)propertyId=prop.id;
         }
       }
@@ -3771,10 +4117,7 @@ const CAT_TEXT={Electrical:'#92400E',Plumbing:'#1E40AF',HVAC:'#065F46',Appliance
 let currentCatalogId=null;
 
 function getCatalog(){
-  if(!DB.settings.catalog||!DB.settings.catalog.length){
-    DB.settings.catalog=[];
-  }
-  return DB.settings.catalog;
+  return DB.catalog;
 }
 
 function toggleCatalogPicker(){
@@ -3851,10 +4194,9 @@ function saveCatalogItem(){
     price:parseFloat(document.getElementById('catm-price').value)||0,
     cat:document.getElementById('catm-cat').value
   };
-  if(!DB.settings.catalog) DB.settings.catalog=[];
-  if(currentCatalogId) DB.settings.catalog=DB.settings.catalog.map(i=>i.id===currentCatalogId?item:i);
-  else DB.settings.catalog.push(item);
-  saveSettingsLocal();
+  if(currentCatalogId) DB.catalog=DB.catalog.map(i=>i.id===currentCatalogId?item:i);
+  else DB.catalog.push(item);
+  saveAndSync();
   renderCatalogSettings();
   closeModal('catalog-modal');
   toast(currentCatalogId?'Service updated':'Service added','success');
@@ -3862,8 +4204,8 @@ function saveCatalogItem(){
 
 function deleteCatalogItem(){
   if(!confirm('Delete this service from the catalog?'))return;
-  DB.settings.catalog=DB.settings.catalog.filter(i=>i.id!==currentCatalogId);
-  saveSettingsLocal();
+  DB.catalog=DB.catalog.filter(i=>i.id!==currentCatalogId);
+  saveAndSync();
   renderCatalogSettings();
   closeModal('catalog-modal');
   toast('Service deleted');
