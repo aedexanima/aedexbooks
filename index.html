@@ -2368,7 +2368,11 @@ function previewDoc(){
 
 function viewDoc(id){const d=DB.docs.find(x=>x.id===id);if(d)showDocPreview(d);}
 
-function showDocPreview(d){
+async function showDocPreview(d){
+  // Ensure logo is in blob cache before rendering so it appears on first open
+  if(DB.settings.logoFileId&&!_blobCache[DB.settings.logoFileId]){
+    try{await getDriveImageUrl(DB.settings.logoFileId);}catch(e){}
+  }
   currentPreviewDoc=d;
   const s=DB.settings;const c=getClient(d.clientId);const prop=getProperty(d.propertyId);
   const isEst=d.type==='estimate';
@@ -2496,14 +2500,8 @@ async function getDocFolder(type){
   const folderName=type==='invoice'?'Invoices':'Estimates';
   const settingKey=type==='invoice'?'invFolderId':'estFolderId';
   if(DB.settings[settingKey]) return DB.settings[settingKey];
-  const aedex=await findDriveFolder(bizRootName());
-  let folderId;
-  if(aedex){
-    folderId=await getOrCreateDriveFolder(folderName,aedex.id);
-  } else {
-    // Fall back to creating at Drive root
-    folderId=await getOrCreateDriveFolder(folderName);
-  }
+  const rootId=await getOrCreateBizRoot();
+  const folderId=await getOrCreateDriveFolder(folderName,rootId);
   DB.settings[settingKey]=folderId;
   saveSettingsLocal();
   return folderId;
@@ -2520,8 +2518,8 @@ function _driveSlug(s,max){return(s||'').replace(/[/\\:*?"<>|]/g,'').trim().slic
 
 async function getAEDEXClientsRoot(){
   if(DB.settings.clientsFolderId) return DB.settings.clientsFolderId;
-  const aedex=await findDriveFolder(bizRootName());
-  const id=await getOrCreateDriveFolder('Clients',aedex?.id||null);
+  const rootId=await getOrCreateBizRoot();
+  const id=await getOrCreateDriveFolder('Clients',rootId);
   DB.settings.clientsFolderId=id;saveSettingsLocal();
   return id;
 }
@@ -3226,7 +3224,12 @@ async function removeLogo(){
 }
 
 function saveSettings(){
-  DB.settings.bizName=document.getElementById('set-biz').value||'AEDEXBOOKS';
+  const newBizName=document.getElementById('set-biz').value||'AEDEXBOOKS';
+  if(newBizName!==DB.settings.bizName){
+    // Invalidate cached Drive folder IDs so they get recreated under the new name
+    DB.settings.estFolderId='';DB.settings.invFolderId='';DB.settings.clientsFolderId='';
+  }
+  DB.settings.bizName=newBizName;
   DB.settings.yourName=document.getElementById('set-name').value;
   DB.settings.phone=document.getElementById('set-phone').value;
   DB.settings.email=document.getElementById('set-email').value;
