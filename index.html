@@ -1112,7 +1112,7 @@ async function onSignedIn(){
 
   // Allowed — proceed
   document.getElementById('gate-screen').style.display='none';
-  if(!DB.settings.sheetId) createSheet();
+  if(!DB.settings.sheetId) findOrCreateSheet();
   else loadFromSheet();
 }
 
@@ -1149,6 +1149,27 @@ const HEADERS={
   Contractors:['id','name','trade','phone','email','notes','createdAt','updatedAt'],
   Settings:['key','value']
 };
+
+async function findOrCreateSheet(){
+  setSyncStatus('🔍 Looking for your data...');
+  try{
+    // Search Drive for an existing AEDEXBOOKS sheet
+    const q=`name='AEDEXBOOKS — Business Data' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`;
+    const r=await driveRequest('GET',`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc&pageSize=1`);
+    const found=r.files?.[0];
+    if(found){
+      DB.settings.sheetId=found.id;
+      saveSettingsLocal();
+      toast('Found your existing data — loading...','success');
+      loadFromSheet();
+    } else {
+      createSheet();
+    }
+  }catch(e){
+    console.warn('Sheet search failed, creating new:',e);
+    createSheet();
+  }
+}
 
 async function createSheet(){
   setSyncStatus('⏳ Creating sheet...');
