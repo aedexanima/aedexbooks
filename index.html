@@ -1416,7 +1416,7 @@ function downloadTaxReport(){
   const blank=()=>'\n';
 
   let csv='';
-  csv+=row(`AEDEX ANIMA LLC — Tax Report ${label}`);
+  csv+=row(`${DB.settings.bizName||'AEDEXBOOKS'} — Tax Report ${label}`);
   csv+=row('Schedule C — Profit or Loss from Business');
   csv+=blank();
 
@@ -2384,15 +2384,15 @@ function showDocPreview(d){
   let rowsHtml='';
   if(isEst){rowsHtml=renderRows(d.lineItems);}
   else{if(laborItems.length)rowsHtml+=renderRows(laborItems);if(matItems.length)rowsHtml+=renderRows(matItems);if(otherItems.length)rowsHtml+=renderRows(otherItems);}
-  const payLine=s.phone?`Zelle payments can be sent to ${s.phone} (${s.bizName||'AEDEX ANIMA LLC'})`:'';
+  const payLine=s.phone?`Zelle payments can be sent to ${s.phone} (${s.bizName||'AEDEXBOOKS'})`:'';
   document.getElementById('preview-content').innerHTML=`
   <div style="font-family:'DM Sans',sans-serif;max-width:620px;margin:0 auto;background:#fff;padding:36px 40px 32px">
 
     <!-- HEADER -->
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
       <div>
-${s.logoFileId&&_blobCache[s.logoFileId] ? '<img src="'+_blobCache[s.logoFileId]+'" style="height:52px;width:auto">' : '<div style="font-size:22px;font-weight:700;letter-spacing:-0.5px;color:#2D6A4F">'+(s.bizName||'AEDEX ANIMA LLC').split(' ')[0]+'</div>'}
-        <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:#555;text-transform:uppercase;margin-top:6px">${s.bizName||'AEDEX ANIMA LLC'}</div>
+${s.logoFileId&&_blobCache[s.logoFileId] ? '<img src="'+_blobCache[s.logoFileId]+'" style="height:52px;width:auto">' : '<div style="font-size:22px;font-weight:700;letter-spacing:-0.5px;color:#2D6A4F">'+(s.bizName||'AEDEXBOOKS').split(' ')[0]+'</div>'}
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:#555;text-transform:uppercase;margin-top:6px">${s.bizName||'AEDEXBOOKS'}</div>
       </div>
       <div style="text-align:right">
         <div style="display:inline-block;background:#1a1a1a;color:#fff;font-size:10px;font-weight:700;letter-spacing:1.5px;padding:3px 10px;border-radius:3px;margin-bottom:6px">${isEst?'ESTIMATE':'INVOICE'}</div>
@@ -2454,7 +2454,7 @@ ${s.logoFileId&&_blobCache[s.logoFileId] ? '<img src="'+_blobCache[s.logoFileId]
     ${(!isEst&&payLine)?`<div style="font-size:11px;font-weight:400;text-align:center;color:#999;padding:10px 0 0;border-top:1px solid #eee;margin-top:12px">${payLine}</div>`:''}
     <div style="border-top:1px solid #e8e8e8;margin-top:24px;padding-top:14px;display:flex;justify-content:space-between;align-items:center">
       <div style="font-size:11px;color:#aaa">Thank you for your business.</div>
-      <div style="font-size:11px;color:#aaa">${s.bizName||'AEDEX ANIMA LLC'}${s.email?' · '+s.email:''}</div>
+      <div style="font-size:11px;color:#aaa">${s.bizName||'AEDEXBOOKS'}${s.email?' · '+s.email:''}</div>
     </div>
   </div>`;
   document.getElementById('preview-modal').classList.add('open');
@@ -2486,13 +2486,17 @@ async function getOrCreateDriveFolder(name,parentId=null){
   return r.id;
 }
 
+function bizRootName(){return DB.settings.bizName||'AEDEXBOOKS';}
+
+async function getOrCreateBizRoot(){
+  return await getOrCreateDriveFolder(bizRootName());
+}
+
 async function getDocFolder(type){
-  // Try to find AEDEX ANIMA LLC folder, then Estimates/Invoices inside it
   const folderName=type==='invoice'?'Invoices':'Estimates';
   const settingKey=type==='invoice'?'invFolderId':'estFolderId';
   if(DB.settings[settingKey]) return DB.settings[settingKey];
-  // Search for AEDEX ANIMA LLC folder
-  const aedex=await findDriveFolder('AEDEX ANIMA LLC');
+  const aedex=await findDriveFolder(bizRootName());
   let folderId;
   if(aedex){
     folderId=await getOrCreateDriveFolder(folderName,aedex.id);
@@ -2516,7 +2520,7 @@ function _driveSlug(s,max){return(s||'').replace(/[/\\:*?"<>|]/g,'').trim().slic
 
 async function getAEDEXClientsRoot(){
   if(DB.settings.clientsFolderId) return DB.settings.clientsFolderId;
-  const aedex=await findDriveFolder('AEDEX ANIMA LLC');
+  const aedex=await findDriveFolder(bizRootName());
   const id=await getOrCreateDriveFolder('Clients',aedex?.id||null);
   DB.settings.clientsFolderId=id;saveSettingsLocal();
   return id;
@@ -2710,8 +2714,8 @@ async function handleExpenseReceiptUpload(input){
       receiptsFolderId=(await getJobFolders(jobId)).receiptsFolderId;
     } else {
       // No linked job — save to a general Receipts folder
-      const aedex=await findDriveFolder('AEDEX ANIMA LLC');
-      receiptsFolderId=await getOrCreateDriveFolder('Receipts',aedex?.id||null);
+      const aedexId=(await getOrCreateBizRoot());
+      receiptsFolderId=await getOrCreateDriveFolder('Receipts',aedexId);
     }
     const result=await uploadFileToDrive(file,receiptsFolderId);
     _expenseReceipt={fileId:result.id,name:result.name,webViewLink:result.webViewLink};
@@ -3183,9 +3187,11 @@ async function uploadLogo(input){
   if(!accessToken){toast('Sign in first','error');return;}
   toast('Uploading logo…','info');
   try{
-    // Upload to Drive root (no specific folder needed for business assets)
+    // Upload into business root folder → Settings subfolder
+    const bizRootId=await getOrCreateBizRoot();
+    const settingsFolderId=await getOrCreateDriveFolder('Settings',bizRootId);
     const form=new FormData();
-    form.append('metadata',new Blob([JSON.stringify({name:'aedexbooks-logo-'+Date.now()+'.'+file.name.split('.').pop()})],{type:'application/json'}));
+    form.append('metadata',new Blob([JSON.stringify({name:'logo.'+file.name.split('.').pop(),parents:[settingsFolderId]})],{type:'application/json'}));
     form.append('file',file);
     const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
       {method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form});
