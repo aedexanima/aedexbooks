@@ -1175,6 +1175,7 @@ async function findOrCreateSheet(){
     if(found){
       DB.settings.sheetId=found.id;
       saveSettingsLocal();
+      registerSheet(found.id);
       toast('Found your existing data — loading...','success');
       loadFromSheet();
     } else {
