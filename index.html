@@ -358,8 +358,14 @@ textarea{resize:vertical;min-height:60px}
           <div class="card-title">Google Sheets connection</div>
           <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Your data syncs automatically to Google Sheets in your Drive.</div>
           <div id="sheet-link-area" style="margin-bottom:14px"></div>
-          <button class="btn" onclick="reconfigure()" style="margin-bottom:8px;width:100%;justify-content:center">Reconfigure connection</button>
-          <button class="btn success" onclick="loadFromSheet()" style="width:100%;justify-content:center">Force sync from Sheet</button>
+          <button class="btn success" onclick="loadFromSheet()" style="margin-bottom:8px;width:100%;justify-content:center">Force sync from Sheet</button>
+          <button class="btn" onclick="reconfigure()" style="margin-bottom:16px;width:100%;justify-content:center">Disconnect sheet</button>
+          <div style="border-top:1px solid var(--border);padding-top:14px">
+            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">CONNECT EXISTING SHEET</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Paste your Google Sheet URL or ID to connect existing data.</div>
+            <div class="field" style="margin-bottom:10px"><input type="text" id="set-sheet-url" placeholder="https://docs.google.com/spreadsheets/d/..."></div>
+            <button class="btn accent" onclick="connectExistingSheet()" style="width:100%;justify-content:center">Connect & Load</button>
+          </div>
         </div>
       </div>
       <div class="card" style="grid-column:1/-1;margin-top:4px">
@@ -3594,6 +3600,20 @@ function reconfigure(){
   DB.settings.sheetId='';
   saveSettingsLocal();
   toast('Sheet disconnected. Sign out and back in to reconnect.','success');
+}
+
+function connectExistingSheet(){
+  const val=document.getElementById('set-sheet-url').value.trim();
+  if(!val){toast('Paste your sheet URL or ID','error');return;}
+  // Extract ID from full URL or accept bare ID
+  const match=val.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  const sheetId=match?match[1]:val;
+  if(!sheetId||sheetId.length<20){toast('That doesn\'t look like a valid sheet URL or ID','error');return;}
+  DB.settings.sheetId=sheetId;
+  saveSettingsLocal();
+  document.getElementById('set-sheet-url').value='';
+  toast('Connecting to sheet...','');
+  loadFromSheet();
 }
 
 // ============================================================
