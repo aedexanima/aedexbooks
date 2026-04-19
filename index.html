@@ -4124,7 +4124,10 @@ function renderCatalogSettings(){
           <td style="padding:7px 0;font-size:13px">${i.name}</td>
           <td style="padding:7px 0;font-size:12px;color:var(--text3);width:70px">${i.type}</td>
           <td style="padding:7px 0;font-size:13px;font-family:'DM Mono',monospace;width:70px;text-align:right">$${i.price}</td>
-          <td style="padding:7px 0;width:60px;text-align:right"><button class="btn sm" onclick="openCatalogItemModal('${i.id}')">Edit</button></td>
+          <td style="padding:7px 0;width:80px;text-align:right;white-space:nowrap">
+            <button class="btn sm" onclick="openCatalogItemModal('${i.id}')">Edit</button>
+            <button class="btn sm danger" onclick="deleteCatalogItemById('${i.id}')" title="Delete" style="padding:0 8px">🗑</button>
+          </td>
         </tr>`).join('')}
       </table>
     </div>`;
@@ -4159,6 +4162,12 @@ function saveCatalogItem(){
   renderCatalogSettings();
   closeModal('catalog-modal');
   toast(currentCatalogId?'Service updated':'Service added','success');
+}
+
+function deleteCatalogItemById(id){
+  if(!confirm('Delete this service?'))return;
+  DB.catalog=DB.catalog.filter(i=>i.id!==id);
+  saveAndSync();renderCatalogSettings();toast('Service deleted');
 }
 
 function deleteCatalogItem(){
