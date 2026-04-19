@@ -1094,7 +1094,7 @@ async function onSignedIn(){
     document.getElementById('nav-av').textContent=n[0].toUpperCase();
   }catch{document.getElementById('nav-user').textContent='Signed in';document.getElementById('nav-av').textContent='✓';}
 
-  // Access gate check
+  // Access gate check + sheet lookup
   if(userEmail){
     try{
       const res=await fetch(`/api/check-access?email=${encodeURIComponent(userEmail)}`).then(r=>r.json());
@@ -1104,8 +1104,12 @@ async function onSignedIn(){
         document.getElementById('gate-screen').style.display='block';
         return;
       }
+      // Use sheetId from KV if we don't have one locally
+      if(res.sheetId&&!DB.settings.sheetId){
+        DB.settings.sheetId=res.sheetId;
+        saveSettingsLocal();
+      }
     }catch(e){
-      // If the check fails (e.g. local dev), allow through — don't block on network error
       console.warn('Access check failed, allowing through:',e.message);
     }
   }
@@ -1150,6 +1154,17 @@ const HEADERS={
   Settings:['key','value']
 };
 
+async function registerSheet(sheetId){
+  if(!accessToken||!sheetId)return;
+  try{
+    await fetch('/api/register-sheet',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({sheetId})
+    });
+  }catch(e){console.warn('Sheet registration failed:',e.message);}
+}
+
 async function findOrCreateSheet(){
   setSyncStatus('🔍 Looking for your data...');
   try{
@@ -1176,6 +1191,7 @@ async function createSheet(){
   try{
     const res=await gapi.client.sheets.spreadsheets.create({resource:{properties:{title:'AEDEXBOOKS — Business Data'},sheets:TABS.map(t=>({properties:{title:t}}))}});
     DB.settings.sheetId=res.result.spreadsheetId;saveSettingsLocal();
+    registerSheet(DB.settings.sheetId);
     for(const [tab,hdrs] of Object.entries(HEADERS)){
       await gapi.client.sheets.spreadsheets.values.update({spreadsheetId:DB.settings.sheetId,range:`${tab}!A1`,valueInputOption:'RAW',resource:{values:[hdrs]}});
     }
@@ -3868,6 +3884,7 @@ function connectExistingSheet(){
   if(!sheetId||sheetId.length<20){toast('That doesn\'t look like a valid sheet URL or ID','error');return;}
   DB.settings.sheetId=sheetId;
   saveSettingsLocal();
+  registerSheet(sheetId);
   document.getElementById('set-sheet-url').value='';
   toast('Connecting to sheet...','');
   loadFromSheet();

@@ -11,8 +11,21 @@ export async function onRequestGet(context) {
     return new Response(JSON.stringify({ allowed: false }), { headers: CORS });
   }
 
-  const value = await context.env.ACCESS_LIST.get(email);
-  return new Response(JSON.stringify({ allowed: value !== null }), { headers: CORS });
+  const raw = await context.env.ACCESS_LIST.get(email);
+  if (raw === null) {
+    return new Response(JSON.stringify({ allowed: false }), { headers: CORS });
+  }
+
+  // Support both old format ("active"/"owner") and new format (JSON)
+  let sheetId = '';
+  try {
+    const data = JSON.parse(raw);
+    sheetId = data.sheetId || '';
+  } catch {
+    // Old string format — no sheetId yet
+  }
+
+  return new Response(JSON.stringify({ allowed: true, sheetId }), { headers: CORS });
 }
 
 export async function onRequestOptions() {
