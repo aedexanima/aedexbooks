@@ -208,7 +208,7 @@ textarea{resize:vertical;min-height:60px}
   <!-- SIDEBAR -->
   <nav class="sidebar">
     <div class="sb-logo">
-      <img id="sb-logo-img" src="" style="max-height:40px;max-width:148px;width:auto;display:none;margin-bottom:8px;border-radius:3px">
+      <img id="sb-logo-img" src="" style="max-height:44px;max-width:148px;width:auto;display:none;margin-bottom:10px;border-radius:3px">
       <div class="sb-name" id="nav-biz">AEDEXBOOKS</div>
       <div class="sb-sub">BUSINESS MANAGER</div>
     </div>
@@ -840,7 +840,7 @@ textarea{resize:vertical;min-height:60px}
 // Activity: {id, ts, action, recordType, recordId, detail}
 
 let DB={clients:[],properties:[],jobs:[],docs:[],expenses:[],activity:[],sentLog:[],contractors:[],
-  settings:{bizName:'AEDEXBOOKS',yourName:'',phone:'',email:'',addr:'',license:'',taxRate:0,clientId:'',sheetId:'',logoDataUrl:'',customClientTypes:[],
+  settings:{bizName:'AEDEXBOOKS',yourName:'',phone:'',email:'',addr:'',license:'',taxRate:0,clientId:'',sheetId:'',logoFileId:'',customClientTypes:[],
     catalog:[
       {id:'cat-001',name:'Smart lock installation',      type:'labor',price:65, cat:'Electrical'},
       {id:'cat-002',name:'Smart switch installation',    type:'labor',price:40, cat:'Electrical'},
@@ -954,7 +954,7 @@ function showApp(){
   document.getElementById('setup-screen').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('nav-biz').textContent=DB.settings.bizName||'AEDEXBOOKS';
-  updateLogoPreview(DB.settings.logoDataUrl||'');
+  if(DB.settings.logoFileId){getDriveImageUrl(DB.settings.logoFileId).then(updateLogoPreview).catch(()=>{});}
   document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   renderAll();loadSettingsForm();
 }
@@ -1117,7 +1117,8 @@ async function syncToSheet(){
         ['addr',DB.settings.addr||''],
         ['license',DB.settings.license||''],
         ['taxRate',String(DB.settings.taxRate||0)],
-        ['catalog',JSON.stringify(DB.settings.catalog||[])]
+        ['catalog',JSON.stringify(DB.settings.catalog||[])],
+        ['logoFileId',DB.settings.logoFileId||'']
       ]
     };
     for(const [tab,rows] of Object.entries(writes)){
@@ -1170,7 +1171,12 @@ async function loadFromSheet(){
         DB.settings.license=sm.license||DB.settings.license;
         DB.settings.taxRate=parseFloat(sm.taxRate)||DB.settings.taxRate||0;
         if(sm.catalog)DB.settings.catalog=safeJSON(sm.catalog,DB.settings.catalog||[]);
+        if(sm.logoFileId!==undefined)DB.settings.logoFileId=sm.logoFileId||'';
         saveSettingsLocal();
+        // Load logo into sidebar/preview after settings sync
+        if(DB.settings.logoFileId){
+          getDriveImageUrl(DB.settings.logoFileId).then(updateLogoPreview).catch(()=>{});
+        }
       }
     }
 
@@ -2385,7 +2391,7 @@ function showDocPreview(d){
     <!-- HEADER -->
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
       <div>
-${s.logoDataUrl ? '<img src="'+s.logoDataUrl+'" style="height:52px;width:auto">' : '<div style="font-size:22px;font-weight:700;letter-spacing:-0.5px;color:#2D6A4F">'+((s.bizName||'AEDEX ANIMA LLC').split(' ')[0])+'</div>'}
+${s.logoFileId&&_blobCache[s.logoFileId] ? '<img src="'+_blobCache[s.logoFileId]+'" style="height:52px;width:auto">' : '<div style="font-size:22px;font-weight:700;letter-spacing:-0.5px;color:#2D6A4F">'+(s.bizName||'AEDEX ANIMA LLC').split(' ')[0]+'</div>'}
         <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:#555;text-transform:uppercase;margin-top:6px">${s.bizName||'AEDEX ANIMA LLC'}</div>
       </div>
       <div style="text-align:right">
@@ -3150,45 +3156,64 @@ function loadSettingsForm(){
   document.getElementById('set-addr').value=s.addr||'';
   document.getElementById('set-lic').value=s.license||'';
   document.getElementById('set-tax').value=s.taxRate||0;
-  updateLogoPreview(s.logoDataUrl||'');
+  if(s.logoFileId){getDriveImageUrl(s.logoFileId).then(updateLogoPreview).catch(()=>{});}
+  else{updateLogoPreview('');}
 }
 
-function updateLogoPreview(dataUrl){
+function updateLogoPreview(blobUrl){
   const img=document.getElementById('logo-img-preview');
   const placeholder=document.getElementById('logo-placeholder');
   const removeBtn=document.getElementById('logo-remove-btn');
   const sbImg=document.getElementById('sb-logo-img');
-  const sbName=document.getElementById('nav-biz');
-  if(dataUrl){
-    img.src=dataUrl;img.style.display='block';
+  if(blobUrl){
+    img.src=blobUrl;img.style.display='block';
     placeholder.style.display='none';removeBtn.style.display='';
-    sbImg.src=dataUrl;sbImg.style.display='block';
-    sbName.style.display='none';
+    sbImg.src=blobUrl;sbImg.style.display='block';
   }else{
     img.src='';img.style.display='none';
     placeholder.style.display='';removeBtn.style.display='none';
     sbImg.src='';sbImg.style.display='none';
-    sbName.style.display='';
   }
 }
 
-function uploadLogo(input){
+async function uploadLogo(input){
   const file=input.files[0];
   if(!file)return;
   if(file.size>2*1024*1024){toast('Logo must be under 2 MB','error');return;}
-  const reader=new FileReader();
-  reader.onload=e=>{
-    DB.settings.logoDataUrl=e.target.result;
+  if(!accessToken){toast('Sign in first','error');return;}
+  toast('Uploading logo…','info');
+  try{
+    // Upload to Drive root (no specific folder needed for business assets)
+    const form=new FormData();
+    form.append('metadata',new Blob([JSON.stringify({name:'aedexbooks-logo-'+Date.now()+'.'+file.name.split('.').pop()})],{type:'application/json'}));
+    form.append('file',file);
+    const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+      {method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form});
+    if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'Upload failed');}
+    const {id}=await r.json();
+    // Delete old logo file if one existed
+    if(DB.settings.logoFileId&&DB.settings.logoFileId!==id){
+      fetch(`https://www.googleapis.com/drive/v3/files/${DB.settings.logoFileId}`,
+        {method:'DELETE',headers:{Authorization:'Bearer '+accessToken}}).catch(()=>{});
+    }
+    DB.settings.logoFileId=id;
     saveSettingsLocal();
-    updateLogoPreview(e.target.result);
-    toast('Logo uploaded — save settings to apply','info');
-  };
-  reader.readAsDataURL(file);
+    syncToSheet();
+    const blobUrl=await getDriveImageUrl(id);
+    updateLogoPreview(blobUrl);
+    toast('Logo saved to Drive','success');
+  }catch(e){toast('Logo upload failed: '+e.message,'error');console.error(e);}
+  input.value='';
 }
 
-function removeLogo(){
-  DB.settings.logoDataUrl='';
+async function removeLogo(){
+  if(DB.settings.logoFileId&&accessToken){
+    fetch(`https://www.googleapis.com/drive/v3/files/${DB.settings.logoFileId}`,
+      {method:'DELETE',headers:{Authorization:'Bearer '+accessToken}}).catch(()=>{});
+  }
+  DB.settings.logoFileId='';
   saveSettingsLocal();
+  syncToSheet();
   updateLogoPreview('');
   document.getElementById('logo-upload').value='';
   toast('Logo removed','info');
@@ -3202,7 +3227,6 @@ function saveSettings(){
   DB.settings.addr=document.getElementById('set-addr').value;
   DB.settings.license=document.getElementById('set-lic').value;
   DB.settings.taxRate=parseFloat(document.getElementById('set-tax').value)||0;
-  // logoDataUrl already saved in DB.settings by uploadLogo()
   saveSettingsLocal();
   syncToSheet();
   document.getElementById('nav-biz').textContent=DB.settings.bizName;
