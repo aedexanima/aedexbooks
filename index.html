@@ -881,7 +881,7 @@ let accessToken=null,signedIn=false,gapiReady=false;
 let currentPreviewDoc=null;
 const GOOGLE_CLIENT_ID='44604318754-j48brnn15erhh1jqtme85r2fd5dpgrah.apps.googleusercontent.com';
 const SCOPES='https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/gmail.send';
-const TABS=['Clients','Properties','Jobs','Documents','Expenses','ActivityLog','SentLog','Contractors'];
+const TABS=['Clients','Properties','Jobs','Documents','Expenses','ActivityLog','SentLog','Contractors','Settings'];
 
 // ============================================================
 // ============================================================
@@ -1030,7 +1030,8 @@ const HEADERS={
   Expenses:['id','date','amount','desc','category','jobId','createdAt','updatedAt','receiptFileId','receiptFileName','receiptWebViewLink'],
   ActivityLog:['id','timestamp','action','recordType','recordId','detail'],
   SentLog:['id','docId','docNumber','clientId','clientName','propertyId','propertyAddr','toEmail','ccEmail','subject','message','sentAt'],
-  Contractors:['id','name','trade','phone','email','notes','createdAt','updatedAt']
+  Contractors:['id','name','trade','phone','email','notes','createdAt','updatedAt'],
+  Settings:['key','value']
 };
 
 async function createSheet(){
@@ -1083,7 +1084,17 @@ async function syncToSheet(){
       Expenses:DB.expenses.map(e=>[e.id,e.date,e.amount,e.desc,e.category,e.jobId,e.createdAt,e.updatedAt,e.receiptFileId||'',e.receiptFileName||'',e.receiptWebViewLink||'']),
       ActivityLog:DB.activity.map(a=>[a.id,a.ts,a.action,a.recordType,a.recordId,a.detail]),
       SentLog:DB.sentLog.map(s=>[s.id,s.docId,s.docNumber,s.clientId,s.clientName,s.propertyId,s.propertyAddr,s.toEmail,s.ccEmail||'',s.subject,s.message,s.sentAt]),
-      Contractors:DB.contractors.map(c=>[c.id,c.name,c.trade,c.phone,c.email,c.notes,c.createdAt,c.updatedAt])
+      Contractors:DB.contractors.map(c=>[c.id,c.name,c.trade,c.phone,c.email,c.notes,c.createdAt,c.updatedAt]),
+      Settings:[
+        ['bizName',DB.settings.bizName||''],
+        ['yourName',DB.settings.yourName||''],
+        ['phone',DB.settings.phone||''],
+        ['email',DB.settings.email||''],
+        ['addr',DB.settings.addr||''],
+        ['license',DB.settings.license||''],
+        ['taxRate',String(DB.settings.taxRate||0)],
+        ['catalog',JSON.stringify(DB.settings.catalog||[])]
+      ]
     };
     for(const [tab,rows] of Object.entries(writes)){
       await gapi.client.sheets.spreadsheets.values.clear({spreadsheetId:DB.settings.sheetId,range:`${tab}!A2:Z9999`});
@@ -1122,6 +1133,22 @@ async function loadFromSheet(){
     DB.activity  =parse(dataRes[5].result.values,HEADERS.ActivityLog);
     DB.sentLog   =parse(dataRes[6]?.result.values,HEADERS.SentLog)||[];
     DB.contractors=parse(dataRes[7]?.result.values,HEADERS.Contractors)||[];
+    // Load business settings from sheet (overrides localStorage so they roam across devices)
+    const settingsRows=dataRes[8]?.result.values||[];
+    if(settingsRows.length){
+      const sm={};settingsRows.forEach(r=>{if(r[0])sm[r[0]]=r[1]||'';});
+      if(sm.bizName!==undefined){
+        DB.settings.bizName=sm.bizName||DB.settings.bizName;
+        DB.settings.yourName=sm.yourName||DB.settings.yourName;
+        DB.settings.phone=sm.phone||DB.settings.phone;
+        DB.settings.email=sm.email||DB.settings.email;
+        DB.settings.addr=sm.addr||DB.settings.addr;
+        DB.settings.license=sm.license||DB.settings.license;
+        DB.settings.taxRate=parseFloat(sm.taxRate)||DB.settings.taxRate||0;
+        if(sm.catalog)DB.settings.catalog=safeJSON(sm.catalog,DB.settings.catalog||[]);
+        saveSettingsLocal();
+      }
+    }
 
     if(needsMigration){
       // Write new headers and migrated data back to sheet — runs once, then flag is set
@@ -3110,6 +3137,7 @@ function saveSettings(){
   DB.settings.license=document.getElementById('set-lic').value;
   DB.settings.taxRate=parseFloat(document.getElementById('set-tax').value)||0;
   saveSettingsLocal();
+  syncToSheet();
   document.getElementById('nav-biz').textContent=DB.settings.bizName;
   toast('Settings saved','success');
 }
