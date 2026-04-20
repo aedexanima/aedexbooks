@@ -1455,10 +1455,17 @@ async function loadFromSheet(){
     const clientKeys=needsMigration?(hdrRes[0].result.values?.[0]||HEADERS.Clients):HEADERS.Clients;
     const propKeys  =needsMigration?(hdrRes[1].result.values?.[0]||HEADERS.Properties):HEADERS.Properties;
 
-    DB.clients   =parse(dataRes[0].result.values,clientKeys).map(c=>({...c,archived:String(c.archived).toLowerCase()==='true',clientType:c.clientType||'handyman',company:c.company||'',altEmail:c.altEmail||''}));
-    DB.properties=parse(dataRes[1].result.values,propKeys);
-    DB.jobs      =parse(dataRes[2].result.values,HEADERS.Jobs).map(j=>({...j,value:+j.value||0,contractorIds:safeJSON(j.contractorIds,[]),archived:String(j.archived).toLowerCase()==='true',photos:safeJSON(j.photos,[]),afterFolderId:j.afterFolderId||'',portalToken:j.portalToken||'',contractorEstimate:safeJSON(j.contractorEstimate,null),clientEstimate:safeJSON(j.clientEstimate,null),contractorInstructions:j.contractorInstructions||''}));
-    DB.docs      =parse(dataRes[3].result.values,HEADERS.Documents).map(d=>({...d,jobId:d.jobId||'',lineItems:safeJSON(d.lineItems,[]),taxRate:+d.taxRate||0,subtotal:+d.subtotal||0,taxAmt:+d.taxAmt||0,total:+d.total||0,paid:String(d.paid).toLowerCase()==='true',laborDisclaimer:String(d.laborDisclaimer).toLowerCase()!=='false',archived:String(d.archived).toLowerCase()==='true'}));
+    // Safety guard: never overwrite existing data with empty sheet results.
+    // If the sheet returns 0 rows but we already have records, keep what we have
+    // (protects against transient API errors or partially-failed syncs wiping data).
+    const sheetClients =parse(dataRes[0].result.values,clientKeys).map(c=>({...c,archived:String(c.archived).toLowerCase()==='true',clientType:c.clientType||'handyman',company:c.company||'',altEmail:c.altEmail||''}));
+    const sheetProps   =parse(dataRes[1].result.values,propKeys);
+    const sheetJobs    =parse(dataRes[2].result.values,HEADERS.Jobs).map(j=>({...j,value:+j.value||0,contractorIds:safeJSON(j.contractorIds,[]),archived:String(j.archived).toLowerCase()==='true',photos:safeJSON(j.photos,[]),afterFolderId:j.afterFolderId||'',portalToken:j.portalToken||'',contractorEstimate:safeJSON(j.contractorEstimate,null),clientEstimate:safeJSON(j.clientEstimate,null),contractorInstructions:j.contractorInstructions||''}));
+    const sheetDocs    =parse(dataRes[3].result.values,HEADERS.Documents).map(d=>({...d,jobId:d.jobId||'',lineItems:safeJSON(d.lineItems,[]),taxRate:+d.taxRate||0,subtotal:+d.subtotal||0,taxAmt:+d.taxAmt||0,total:+d.total||0,paid:String(d.paid).toLowerCase()==='true',laborDisclaimer:String(d.laborDisclaimer).toLowerCase()!=='false',archived:String(d.archived).toLowerCase()==='true'}));
+    if(sheetClients.length||!DB.clients.length)  DB.clients   =sheetClients;
+    if(sheetProps.length  ||!DB.properties.length)DB.properties=sheetProps;
+    if(sheetJobs.length   ||!DB.jobs.length)      DB.jobs      =sheetJobs;
+    if(sheetDocs.length   ||!DB.docs.length)      DB.docs      =sheetDocs;
     migrateNames(); // runs after all data is loaded so invoice back-fill can find docs
     DB.expenses  =parse(dataRes[4].result.values,HEADERS.Expenses).map(e=>({...e,amount:+e.amount||0,receiptFileId:e.receiptFileId||'',receiptFileName:e.receiptFileName||'',receiptWebViewLink:e.receiptWebViewLink||''}));
     DB.activity  =parse(dataRes[5].result.values,HEADERS.ActivityLog);
