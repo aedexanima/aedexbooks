@@ -1,0 +1,8 @@
+# Wrangler build artifacts
+.wrangler/
+
+# Icons (binary assets, not useful to read)
+icons/
+
+# Git internals
+.git/

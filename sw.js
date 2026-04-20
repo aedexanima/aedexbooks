@@ -1,4 +1,4 @@
-const CACHE = 'aedexbooks-v1';
+const CACHE = 'aedexbooks-v3';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -17,12 +17,12 @@ self.addEventListener('install', e => {
   );
 });
 
-// Activate: clean up old caches
+// Activate: clean up old caches (don't claim existing clients — avoids mid-session reload)
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    )
   );
 });
 
@@ -30,11 +30,26 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = e.request.url;
 
-  // Never cache Google API calls — always go to network
+  // Never cache these — let them go straight to network
   if (url.includes('googleapis.com') ||
       url.includes('accounts.google.com') ||
       url.includes('gsi/client') ||
-      url.includes('formspree.io')) {
+      url.includes('formspree.io') ||
+      url.includes('cloudflareinsights.com')) {
+    return;
+  }
+
+  // Network-first for HTML (always get latest app), cache-first for other assets
+  const isDocument = e.request.destination === 'document' || url.endsWith('/') || url.endsWith('/index.html');
+
+  if (isDocument) {
+    e.respondWith(
+      fetch(e.request).then(response => {
+        const clone = response.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return response;
+      }).catch(() => caches.match(e.request))
+    );
     return;
   }
 
@@ -42,7 +57,6 @@ self.addEventListener('fetch', e => {
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(response => {
-        // Cache successful GET responses for app assets
         if (e.request.method === 'GET' && response.status === 200) {
           const clone = response.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
@@ -50,7 +64,6 @@ self.addEventListener('fetch', e => {
         return response;
       });
     }).catch(() => {
-      // Offline fallback: return the app shell
       if (e.request.destination === 'document') {
         return caches.match('/index.html');
       }
