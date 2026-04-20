@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Contractor Portal — Aedex Anima</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F6F2;--surface:#FFFFFF;--surface2:#F0EFE9;--border:#E2E0D8;
+  --text:#1C1B18;--text2:#6B6960;--text3:#9C9A91;
+  --accent:#2D6A4F;--accent-light:#E8F5EE;--accent-text:#1A4731;
+  --red:#B91C1C;--red-light:#FEE2E2;
+  --amber:#B45309;--amber-light:#FEF3C7;
+  --r:12px;--rs:7px;--shadow:0 1px 4px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px 48px}
+.logo-bar{text-align:center;padding:24px 0 20px;border-bottom:1px solid var(--border);margin-bottom:24px}
+.logo-bar-name{font-size:16px;font-weight:700;letter-spacing:-.2px}
+.logo-bar-sub{font-size:11px;color:var(--text3);margin-top:2px;letter-spacing:.5px;text-transform:uppercase}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:12px}
+.alert{background:var(--amber-light);border:1px solid #fde68a;border-radius:var(--rs);padding:14px 16px;margin-bottom:20px;font-size:14px;color:var(--amber);font-weight:500;line-height:1.5}
+.alert-icon{font-size:18px;margin-bottom:4px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+input,select,textarea{width:100%;padding:10px 13px;font-size:15px;font-family:'DM Sans',sans-serif;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--surface);color:var(--text);-webkit-appearance:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+textarea{resize:vertical;min-height:72px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:13px 18px;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;border:1.5px solid var(--border);border-radius:var(--rs);cursor:pointer;background:var(--surface);color:var(--text);transition:all .15s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.btn:active{opacity:.85}
+.btn.accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.accent:active{background:var(--accent-text)}
+.btn.full{width:100%}
+.btn.sm{padding:8px 13px;font-size:13px;font-weight:500}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.danger{color:var(--red);border-color:var(--red)}
+.sec-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin:20px 0 10px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.labor-hdr{display:grid;grid-template-columns:1fr 100px 32px;gap:8px;margin-bottom:6px}
+.labor-hdr span{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+.labor-row{display:grid;grid-template-columns:1fr 100px 32px;gap:8px;align-items:center;margin-bottom:8px}
+.labor-row input{margin:0;padding:9px 11px;font-size:14px}
+.rm-btn{background:none;border:1.5px solid var(--border);cursor:pointer;color:var(--text3);font-size:18px;padding:0;width:32px;height:40px;min-height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--rs);-webkit-tap-highlight-color:transparent}
+.rm-btn:active{color:var(--red);border-color:var(--red);background:var(--red-light)}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:14px;color:var(--text2)}
+.total-row.grand{font-size:17px;font-weight:700;color:var(--text);border-top:1.5px solid var(--border);padding-top:10px;margin-top:6px}
+.photo-strip{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.photo-thumb{position:relative;width:80px;height:80px;border-radius:var(--rs);overflow:hidden;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-thumb .rm{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.upload-btn-wrap{margin-top:10px;display:flex;flex-direction:column;gap:4px}
+.type-hint{font-size:11px;color:var(--text3)}
+.preview-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:12px 14px;margin-bottom:8px}
+.preview-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:6px}
+.preview-row{display:flex;justify-content:space-between;font-size:14px;padding:3px 0}
+.preview-row .money{font-family:'DM Mono',monospace;font-weight:600}
+.spinner{display:inline-block;width:18px;height:18px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.done-card{text-align:center;padding:40px 24px}
+.done-icon{font-size:52px;margin-bottom:16px}
+.done-title{font-size:22px;font-weight:700;margin-bottom:8px}
+.done-sub{font-size:14px;color:var(--text2);line-height:1.6;max-width:340px;margin:0 auto}
+.info-row{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text2);margin-bottom:6px}
+.info-row .label{font-weight:600;color:var(--text);min-width:80px;flex-shrink:0}
+#state-loading,#state-error,#state-done,#state-form,#state-preview{display:none}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:12px 20px;border-radius:var(--r);font-size:14px;font-weight:500;z-index:99;opacity:0;transition:all .3s;white-space:nowrap;max-width:90vw}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.error{background:var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="logo-bar">
+    <div class="logo-bar-name">AEDEX ANIMA LLC</div>
+    <div class="logo-bar-sub">Contractor Portal</div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="state-loading">
+    <div class="card" style="text-align:center;padding:40px 20px;color:var(--text3)">Loading job details…</div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="state-error">
+    <div class="card" style="text-align:center;padding:40px 20px">
+      <div style="font-size:36px;margin-bottom:12px">🔒</div>
+      <div style="font-size:17px;font-weight:600;margin-bottom:8px">Link not found</div>
+      <div id="error-message" style="font-size:13px;color:var(--text2);line-height:1.6">This link is invalid, expired, or has already been submitted. Contact Aedex Anima LLC for a new link.</div>
+    </div>
+  </div>
+
+  <!-- DONE -->
+  <div id="state-done">
+    <div class="card done-card">
+      <div class="done-icon">✅</div>
+      <div class="done-title">Estimate submitted!</div>
+      <div class="done-sub">Your estimate has been received. Aedex Anima LLC will be in touch to discuss next steps. You can close this window.</div>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div id="state-form">
+
+    <div class="alert">
+      <div class="alert-icon">⚠️</div>
+      <strong>Save all material receipts and submit them with your invoice.</strong>
+      Upload a photo or scan of your receipt in the Materials section below.
+    </div>
+
+    <!-- Job info -->
+    <div class="card">
+      <div class="card-title">Job Details</div>
+      <div class="info-row"><span class="label">Job</span><span id="info-title"></span></div>
+      <div class="info-row"><span class="label">Address</span><span id="info-address"></span></div>
+      <div id="info-instructions-wrap" style="display:none">
+        <div class="info-row" style="flex-direction:column;gap:4px">
+          <span class="label">Instructions</span>
+          <span id="info-instructions" style="color:var(--text2);font-size:13px;white-space:pre-wrap;line-height:1.5"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Before photos -->
+    <div class="card">
+      <div class="card-title">Before Photos</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Upload photos of the job site before work begins.</div>
+      <div class="photo-strip" id="before-strip"></div>
+      <div class="upload-btn-wrap">
+        <input type="file" id="before-input" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/jpeg,image/png,image/heic,image/heif,image/webp" multiple style="display:none" onchange="handleBeforePhotos(this)">
+        <button type="button" class="btn" onclick="document.getElementById('before-input').click()">+ Add Before Photos</button>
+        <span class="type-hint">JPG, PNG, HEIC, WebP</span>
+      </div>
+    </div>
+
+    <!-- Labor -->
+    <div class="card">
+      <div class="card-title">Labor</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Add each task or trade as a separate line item.</div>
+      <div class="labor-hdr">
+        <span>Description</span>
+        <span style="text-align:right">Total charge</span>
+        <span></span>
+      </div>
+      <div id="labor-rows"></div>
+      <button class="btn sm" onclick="addLaborRow()" style="margin-top:4px">+ Add Line</button>
+      <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px">
+        <div class="total-row"><span>Labor subtotal</span><span class="money" id="labor-subtotal">$0.00</span></div>
+      </div>
+    </div>
+
+    <!-- Materials -->
+    <div class="card">
+      <div class="card-title">Materials</div>
+      <div class="field">
+        <label>Materials total ($)</label>
+        <input type="number" id="materials-total" placeholder="0.00" min="0" step="0.01" oninput="updateGrandTotal()">
+      </div>
+      <div class="field">
+        <label>Materials description</label>
+        <textarea id="materials-notes" placeholder="List the materials needed or already purchased…"></textarea>
+      </div>
+      <div style="margin-top:4px">
+        <div class="card-title">Receipt</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Attach a photo or scan of your receipt.</div>
+        <div id="receipt-preview" style="margin-bottom:10px"></div>
+        <div class="upload-btn-wrap">
+          <input type="file" id="receipt-input" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,.pdf,image/jpeg,image/png,image/heic,image/heif,image/webp,application/pdf" style="display:none" onchange="handleReceipt(this)">
+          <button type="button" id="receipt-btn" class="btn" onclick="document.getElementById('receipt-input').click()">+ Attach Receipt</button>
+          <span class="type-hint">JPG, PNG, HEIC, WebP, PDF</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grand total -->
+    <div class="card">
+      <div class="total-row"><span>Labor subtotal</span><span class="money" id="gt-labor">$0.00</span></div>
+      <div class="total-row"><span>Materials</span><span class="money" id="gt-materials">$0.00</span></div>
+      <div class="total-row grand"><span>Grand Total</span><span class="money" id="gt-grand">$0.00</span></div>
+    </div>
+
+    <button class="btn accent full" style="font-size:16px;padding:16px" onclick="goToPreview()">Review &amp; Submit →</button>
+
+  </div><!-- /state-form -->
+
+  <!-- PREVIEW -->
+  <div id="state-preview">
+    <div class="card">
+      <div class="card-title">Review your estimate</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Check everything before submitting. You cannot edit after submitting.</div>
+
+      <div class="preview-card">
+        <div class="preview-label">Job</div>
+        <div id="prev-job-title" style="font-size:14px;font-weight:600"></div>
+        <div id="prev-job-address" style="font-size:13px;color:var(--text2)"></div>
+      </div>
+
+      <div class="preview-card">
+        <div class="preview-label">Before Photos</div>
+        <div id="prev-photos" style="font-size:13px;color:var(--text2)">None uploaded</div>
+      </div>
+
+      <div class="preview-card">
+        <div class="preview-label">Labor</div>
+        <div id="prev-labor-rows"></div>
+        <div class="preview-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px"><span>Labor subtotal</span><span class="money" id="prev-labor-subtotal">$0.00</span></div>
+      </div>
+
+      <div class="preview-card">
+        <div class="preview-label">Materials</div>
+        <div class="preview-row"><span id="prev-materials-desc">Materials</span><span class="money" id="prev-materials-total">$0.00</span></div>
+        <div id="prev-receipt-name" style="font-size:12px;color:var(--text3);margin-top:4px"></div>
+      </div>
+
+      <div class="card" style="margin-bottom:0">
+        <div class="total-row grand"><span>Grand Total</span><span class="money" id="prev-grand">$0.00</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn full" onclick="goBack()" style="flex:1">← Go Back</button>
+      <button class="btn accent full" id="submit-btn" onclick="submitEstimate()" style="flex:2;font-size:16px;padding:16px">Submit Estimate</button>
+    </div>
+  </div><!-- /state-preview -->
+
+</div><!-- /wrap -->
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ─── State ─────────────────────────────────────────────────
+let _token = '';
+let _jobData = null;
+let _laborItems = [];         // [{id, desc, total}]
+let _beforePhotos = [];       // [{name, type, file, previewUrl}]
+let _receiptFile = null;      // {name, type, file, previewUrl} | null
+let _submitting = false;
+
+// ─── File validation (inline copy of validatePhotoFiles) ───
+const PHOTO_EXTS = new Set(['jpg','jpeg','png','heic','heif','webp']);
+const PHOTO_MIMES = new Set(['image/jpeg','image/png','image/heic','image/heif','image/webp']);
+
+function validatePhotoFiles(files, allowPdf = false) {
+  const invalid = [];
+  for (const f of files) {
+    const ext = (f.name.split('.').pop() || '').toLowerCase();
+    const mime = (f.type || '').toLowerCase();
+    const extOk = PHOTO_EXTS.has(ext) || (allowPdf && ext === 'pdf');
+    const mimeOk = PHOTO_MIMES.has(mime) || (allowPdf && mime === 'application/pdf');
+    if (!extOk && !mimeOk) invalid.push(f.name);
+  }
+  return invalid;
+}
+
+function fmt(n) { return '$' + (parseFloat(n) || 0).toFixed(2); }
+
+// ─── Boot ──────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(location.search);
+  _token = params.get('token') || '';
+  if (!_token) { showError('No token provided in the link.'); return; }
+  show('loading');
+  loadJob();
+});
+
+async function loadJob() {
+  try {
+    const r = await fetch(`/api/portal/get?token=${encodeURIComponent(_token)}`);
+    const data = await r.json();
+    if (!data.ok) {
+      const msg = data.error === 'Invalid or expired link'
+        ? 'This link is invalid or has expired. Contact Aedex Anima LLC for a new link.'
+        : data.error || 'Unknown error';
+      showError(msg);
+      return;
+    }
+    if (data.status === 'submitted') {
+      show('done');
+      return;
+    }
+    _jobData = data;
+    populateJobInfo();
+    addLaborRow(); // start with one empty row
+    show('form');
+  } catch (e) {
+    showError('Could not load job details. Check your connection and try again.');
+  }
+}
+
+function populateJobInfo() {
+  document.getElementById('info-title').textContent = _jobData.jobTitle || '—';
+  document.getElementById('info-address').textContent = _jobData.jobAddress || '—';
+  const instr = _jobData.jobInstructions || '';
+  if (instr) {
+    document.getElementById('info-instructions').textContent = instr;
+    document.getElementById('info-instructions-wrap').style.display = 'block';
+  }
+}
+
+// ─── UI state helpers ──────────────────────────────────────
+function show(state) {
+  ['loading','error','done','form','preview'].forEach(s =>
+    document.getElementById('state-' + s).style.display = s === state ? 'block' : 'none'
+  );
+}
+
+function showError(msg) {
+  document.getElementById('error-message').textContent = msg;
+  show('error');
+}
+
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+// ─── Before photos ─────────────────────────────────────────
+function handleBeforePhotos(input) {
+  const files = [...input.files];
+  input.value = '';
+  if (!files.length) return;
+  const invalid = validatePhotoFiles(files, false);
+  if (invalid.length) {
+    showToast('Unsupported file: ' + invalid[0] + '. Use JPG, PNG, HEIC, or WebP.', 'error');
+    return;
+  }
+  for (const file of files) {
+    _beforePhotos.push({ name: file.name, type: file.type || 'image/jpeg', file, previewUrl: URL.createObjectURL(file) });
+  }
+  renderBeforeStrip();
+}
+
+function renderBeforeStrip() {
+  const strip = document.getElementById('before-strip');
+  strip.innerHTML = _beforePhotos.map((p, i) =>
+    `<div class="photo-thumb">
+      <img src="${p.previewUrl}" alt="${p.name}">
+      <button class="rm" onclick="removeBeforePhoto(${i})" aria-label="Remove">×</button>
+    </div>`
+  ).join('');
+}
+
+function removeBeforePhoto(i) {
+  URL.revokeObjectURL(_beforePhotos[i].previewUrl);
+  _beforePhotos.splice(i, 1);
+  renderBeforeStrip();
+}
+
+// ─── Labor ─────────────────────────────────────────────────
+function addLaborRow() {
+  _laborItems.push({ id: Date.now(), desc: '', total: '' });
+  renderLaborRows();
+  // Focus last description input
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('#labor-rows .labor-desc');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  }, 50);
+}
+
+function renderLaborRows() {
+  document.getElementById('labor-rows').innerHTML = _laborItems.map((li, i) =>
+    `<div class="labor-row" id="li-${li.id}">
+      <input class="labor-desc" type="text" value="${(li.desc || '').replace(/"/g, '&quot;')}"
+        placeholder="e.g. Electrical rough-in"
+        oninput="_laborItems[${i}].desc=this.value">
+      <input type="number" min="0" step="0.01" value="${li.total || ''}"
+        placeholder="0.00" style="text-align:right"
+        oninput="_laborItems[${i}].total=parseFloat(this.value)||0;updateGrandTotal()">
+      <button class="rm-btn" onclick="removeLaborRow(${i})" aria-label="Remove">×</button>
+    </div>`
+  ).join('');
+  updateGrandTotal();
+}
+
+function removeLaborRow(i) {
+  _laborItems.splice(i, 1);
+  renderLaborRows();
+}
+
+function laborSubtotal() {
+  return _laborItems.reduce((s, li) => s + (parseFloat(li.total) || 0), 0);
+}
+
+// ─── Totals ────────────────────────────────────────────────
+function updateGrandTotal() {
+  const lab = laborSubtotal();
+  const mat = parseFloat(document.getElementById('materials-total').value) || 0;
+  const grand = lab + mat;
+  document.getElementById('labor-subtotal').textContent = fmt(lab);
+  document.getElementById('gt-labor').textContent = fmt(lab);
+  document.getElementById('gt-materials').textContent = fmt(mat);
+  document.getElementById('gt-grand').textContent = fmt(grand);
+}
+
+// ─── Receipt ───────────────────────────────────────────────
+function handleReceipt(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  const invalid = validatePhotoFiles([file], true);
+  if (invalid.length) {
+    showToast('Unsupported file: ' + file.name + '. Use JPG, PNG, HEIC, WebP, or PDF.', 'error');
+    return;
+  }
+  if (_receiptFile) URL.revokeObjectURL(_receiptFile.previewUrl);
+  const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+  _receiptFile = {
+    name: file.name,
+    type: file.type || 'application/octet-stream',
+    file,
+    previewUrl: isPdf ? null : URL.createObjectURL(file),
+    isPdf
+  };
+  renderReceiptPreview();
+}
+
+function renderReceiptPreview() {
+  const el = document.getElementById('receipt-preview');
+  const btn = document.getElementById('receipt-btn');
+  if (!_receiptFile) {
+    el.innerHTML = '';
+    btn.textContent = '+ Attach Receipt';
+    return;
+  }
+  el.innerHTML = _receiptFile.isPdf
+    ? `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs)">
+        <span style="font-size:22px">📄</span>
+        <div>
+          <div style="font-size:13px;font-weight:600">${_receiptFile.name}</div>
+          <button onclick="removeReceipt()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:0;margin-top:2px">Remove</button>
+        </div>
+      </div>`
+    : `<div style="display:flex;align-items:center;gap:10px">
+        <div style="width:72px;height:72px;border-radius:var(--rs);overflow:hidden;border:1.5px solid var(--border);flex-shrink:0">
+          <img src="${_receiptFile.previewUrl}" alt="Receipt" style="width:100%;height:100%;object-fit:cover">
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_receiptFile.name}</div>
+          <button onclick="removeReceipt()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:0;margin-top:2px">Remove</button>
+        </div>
+      </div>`;
+  btn.textContent = 'Replace Receipt';
+}
+
+function removeReceipt() {
+  if (_receiptFile && _receiptFile.previewUrl) URL.revokeObjectURL(_receiptFile.previewUrl);
+  _receiptFile = null;
+  renderReceiptPreview();
+}
+
+// ─── Preview ───────────────────────────────────────────────
+function goToPreview() {
+  const lab = laborSubtotal();
+  const mat = parseFloat(document.getElementById('materials-total').value) || 0;
+  const grand = lab + mat;
+
+  document.getElementById('prev-job-title').textContent = _jobData.jobTitle || '—';
+  document.getElementById('prev-job-address').textContent = _jobData.jobAddress || '—';
+
+  const photoCount = _beforePhotos.length;
+  document.getElementById('prev-photos').textContent =
+    photoCount ? photoCount + ' photo' + (photoCount !== 1 ? 's' : '') + ' attached' : 'None uploaded';
+
+  const laborHtml = _laborItems.filter(li => li.desc || li.total).map(li =>
+    `<div class="preview-row"><span>${li.desc || '—'}</span><span class="money">${fmt(li.total)}</span></div>`
+  ).join('') || '<div style="font-size:13px;color:var(--text3)">No items</div>';
+  document.getElementById('prev-labor-rows').innerHTML = laborHtml;
+  document.getElementById('prev-labor-subtotal').textContent = fmt(lab);
+
+  const matDesc = document.getElementById('materials-notes').value || 'Materials';
+  document.getElementById('prev-materials-desc').textContent = matDesc;
+  document.getElementById('prev-materials-total').textContent = fmt(mat);
+  document.getElementById('prev-receipt-name').textContent = _receiptFile ? '📎 ' + _receiptFile.name : 'No receipt attached';
+
+  document.getElementById('prev-grand').textContent = fmt(grand);
+
+  show('preview');
+  window.scrollTo(0, 0);
+}
+
+function goBack() {
+  show('form');
+  window.scrollTo(0, 0);
+}
+
+// ─── Submit ────────────────────────────────────────────────
+async function submitEstimate() {
+  if (_submitting) return;
+  _submitting = true;
+  const btn = document.getElementById('submit-btn');
+  btn.innerHTML = '<span class="spinner"></span> Submitting…';
+  btn.disabled = true;
+
+  try {
+    const lab = laborSubtotal();
+    const mat = parseFloat(document.getElementById('materials-total').value) || 0;
+    const matNotes = document.getElementById('materials-notes').value;
+
+    // Convert photos to base64
+    const beforePhotosB64 = await Promise.all(_beforePhotos.map(async p => ({
+      name: p.name,
+      type: p.type,
+      data: await fileToBase64(p.file),
+    })));
+
+    let receiptDataB64 = null;
+    if (_receiptFile) {
+      receiptDataB64 = {
+        name: _receiptFile.name,
+        type: _receiptFile.type,
+        data: await fileToBase64(_receiptFile.file),
+      };
+    }
+
+    // Rough size check (~15MB payload limit)
+    const payloadSize = JSON.stringify({ beforePhotosB64, receiptDataB64 }).length;
+    if (payloadSize > 15 * 1024 * 1024) {
+      showToast('Photos are too large to submit. Please use smaller photos (under 5 MB each) and try again.', 'error');
+      btn.innerHTML = 'Submit Estimate';
+      btn.disabled = false;
+      _submitting = false;
+      return;
+    }
+
+    const body = {
+      token: _token,
+      laborItems: _laborItems.filter(li => li.desc || li.total).map(li => ({ desc: li.desc, total: parseFloat(li.total) || 0 })),
+      laborSubtotal: lab,
+      materialsTotal: mat,
+      materialsNotes: matNotes,
+      grandTotal: lab + mat,
+      beforePhotos: beforePhotosB64,
+      receiptData: receiptDataB64,
+    };
+
+    const r = await fetch('/api/portal/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const result = await r.json();
+    if (!result.ok) throw new Error(result.error || 'Submission failed');
+
+    show('done');
+    window.scrollTo(0, 0);
+  } catch (e) {
+    console.error(e);
+    showToast('Submission failed: ' + e.message + '. Check your connection and try again.', 'error');
+    btn.innerHTML = 'Submit Estimate';
+    btn.disabled = false;
+    _submitting = false;
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]); // strip data:...;base64, prefix
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+</script>
+</body>
+</html>

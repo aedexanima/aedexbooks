@@ -94,7 +94,7 @@ Never rely on `_jobFolderCache` as the source of truth — it is in-memory only 
 |---|---|
 | Clients | id, firstName, lastName, phone, email, billingAddr, ref, notes, createdAt, updatedAt, archived, clientType, company |
 | Properties | id, clientId, address, type, tenantFirstName, tenantLastName, tenantPhone, tenantEmail, notes, moveInDate, createdAt, updatedAt |
-| Jobs | id, clientId, propertyId, title, status, startDate, endDate, value, materials, photoNotes, notes, estRef, createdAt, updatedAt, workDetails, contractorIds, archived, photos, afterFolderId |
+| Jobs | id, clientId, propertyId, title, status, startDate, endDate, value, materials, photoNotes, notes, estRef, createdAt, updatedAt, workDetails, contractorIds, archived, photos, afterFolderId, portalToken, contractorEstimate, clientEstimate, contractorInstructions |
 | Documents | id, number, estRef, type, clientId, propertyId, date, dueDate, paymentMethod, notes, lineItems, taxRate, subtotal, taxAmt, total, paid, createdAt, updatedAt, paymentTerms, laborDisclaimer, archived, jobId |
 | Expenses | id, date, amount, desc, category, jobId, createdAt, updatedAt, receiptFileId, receiptFileName, receiptWebViewLink |
 | Contractors | id, name, trade, phone, email, notes, createdAt, updatedAt |
@@ -192,6 +192,21 @@ Key file: same folder as app — `service_account.json` (not in this repo)
 - OAuth app submitted for Google verification 2026-04-19
 
 ---
+
+## Contractor Portal (added 2026-04-20)
+- **Portal page:** `/contractor.html?token=UUID` — unauthenticated, mobile-first, no Google auth
+- **Token generation:** `crypto.randomUUID()` in `sendPortalLink()`, stored on `job.portalToken`
+- **KV namespace:** `PORTAL_TOKENS` (separate from `ACCESS_LIST`) — must be created with `npx wrangler kv namespace create PORTAL_TOKENS` and ID added to `wrangler.toml`
+- **KV keys:** `portal:TOKEN` → job snapshot, `submission:TOKEN` → submitted estimate (including base64 photos); both have 30-day TTL
+- **Cloudflare Functions:**
+  - `POST /api/portal/create` — called from aedexbooks to create the token entry in KV
+  - `GET /api/portal/get?token=X[&include=submission]` — returns job snapshot; with `include=submission` also returns submitted estimate data
+  - `POST /api/portal/submit` — contractor submits; stores in KV, marks status=submitted, sends Resend notification
+- **Notification email:** Uses Resend.com API — key stored as Cloudflare secret `RESEND_API_KEY`. From address must be verified in Resend dashboard (e.g. `notifications@aedexanima.com`)
+- **Photo handling:** Contractor photos stored as base64 in KV submission. When Levi clicks "Upload Photos to Drive" in aedexbooks, the app fetches from KV and uploads to Drive using his OAuth token
+- **`contractorEstimate`** on job: JSON — labor items, subtotal, materials total/notes, grand total, submitted timestamp, Drive file IDs (after upload). **Never overwritten once submitted.**
+- **`clientEstimate`** on job: JSON — editable line items pre-populated from contractor estimate via "Convert to Client Estimate." `lockedAt` set when the client doc is sent
+- **`contractorInstructions`** on job: plain text shown on the contractor portal
 
 ## KV access management
 ```bash

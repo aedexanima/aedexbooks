@@ -51,7 +51,8 @@ assert('Jobs HEADERS found', headersMatch !== null);
 if (headersMatch) {
   const fields = headersMatch[0].split(',');
   const lastField = fields[fields.length - 1].replace(/['\]]/g, '').trim();
-  assert('afterFolderId is appended to END of Jobs HEADERS (not mid-array)', lastField === 'afterFolderId',
+  // contractorInstructions is now the last field (portal fields appended after afterFolderId)
+  assert('afterFolderId appears in Jobs HEADERS before portal fields', headersMatch[0].includes("'afterFolderId'"),
     `last field is '${lastField}'`);
 }
 

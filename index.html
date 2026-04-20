@@ -765,10 +765,18 @@ textarea{resize:vertical;min-height:60px}
       </div>
     </div>
   </div>
-  <div class="field" style="margin-bottom:16px">
+  <div class="field" style="margin-bottom:12px">
     <label>Assigned contractors</label>
     <div id="jm-contractors" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;min-height:28px"></div>
   </div>
+  <div class="field" style="margin-bottom:16px">
+    <label>Contractor instructions <span style="font-weight:400;color:var(--text3)">(shown on the contractor portal)</span></label>
+    <textarea id="jm-contractor-instructions" placeholder="Special instructions for the contractor — access codes, parking, what to focus on..."></textarea>
+  </div>
+
+  <!-- PORTAL & ESTIMATES SECTION -->
+  <div id="jm-portal-section"></div>
+
   <div class="btn-row">
     <button class="btn accent" onclick="saveJob()">Save job</button>
     <button class="btn" onclick="closeModal('job-modal')">Cancel</button>
@@ -1325,7 +1333,7 @@ function setSyncStatus(m){
 const HEADERS={
   Clients:['id','firstName','lastName','phone','email','billingAddr','ref','notes','createdAt','updatedAt','archived','clientType','company','altEmail'],
   Properties:['id','clientId','address','type','tenantFirstName','tenantLastName','tenantPhone','tenantEmail','notes','moveInDate','createdAt','updatedAt'],
-  Jobs:['id','clientId','propertyId','title','status','startDate','endDate','value','materials','photoNotes','notes','estRef','createdAt','updatedAt','workDetails','contractorIds','archived','photos','afterFolderId'],
+  Jobs:['id','clientId','propertyId','title','status','startDate','endDate','value','materials','photoNotes','notes','estRef','createdAt','updatedAt','workDetails','contractorIds','archived','photos','afterFolderId','portalToken','contractorEstimate','clientEstimate','contractorInstructions'],
   Documents:['id','number','estRef','type','clientId','propertyId','date','dueDate','paymentMethod','notes','lineItems','taxRate','subtotal','taxAmt','total','paid','createdAt','updatedAt','paymentTerms','laborDisclaimer','archived','jobId'],
   Expenses:['id','date','amount','desc','category','jobId','createdAt','updatedAt','receiptFileId','receiptFileName','receiptWebViewLink'],
   ActivityLog:['id','ts','action','recordType','recordId','detail'],
@@ -1401,7 +1409,7 @@ async function syncToSheet(){
     const writes={
       Clients:DB.clients.map(c=>[c.id,c.firstName||'',c.lastName||'',c.phone,c.email,c.billingAddr,c.ref,c.notes,c.createdAt,c.updatedAt,c.archived?'true':'false',c.clientType||'handyman',c.company||'',c.altEmail||'']),
       Properties:DB.properties.map(p=>[p.id,p.clientId,p.address,p.type,p.tenantFirstName||'',p.tenantLastName||'',p.tenantPhone,p.tenantEmail,p.notes,p.moveInDate||'',p.createdAt,p.updatedAt]),
-      Jobs:DB.jobs.map(j=>[j.id,j.clientId,j.propertyId,j.title,j.status,j.startDate,j.endDate,j.value,j.materials,j.photoNotes,j.notes,j.estRef,j.createdAt,j.updatedAt,j.workDetails||'',JSON.stringify(j.contractorIds||[]),j.archived?'true':'false',JSON.stringify(j.photos||[]),j.afterFolderId||'']),
+      Jobs:DB.jobs.map(j=>[j.id,j.clientId,j.propertyId,j.title,j.status,j.startDate,j.endDate,j.value,j.materials,j.photoNotes,j.notes,j.estRef,j.createdAt,j.updatedAt,j.workDetails||'',JSON.stringify(j.contractorIds||[]),j.archived?'true':'false',JSON.stringify(j.photos||[]),j.afterFolderId||'',j.portalToken||'',JSON.stringify(j.contractorEstimate||null),JSON.stringify(j.clientEstimate||null),j.contractorInstructions||'']),
       Documents:DB.docs.map(d=>[d.id,d.number||'',d.estRef||'',d.type,d.clientId,d.propertyId,d.date,d.dueDate,d.paymentMethod,d.notes,JSON.stringify(d.lineItems),d.taxRate,d.subtotal,d.taxAmt,d.total,d.paid?'true':'false',d.createdAt,d.updatedAt,d.paymentTerms||'',d.laborDisclaimer===false?'false':'true',d.archived?'true':'false',d.jobId||'']),
       Expenses:DB.expenses.map(e=>[e.id,e.date,e.amount,e.desc,e.category,e.jobId,e.createdAt,e.updatedAt,e.receiptFileId||'',e.receiptFileName||'',e.receiptWebViewLink||'']),
       ActivityLog:DB.activity.map(a=>[a.id,a.ts,a.action,a.recordType,a.recordId,a.detail]),
@@ -1449,7 +1457,7 @@ async function loadFromSheet(){
 
     DB.clients   =parse(dataRes[0].result.values,clientKeys).map(c=>({...c,archived:String(c.archived).toLowerCase()==='true',clientType:c.clientType||'handyman',company:c.company||'',altEmail:c.altEmail||''}));
     DB.properties=parse(dataRes[1].result.values,propKeys);
-    DB.jobs      =parse(dataRes[2].result.values,HEADERS.Jobs).map(j=>({...j,value:+j.value||0,contractorIds:safeJSON(j.contractorIds,[]),archived:String(j.archived).toLowerCase()==='true',photos:safeJSON(j.photos,[]),afterFolderId:j.afterFolderId||''}));
+    DB.jobs      =parse(dataRes[2].result.values,HEADERS.Jobs).map(j=>({...j,value:+j.value||0,contractorIds:safeJSON(j.contractorIds,[]),archived:String(j.archived).toLowerCase()==='true',photos:safeJSON(j.photos,[]),afterFolderId:j.afterFolderId||'',portalToken:j.portalToken||'',contractorEstimate:safeJSON(j.contractorEstimate,null),clientEstimate:safeJSON(j.clientEstimate,null),contractorInstructions:j.contractorInstructions||''}));
     DB.docs      =parse(dataRes[3].result.values,HEADERS.Documents).map(d=>({...d,jobId:d.jobId||'',lineItems:safeJSON(d.lineItems,[]),taxRate:+d.taxRate||0,subtotal:+d.subtotal||0,taxAmt:+d.taxAmt||0,total:+d.total||0,paid:String(d.paid).toLowerCase()==='true',laborDisclaimer:String(d.laborDisclaimer).toLowerCase()!=='false',archived:String(d.archived).toLowerCase()==='true'}));
     migrateNames(); // runs after all data is loaded so invoice back-fill can find docs
     DB.expenses  =parse(dataRes[4].result.values,HEADERS.Expenses).map(e=>({...e,amount:+e.amount||0,receiptFileId:e.receiptFileId||'',receiptFileName:e.receiptFileName||'',receiptWebViewLink:e.receiptWebViewLink||''}));
@@ -2327,7 +2335,7 @@ function openJobModal(clientId=''){
   document.getElementById('jm-title').textContent='New Job';
   document.getElementById('jm-del').style.display='none';
   document.getElementById('jm-restore').style.display='none';
-  ['jm-title-inp','jm-start','jm-end','jm-materials','jm-notes','jm-est-ref'].forEach(id=>document.getElementById(id).value='');
+  ['jm-title-inp','jm-start','jm-end','jm-materials','jm-notes','jm-est-ref','jm-contractor-instructions'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('jm-value').value='';
   document.getElementById('jm-status').value='estimate-sent';
   document.getElementById('jm-start').value=today();
@@ -2335,6 +2343,7 @@ function openJobModal(clientId=''){
   populateProperties();
   renderJobContractorPicker([]);
   renderJobPhotoStrip();
+  renderPortalSection(null);
   document.getElementById('job-modal').classList.add('open');
 }
 
@@ -2356,10 +2365,12 @@ function editJob(id){
   document.getElementById('jm-materials').value=j.materials||'';
   document.getElementById('jm-notes').value=j.notes||'';
   document.getElementById('jm-est-ref').value=j.estRef||'';
+  document.getElementById('jm-contractor-instructions').value=j.contractorInstructions||'';
   populateClientDropdown('jm-client',j.clientId);
   populateProperties(j.propertyId);
   renderJobContractorPicker(j.contractorIds||[]);
   renderJobPhotoStrip();
+  renderPortalSection(j);
   document.getElementById('job-modal').classList.add('open');
 }
 
@@ -2400,6 +2411,11 @@ function saveJob(){
     afterFolderId:existing?.afterFolderId||_stagingAfterFolderId||'',
     workDetails:existing?.workDetails||'',
     archived:existing?.archived||false,
+    contractorInstructions:document.getElementById('jm-contractor-instructions').value,
+    // Preserve portal/estimate fields — never overwritten by the job modal
+    portalToken:existing?.portalToken||'',
+    contractorEstimate:existing?.contractorEstimate||null,
+    clientEstimate:existing?.clientEstimate||null,
     createdAt:existing?.createdAt||ts,updatedAt:ts
   };
   if(currentJobId){
@@ -2426,6 +2442,317 @@ function restoreCurrentJob(){
   logActivity('Restored','Job',currentJobId,j?`${j.title} — ${clientFullName(getClient(j.clientId))}`:'');
   saveAndSync();renderPipeline();renderJobs();
   closeModal('job-modal');toast('Job restored');
+}
+
+// ============================================================
+// CONTRACTOR PORTAL — job modal portal & estimates section
+// ============================================================
+
+function renderPortalSection(job){
+  const el=document.getElementById('jm-portal-section');
+  if(!el) return;
+  // Only show portal section for existing jobs (job must be saved first)
+  if(!job){el.innerHTML='';return;}
+  const ctr=job.contractorIds&&job.contractorIds.length?DB.contractors.find(c=>c.id===job.contractorIds[0]):null;
+  const hasToken=!!job.portalToken;
+  const est=job.contractorEstimate;
+  const cEst=job.clientEstimate;
+
+  // ── Portal link section ──
+  let portalHtml='';
+  if(!ctr){
+    portalHtml=`<div style="font-size:12px;color:var(--text3);padding:8px 0">Assign a contractor above to send a portal link.</div>`;
+  } else if(!hasToken){
+    portalHtml=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:13px;color:var(--text2)">Send portal link to <strong>${ctr.name}</strong>${ctr.email?' ('+ctr.email+')':''}</span>
+      <button class="btn sm accent" id="jm-send-portal-btn" onclick="sendPortalLink()">Send Portal Link</button>
+    </div>`;
+  } else {
+    const portalUrl=`${location.origin}/contractor.html?token=${job.portalToken}`;
+    portalHtml=`<div style="font-size:12px;color:var(--text2)">Portal link sent to <strong>${ctr.name}</strong>
+      <span style="color:var(--text3);margin-left:8px">${est?'✓ Submitted':'Awaiting submission'}</span>
+    </div>
+    <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="text" value="${portalUrl}" readonly style="flex:1;min-width:180px;font-size:11px;font-family:'DM Mono',monospace;padding:5px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text2)">
+      <button class="btn sm" onclick="navigator.clipboard.writeText('${portalUrl}').then(()=>toast('Link copied','success'))">Copy</button>
+    </div>`;
+  }
+
+  // ── Contractor estimate section ──
+  let estHtml='';
+  if(est){
+    const laborRows=(est.laborItems||[]).map(li=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)"><span>${li.desc||'—'}</span><strong style="font-family:'DM Mono',monospace">$${(+li.total||0).toFixed(2)}</strong></div>`).join('');
+    estHtml=`<div style="margin-top:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:14px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:10px">Contractor Estimate — Read Only</div>
+      <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">Labor</div>
+      ${laborRows||'<div style="font-size:12px;color:var(--text3)">No labor items</div>'}
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-top:6px"><span>Labor subtotal</span><strong style="font-family:'DM Mono',monospace">$${(+est.laborSubtotal||0).toFixed(2)}</strong></div>
+      <div style="border-top:1px solid var(--border);margin:10px 0"></div>
+      <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Materials</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2)"><span>${est.materialsNotes||'Materials'}</span><strong style="font-family:'DM Mono',monospace">$${(+est.materialsTotal||0).toFixed(2)}</strong></div>
+      ${est.receiptFileId?`<div style="margin-top:6px"><a href="https://drive.google.com/file/d/${est.receiptFileId}/view" target="_blank" style="font-size:11px;color:var(--accent)">📎 View receipt</a></div>`:''}
+      ${(est.photoFileIds||[]).length?`<div style="margin-top:6px;font-size:11px;color:var(--text3)">${est.photoFileIds.length} before photo${est.photoFileIds.length!==1?'s':''} uploaded</div>`:''}
+      <div style="border-top:1px solid var(--border);margin:10px 0"></div>
+      <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600"><span>Grand total</span><span style="font-family:'DM Mono',monospace;color:var(--accent)">$${(+est.grandTotal||0).toFixed(2)}</span></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        ${!est.photoFileIds?.length&&job.portalToken?`<button class="btn sm" onclick="acceptContractorPhotos('${job.portalToken}')">↑ Upload Photos to Drive</button>`:''}
+        ${!cEst?`<button class="btn sm accent" onclick="convertToClientEstimate()">Convert to Client Estimate →</button>`:''}
+      </div>
+    </div>`;
+  }
+
+  // ── Client estimate section ──
+  let cEstHtml='';
+  if(cEst){
+    const locked=!!cEst.lockedAt;
+    const cRows=(cEst.lineItems||[]).map((li,i)=>`<div style="display:grid;grid-template-columns:2fr 70px 80px 80px 26px;gap:6px;align-items:center;margin-bottom:6px">
+      ${locked
+        ?`<span style="font-size:13px">${li.desc||'—'}</span><span style="font-size:12px;text-align:center">${li.qty||1}</span><span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace">$${(+li.rate||0).toFixed(2)}</span><span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace">$${(+li.amount||0).toFixed(2)}</span><span></span>`
+        :`<input type="text" value="${(li.desc||'').replace(/"/g,'&quot;')}" oninput="updateClientEstimateLine(${i},'desc',this.value)" style="font-size:12px;padding:5px 7px">
+         <input type="number" value="${li.qty||1}" min="0" step="0.01" oninput="updateClientEstimateLine(${i},'qty',this.value)" style="font-size:12px;padding:5px 7px;text-align:center">
+         <input type="number" value="${(+li.rate||0).toFixed(2)}" min="0" step="0.01" oninput="updateClientEstimateLine(${i},'rate',this.value)" style="font-size:12px;padding:5px 7px;text-align:right">
+         <span style="font-size:12px;font-family:'DM Mono',monospace;text-align:right;padding:5px 0">$${(+li.amount||0).toFixed(2)}</span>
+         <button onclick="removeClientEstimateLine(${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:0;width:26px;height:26px;border-radius:4px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text3)'">×</button>`
+      }
+    </div>`).join('');
+    const cSubtotal=(cEst.lineItems||[]).reduce((s,li)=>s+(+li.amount||0),0);
+    cEstHtml=`<div style="margin-top:14px;border:1px solid var(--border);border-radius:var(--rs);padding:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)">Client Estimate${locked?' — Locked (sent)':''}</div>
+        ${locked?'':`<div style="display:flex;gap:6px"><button class="btn sm" onclick="addClientEstimateLine()">+ Line</button><button class="btn sm accent" onclick="saveClientEstimate()">Save</button></div>`}
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 70px 80px 80px 26px;gap:6px;margin-bottom:5px">
+        <span style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase">Description</span>
+        <span style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;text-align:center">Qty</span>
+        <span style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;text-align:right">Rate</span>
+        <span style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;text-align:right">Amount</span>
+        <span></span>
+      </div>
+      ${cRows||'<div style="font-size:12px;color:var(--text3);padding:8px 0">No line items yet</div>'}
+      <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px;display:flex;justify-content:flex-end">
+        <div style="font-size:14px;font-weight:600">Subtotal: <span style="font-family:'DM Mono',monospace;color:var(--accent)">$${cSubtotal.toFixed(2)}</span></div>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML=`<div class="sec-label" style="margin-top:14px">Contractor Portal & Estimates</div>
+    ${portalHtml}
+    ${estHtml}
+    ${cEstHtml}`;
+}
+
+async function sendPortalLink(){
+  if(!currentJobId){toast('Save the job first before sending a portal link','error');return;}
+  const job=DB.jobs.find(j=>j.id===currentJobId);
+  if(!job){return;}
+  const ctr=job.contractorIds&&job.contractorIds.length?DB.contractors.find(c=>c.id===job.contractorIds[0]):null;
+  if(!ctr){toast('Assign a contractor to this job first','error');return;}
+  if(!ctr.email){toast('Contractor has no email address — add one in the Contractors page','error');return;}
+  if(!signedIn||!accessToken){toast('Sign in to send portal link','error');return;}
+  const btn=document.getElementById('jm-send-portal-btn');
+  if(btn){btn.textContent='Sending…';btn.disabled=true;}
+
+  const token=crypto.randomUUID();
+  const prop=getProperty(job.propertyId);
+  const jobAddress=prop.address||'';
+
+  // Build Drive folder IDs if available
+  let beforeFolderId='',receiptsFolderId='';
+  try{
+    const folders=await getJobFolders(currentJobId);
+    beforeFolderId=folders.beforeFolderId||'';
+    receiptsFolderId=folders.receiptsFolderId||'';
+  }catch(e){console.warn('Could not resolve job folders:',e.message);}
+
+  // Store token in KV via Cloudflare Function
+  try{
+    const r=await fetch('/api/portal/create',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        token,jobId:currentJobId,
+        contractorId:ctr.id,contractorName:ctr.name,contractorEmail:ctr.email,
+        jobTitle:job.title,jobAddress,
+        jobInstructions:job.contractorInstructions||'',
+        beforeFolderId,receiptsFolderId
+      })
+    });
+    if(!r.ok) throw new Error('Portal create failed');
+  }catch(e){
+    toast('Could not create portal link: '+e.message,'error');
+    if(btn){btn.textContent='Send Portal Link';btn.disabled=false;}
+    return;
+  }
+
+  // Persist token to job record
+  const idx=DB.jobs.findIndex(j=>j.id===currentJobId);
+  if(idx!==-1){DB.jobs[idx].portalToken=token;DB.jobs[idx].updatedAt=now();}
+  saveAndSync();
+
+  // Send email to contractor via Gmail API
+  const portalUrl=`${location.origin}/contractor.html?token=${token}`;
+  const subject=`Work order — ${job.title}${jobAddress?' at '+jobAddress:''}`;
+  const message=`Hi ${ctr.name},
+
+You've been assigned to a job and can submit your labor and materials estimate using the secure link below.
+
+Job: ${job.title}${jobAddress?'\nAddress: '+jobAddress:''}
+${job.contractorInstructions?'\nInstructions:\n'+job.contractorInstructions:''}
+
+Your portal link:
+${portalUrl}
+
+Important: Save all material receipts and submit them with your estimate.
+
+Thanks,
+${DB.settings.yourName||DB.settings.bizName||'Aedex Anima'}`;
+
+  const boundary='----=_aedex_portal_'+Date.now();
+  const mime=[
+    'MIME-Version: 1.0','From: me',`To: ${ctr.email}`,
+    `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
+    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    '',`--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"','Content-Transfer-Encoding: 7bit','',
+    message,'',`--${boundary}--`
+  ].join('\r\n');
+  const raw=btoa(unescape(encodeURIComponent(mime))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+
+  try{
+    const resp=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{
+      method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({raw})
+    });
+    if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||'Send failed');}
+    toast(`Portal link sent to ${ctr.email}`,'success');
+    logActivity('Sent','Job',currentJobId,`Portal link → ${ctr.name}`);
+  }catch(e){
+    toast('Email failed: '+e.message+' — link created, copy it manually','error');
+  }
+
+  // Re-render portal section with new token
+  const updatedJob=DB.jobs.find(j=>j.id===currentJobId);
+  renderPortalSection(updatedJob);
+}
+
+async function acceptContractorPhotos(token){
+  if(!token||!signedIn||!accessToken){toast('Sign in to upload photos','error');return;}
+  const job=DB.jobs.find(j=>j.id===currentJobId);
+  if(!job){return;}
+  const btn=event.target;
+  btn.textContent='Fetching…';btn.disabled=true;
+  try{
+    const r=await fetch(`/api/portal/get?token=${token}&include=submission`);
+    const data=await r.json();
+    if(!data.ok){toast('Could not fetch submission','error');btn.textContent='↑ Upload Photos to Drive';btn.disabled=false;return;}
+    const sub=data.submission;
+    if(!sub){toast('No submission data found','error');btn.textContent='↑ Upload Photos to Drive';btn.disabled=false;return;}
+
+    const folders=await getJobFolders(currentJobId);
+    const photoFileIds=[];
+
+    // Upload before photos
+    if(sub.beforePhotos&&sub.beforePhotos.length){
+      btn.textContent='Uploading photos…';
+      for(const p of sub.beforePhotos){
+        const blob=_b64toBlob(p.data,p.type||'image/jpeg');
+        const file=new File([blob],p.name||'before.jpg',{type:p.type||'image/jpeg'});
+        const result=await uploadFileToDrive(file,folders.beforeFolderId);
+        photoFileIds.push({fileId:result.id,name:result.name,webViewLink:result.webViewLink,category:'before'});
+      }
+    }
+
+    // Upload receipt
+    let receiptFileId='';
+    if(sub.receiptData){
+      btn.textContent='Uploading receipt…';
+      const blob=_b64toBlob(sub.receiptData.data,sub.receiptData.type||'image/jpeg');
+      const file=new File([blob],sub.receiptData.name||'receipt.jpg',{type:sub.receiptData.type||'image/jpeg'});
+      const result=await uploadFileToDrive(file,folders.receiptsFolderId);
+      receiptFileId=result.id;
+    }
+
+    // Update job record
+    const idx=DB.jobs.findIndex(j=>j.id===currentJobId);
+    if(idx!==-1){
+      const ce=DB.jobs[idx].contractorEstimate||{};
+      ce.photoFileIds=photoFileIds.map(p=>p.fileId);
+      ce.receiptFileId=receiptFileId;
+      DB.jobs[idx].contractorEstimate=ce;
+      DB.jobs[idx].photos=[...(DB.jobs[idx].photos||[]),...photoFileIds];
+      DB.jobs[idx].updatedAt=now();
+    }
+    saveAndSync();
+    _jobPhotos=DB.jobs.find(j=>j.id===currentJobId)?.photos||[];
+    renderJobPhotoStrip();
+    renderPortalSection(DB.jobs.find(j=>j.id===currentJobId));
+    toast('Photos uploaded to Drive','success');
+  }catch(e){
+    console.error(e);toast('Upload failed: '+e.message,'error');
+    btn.textContent='↑ Upload Photos to Drive';btn.disabled=false;
+  }
+}
+
+function _b64toBlob(b64,type='image/jpeg'){
+  const bin=atob(b64);
+  const arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+  return new Blob([arr],{type});
+}
+
+function convertToClientEstimate(){
+  const job=DB.jobs.find(j=>j.id===currentJobId);
+  if(!job||!job.contractorEstimate) return;
+  const ce=job.contractorEstimate;
+  // Pre-populate client estimate from contractor labor items
+  const lineItems=(ce.laborItems||[]).map(li=>({
+    desc:li.desc||'',
+    qty:1,
+    rate:+li.total||0,
+    amount:+li.total||0
+  }));
+  // Add materials as a single line item
+  if(+ce.materialsTotal>0){
+    lineItems.push({desc:ce.materialsNotes||'Materials',qty:1,rate:+ce.materialsTotal||0,amount:+ce.materialsTotal||0});
+  }
+  const clientEstimate={lineItems,createdAt:now(),lockedAt:null};
+  const idx=DB.jobs.findIndex(j=>j.id===currentJobId);
+  if(idx!==-1){DB.jobs[idx].clientEstimate=clientEstimate;DB.jobs[idx].updatedAt=now();}
+  saveAndSync();
+  renderPortalSection(DB.jobs.find(j=>j.id===currentJobId));
+  toast('Client estimate created — edit and adjust before sending','success');
+}
+
+function updateClientEstimateLine(i,field,val){
+  const job=DB.jobs.find(j=>j.id===currentJobId);
+  if(!job||!job.clientEstimate) return;
+  const line=job.clientEstimate.lineItems[i];
+  if(!line) return;
+  line[field]=field==='desc'?val:parseFloat(val)||0;
+  if(field==='qty'||field==='rate') line.amount=(line.qty||1)*(line.rate||0);
+  renderPortalSection(job);
+}
+
+function removeClientEstimateLine(i){
+  const job=DB.jobs.find(j=>j.id===currentJobId);
+  if(!job||!job.clientEstimate) return;
+  job.clientEstimate.lineItems.splice(i,1);
+  renderPortalSection(job);
+}
+
+function addClientEstimateLine(){
+  const job=DB.jobs.find(j=>j.id===currentJobId);
+  if(!job||!job.clientEstimate) return;
+  job.clientEstimate.lineItems.push({desc:'',qty:1,rate:0,amount:0});
+  renderPortalSection(job);
+}
+
+function saveClientEstimate(){
+  const job=DB.jobs.find(j=>j.id===currentJobId);
+  if(!job||!job.clientEstimate) return;
+  job.updatedAt=now();
+  saveAndSync();
+  toast('Client estimate saved','success');
 }
 
 // ============================================================
