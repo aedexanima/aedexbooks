@@ -2468,7 +2468,7 @@ function renderPortalSection(job){
       <button class="btn sm accent" id="jm-send-portal-btn" onclick="sendPortalLink()">Send Portal Link</button>
     </div>`;
   } else {
-    const portalUrl=`${location.origin}/contractor.html?token=${job.portalToken}`;
+    const portalUrl=`${location.origin}/contractor?token=${job.portalToken}`;
     portalHtml=`<div style="font-size:12px;color:var(--text2)">Portal link sent to <strong>${ctr.name}</strong>
       <span style="color:var(--text3);margin-left:8px">${est?'✓ Submitted':'Awaiting submission'}</span>
     </div>
@@ -2590,7 +2590,7 @@ async function sendPortalLink(){
   saveAndSync();
 
   // Send email to contractor via Gmail API
-  const portalUrl=`${location.origin}/contractor.html?token=${token}`;
+  const portalUrl=`${location.origin}/contractor?token=${token}`;
   const subject=`Work order — ${job.title}${jobAddress?' at '+jobAddress:''}`;
   const message=`Hi ${ctr.name},
 
