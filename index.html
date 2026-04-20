@@ -72,11 +72,12 @@ tbody tr:hover td{background:#fafaf7}
 /* BADGES */
 .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
 .badge.quoted{background:var(--blue-light);color:var(--blue)}
+.badge.unassigned{background:#f1f0eb;color:#6b6960}
+.badge.assigned-for-estimate{background:var(--amber-light);color:var(--amber)}
 .badge.progress,.badge.in-progress{background:var(--amber-light);color:var(--amber)}
 .badge.approved{background:#dcfce7;color:#166534}
-.badge.complete{background:var(--accent-light);color:var(--accent-text)}
+.badge.complete,.badge.paid{background:var(--accent-light);color:var(--accent-text)}
 .badge.invoiced,.badge.invoice-sent{background:var(--purple-light);color:var(--purple)}
-.badge.paid{background:var(--accent-light);color:var(--accent-text)}
 .badge.unpaid{background:var(--red-light);color:var(--red)}
 .badge.estimate{background:var(--blue-light);color:var(--blue)}
 .badge.invoice{background:var(--purple-light);color:var(--purple)}
@@ -721,11 +722,11 @@ textarea{resize:vertical;min-height:60px}
     <div class="field"><label>Job title *</label><input type="text" id="jm-title-inp" placeholder="e.g. Bathroom tile repair"></div>
     <div class="field"><label>Status</label>
       <select id="jm-status">
+        <option value="unassigned">Unassigned</option>
+        <option value="assigned-for-estimate">Assigned for Estimate</option>
         <option value="estimate-sent">Estimate Sent</option>
-        <option value="approved">Approved</option>
         <option value="in-progress">In Progress</option>
-        <option value="invoice-sent">Invoice Sent</option>
-        <option value="paid">Paid</option>
+        <option value="complete">Complete</option>
       </select>
     </div>
   </div>
@@ -1077,10 +1078,27 @@ const TABS=['Clients','Properties','Jobs','Documents','Expenses','ActivityLog','
 // ============================================================
 // DATA MIGRATION
 // ============================================================
+function nextJobNumber(){
+  // Find the highest existing JOB-XXXX number and increment
+  let max=0;
+  DB.jobs.forEach(j=>{
+    const m=(j.jobNumber||'').match(/^JOB-(\d+)$/);
+    if(m) max=Math.max(max,parseInt(m[1],10));
+  });
+  return 'JOB-'+(max+1).toString().padStart(4,'0');
+}
+
 function migrateNames(){
+  // Assign job numbers to any jobs that don't have one yet (idempotent)
+  DB.jobs.forEach(j=>{if(!j.jobNumber) j.jobNumber=nextJobNumber();});
+
   // Migrate old job statuses to new values
-  const statusMap={'quoted':'estimate-sent','complete':'paid','invoiced':'invoice-sent','progress':'in-progress','awaiting-payment':'invoice-sent'};
-  DB.jobs.forEach(j=>{if(statusMap[j.status]) j.status=statusMap[j.status];});
+  const statusMap={'quoted':'estimate-sent','complete':'complete','invoiced':'complete','paid':'complete','approved':'in-progress','progress':'in-progress','awaiting-payment':'complete'};
+  const validStatuses=new Set(['unassigned','assigned-for-estimate','estimate-sent','in-progress','complete']);
+  DB.jobs.forEach(j=>{
+    if(statusMap[j.status]) j.status=statusMap[j.status];
+    if(!j.status||!validStatuses.has(j.status)) j.status='unassigned';
+  });
 
   // Split old combined name fields into firstName/lastName.
   // Safe to call multiple times — only acts on records that still have the old field.
@@ -1333,7 +1351,7 @@ function setSyncStatus(m){
 const HEADERS={
   Clients:['id','firstName','lastName','phone','email','billingAddr','ref','notes','createdAt','updatedAt','archived','clientType','company','altEmail'],
   Properties:['id','clientId','address','type','tenantFirstName','tenantLastName','tenantPhone','tenantEmail','notes','moveInDate','createdAt','updatedAt'],
-  Jobs:['id','clientId','propertyId','title','status','startDate','endDate','value','materials','photoNotes','notes','estRef','createdAt','updatedAt','workDetails','contractorIds','archived','photos','afterFolderId','portalToken','contractorEstimate','clientEstimate','contractorInstructions'],
+  Jobs:['id','clientId','propertyId','title','status','startDate','endDate','value','materials','photoNotes','notes','estRef','createdAt','updatedAt','workDetails','contractorIds','archived','photos','afterFolderId','portalToken','contractorEstimate','clientEstimate','contractorInstructions','jobNumber'],
   Documents:['id','number','estRef','type','clientId','propertyId','date','dueDate','paymentMethod','notes','lineItems','taxRate','subtotal','taxAmt','total','paid','createdAt','updatedAt','paymentTerms','laborDisclaimer','archived','jobId'],
   Expenses:['id','date','amount','desc','category','jobId','createdAt','updatedAt','receiptFileId','receiptFileName','receiptWebViewLink'],
   ActivityLog:['id','ts','action','recordType','recordId','detail'],
@@ -1409,7 +1427,7 @@ async function syncToSheet(){
     const writes={
       Clients:DB.clients.map(c=>[c.id,c.firstName||'',c.lastName||'',c.phone,c.email,c.billingAddr,c.ref,c.notes,c.createdAt,c.updatedAt,c.archived?'true':'false',c.clientType||'handyman',c.company||'',c.altEmail||'']),
       Properties:DB.properties.map(p=>[p.id,p.clientId,p.address,p.type,p.tenantFirstName||'',p.tenantLastName||'',p.tenantPhone,p.tenantEmail,p.notes,p.moveInDate||'',p.createdAt,p.updatedAt]),
-      Jobs:DB.jobs.map(j=>[j.id,j.clientId,j.propertyId,j.title,j.status,j.startDate,j.endDate,j.value,j.materials,j.photoNotes,j.notes,j.estRef,j.createdAt,j.updatedAt,j.workDetails||'',JSON.stringify(j.contractorIds||[]),j.archived?'true':'false',JSON.stringify(j.photos||[]),j.afterFolderId||'',j.portalToken||'',JSON.stringify(j.contractorEstimate||null),JSON.stringify(j.clientEstimate||null),j.contractorInstructions||'']),
+      Jobs:DB.jobs.map(j=>[j.id,j.clientId,j.propertyId,j.title,j.status,j.startDate,j.endDate,j.value,j.materials,j.photoNotes,j.notes,j.estRef,j.createdAt,j.updatedAt,j.workDetails||'',JSON.stringify(j.contractorIds||[]),j.archived?'true':'false',JSON.stringify(j.photos||[]),j.afterFolderId||'',j.portalToken||'',JSON.stringify(j.contractorEstimate||null),JSON.stringify(j.clientEstimate||null),j.contractorInstructions||'',j.jobNumber||'']),
       Documents:DB.docs.map(d=>[d.id,d.number||'',d.estRef||'',d.type,d.clientId,d.propertyId,d.date,d.dueDate,d.paymentMethod,d.notes,JSON.stringify(d.lineItems),d.taxRate,d.subtotal,d.taxAmt,d.total,d.paid?'true':'false',d.createdAt,d.updatedAt,d.paymentTerms||'',d.laborDisclaimer===false?'false':'true',d.archived?'true':'false',d.jobId||'']),
       Expenses:DB.expenses.map(e=>[e.id,e.date,e.amount,e.desc,e.category,e.jobId,e.createdAt,e.updatedAt,e.receiptFileId||'',e.receiptFileName||'',e.receiptWebViewLink||'']),
       ActivityLog:DB.activity.map(a=>[a.id,a.ts,a.action,a.recordType,a.recordId,a.detail]),
@@ -1460,7 +1478,7 @@ async function loadFromSheet(){
     // (protects against transient API errors or partially-failed syncs wiping data).
     const sheetClients =parse(dataRes[0].result.values,clientKeys).map(c=>({...c,archived:String(c.archived).toLowerCase()==='true',clientType:c.clientType||'handyman',company:c.company||'',altEmail:c.altEmail||''}));
     const sheetProps   =parse(dataRes[1].result.values,propKeys);
-    const sheetJobs    =parse(dataRes[2].result.values,HEADERS.Jobs).map(j=>({...j,value:+j.value||0,contractorIds:safeJSON(j.contractorIds,[]),archived:String(j.archived).toLowerCase()==='true',photos:safeJSON(j.photos,[]),afterFolderId:j.afterFolderId||'',portalToken:j.portalToken||'',contractorEstimate:safeJSON(j.contractorEstimate,null),clientEstimate:safeJSON(j.clientEstimate,null),contractorInstructions:j.contractorInstructions||''}));
+    const sheetJobs    =parse(dataRes[2].result.values,HEADERS.Jobs).map(j=>({...j,value:+j.value||0,contractorIds:safeJSON(j.contractorIds,[]),archived:String(j.archived).toLowerCase()==='true',photos:safeJSON(j.photos,[]),afterFolderId:j.afterFolderId||'',portalToken:j.portalToken||'',contractorEstimate:safeJSON(j.contractorEstimate,null),clientEstimate:safeJSON(j.clientEstimate,null),contractorInstructions:j.contractorInstructions||'',jobNumber:j.jobNumber||''}));
     const sheetDocs    =parse(dataRes[3].result.values,HEADERS.Documents).map(d=>({...d,jobId:d.jobId||'',lineItems:safeJSON(d.lineItems,[]),taxRate:+d.taxRate||0,subtotal:+d.subtotal||0,taxAmt:+d.taxAmt||0,total:+d.total||0,paid:String(d.paid).toLowerCase()==='true',laborDisclaimer:String(d.laborDisclaimer).toLowerCase()!=='false',archived:String(d.archived).toLowerCase()==='true'}));
     if(sheetClients.length||!DB.clients.length)  DB.clients   =sheetClients;
     if(sheetProps.length  ||!DB.properties.length)DB.properties=sheetProps;
@@ -1880,8 +1898,10 @@ function downloadTaxReport(){
 // ============================================================
 // PIPELINE
 // ============================================================
-const STAGES=[{key:'estimate-sent',label:'Estimate Sent'},{key:'approved',label:'Approved'},{key:'in-progress',label:'In Progress'},{key:'invoice-sent',label:'Invoice Sent'},{key:'paid',label:'Paid'}];
-const STAGE_LABEL={['estimate-sent']:'Estimate Sent',['approved']:'Approved',['in-progress']:'In Progress',['invoice-sent']:'Invoice Sent',['paid']:'Paid',['progress']:'In Progress',['awaiting-payment']:'Invoice Sent'};
+const STAGES=[{key:'unassigned',label:'Unassigned'},{key:'assigned-for-estimate',label:'Assigned for Estimate'},{key:'estimate-sent',label:'Estimate Sent'},{key:'in-progress',label:'In Progress'},{key:'complete',label:'Complete'}];
+const STAGE_LABEL={['unassigned']:'Unassigned',['assigned-for-estimate']:'Assigned for Estimate',['estimate-sent']:'Estimate Sent',['in-progress']:'In Progress',['complete']:'Complete',
+  // Legacy status display (for any old data not yet migrated)
+  ['approved']:'Approved',['invoice-sent']:'Invoice Sent',['paid']:'Complete',['progress']:'In Progress',['awaiting-payment']:'Invoice Sent'};
 function renderPipeline(){
   document.getElementById('pipeline-board').innerHTML=STAGES.map(s=>{
     const jobs=DB.jobs.filter(j=>j.status===s.key&&!j.archived);
@@ -2222,7 +2242,7 @@ function restoreCurrentClient(){
 // ============================================================
 function getJobOverdueDays(j){
   // Returns days past due for a job's unpaid invoice, or null if not applicable
-  if(j.status!=='invoice-sent'&&j.status!=='awaiting-payment') return null;
+  // Check for overdue invoice regardless of specific status
   const inv=DB.docs.find(d=>d.type==='invoice'&&!d.paid&&d.clientId===j.clientId&&(d.propertyId===j.propertyId||!d.propertyId));
   if(!inv||!inv.dueDate) return null;
   const days=Math.floor((Date.now()-new Date(inv.dueDate))/(864e5));
@@ -2282,7 +2302,7 @@ function renderJobs(){
       <div class="job-card-m-top" onclick="editJob('${j.id}')">
         <div style="flex:1;min-width:0">
           <div class="job-card-m-client">${clientFullName(getClient(j.clientId))}</div>
-          <div class="job-card-m-title">${j.title}${j.photos?.length?` <span style="font-size:11px;color:var(--text3)">📷${j.photos.length}</span>`:''}</div>
+          <div class="job-card-m-title">${j.jobNumber?`<span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);margin-right:3px">${j.jobNumber}</span>`:''}${j.title}${j.photos?.length?` <span style="font-size:11px;color:var(--text3)">📷${j.photos.length}</span>`:''}</div>
         </div>
         <span class="badge ${j.status}" style="flex-shrink:0">${stageLabel[j.status]||j.status}</span>
       </div>
@@ -2306,7 +2326,7 @@ function renderJobs(){
     return`<tr${j.archived?' style="opacity:.5"':''}>
     <td><strong>${clientFullName(getClient(j.clientId))}</strong></td>
     <td style="font-size:12px;color:var(--text2)">${getProperty(j.propertyId).address||'—'}</td>
-    <td>${j.title}${j.archived?' <span class="badge" style="font-size:10px;background:#e0e0e0;color:#666">Archived</span>':''}${overdueDays!==null?` <span class="badge" style="font-size:10px;background:var(--red-light);color:var(--red)">⚠ ${overdueDays}d overdue</span>`:''}${j.photos?.length?` <span style="font-size:10px;color:var(--text3)">📷 ${j.photos.length}</span>`:''}</td>
+    <td>${j.jobNumber?`<span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);margin-right:4px">${j.jobNumber}</span>`:''}${j.title}${j.archived?' <span class="badge" style="font-size:10px;background:#e0e0e0;color:#666">Archived</span>':''}${overdueDays!==null?` <span class="badge" style="font-size:10px;background:var(--red-light);color:var(--red)">⚠ ${overdueDays}d overdue</span>`:''}${j.photos?.length?` <span style="font-size:10px;color:var(--text3)">📷 ${j.photos.length}</span>`:''}</td>
     <td><span class="badge ${j.status}">${stageLabel[j.status]||j.status}</span></td>
     <td style="font-size:12px;color:var(--text2)">${ctrs.length?ctrs.join(', '):'—'}</td>
     <td style="font-family:'DM Mono',monospace">${fmt(j.value)}</td>
@@ -2344,7 +2364,7 @@ function openJobModal(clientId=''){
   document.getElementById('jm-restore').style.display='none';
   ['jm-title-inp','jm-start','jm-end','jm-materials','jm-notes','jm-est-ref','jm-contractor-instructions'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('jm-value').value='';
-  document.getElementById('jm-status').value='estimate-sent';
+  document.getElementById('jm-status').value='unassigned';
   document.getElementById('jm-start').value=today();
   populateClientDropdown('jm-client',clientId);
   populateProperties();
@@ -2361,11 +2381,11 @@ function editJob(id){
   currentJobId=id;
   _jobPhotos=[...(j.photos||[])];
   _stagingAfterFolderId='';
-  document.getElementById('jm-title').textContent='Edit Job';
+  document.getElementById('jm-title').textContent=j.jobNumber?`Edit Job — ${j.jobNumber}`:'Edit Job';
   document.getElementById('jm-del').style.display=j.archived?'none':'inline-flex';
   document.getElementById('jm-restore').style.display=j.archived?'inline-flex':'none';
   document.getElementById('jm-title-inp').value=j.title||'';
-  document.getElementById('jm-status').value=j.status||'estimate-sent';
+  document.getElementById('jm-status').value=j.status||'unassigned';
   document.getElementById('jm-start').value=j.startDate||'';
   document.getElementById('jm-end').value=j.endDate||'';
   document.getElementById('jm-value').value=j.value||'';
@@ -2379,6 +2399,8 @@ function editJob(id){
   renderJobPhotoStrip();
   renderPortalSection(j);
   document.getElementById('job-modal').classList.add('open');
+  // Silently check KV for a new submission the app hasn't seen yet
+  checkPortalSubmission(j);
 }
 
 function populateClientDropdown(selId,selectedId=''){
@@ -2423,8 +2445,12 @@ function saveJob(){
     portalToken:existing?.portalToken||'',
     contractorEstimate:existing?.contractorEstimate||null,
     clientEstimate:existing?.clientEstimate||null,
+    // Job number: preserve existing, or assign a new one for new jobs
+    jobNumber:existing?.jobNumber||nextJobNumber(),
     createdAt:existing?.createdAt||ts,updatedAt:ts
   };
+  // Auto-advance status: if a contractor was just assigned and job is still Unassigned, move to Assigned for Estimate
+  if(job.status==='unassigned'&&job.contractorIds.length>0) job.status='assigned-for-estimate';
   if(currentJobId){
     DB.jobs=DB.jobs.map(j=>j.id===currentJobId?job:j);
     // Invalidate cached Drive folder so renames/client changes get a fresh folder path
@@ -2591,9 +2617,13 @@ async function sendPortalLink(){
     return;
   }
 
-  // Persist token to job record
+  // Persist token to job record and advance status to Estimate Sent
   const idx=DB.jobs.findIndex(j=>j.id===currentJobId);
-  if(idx!==-1){DB.jobs[idx].portalToken=token;DB.jobs[idx].updatedAt=now();}
+  if(idx!==-1){
+    DB.jobs[idx].portalToken=token;
+    DB.jobs[idx].status='estimate-sent';
+    DB.jobs[idx].updatedAt=now();
+  }
   saveAndSync();
 
   // Send email to contractor via Gmail API
@@ -2609,7 +2639,7 @@ ${job.contractorInstructions?'\nInstructions:\n'+job.contractorInstructions:''}
 Your portal link:
 ${portalUrl}
 
-Important: Save all material receipts and submit them with your estimate.
+Important: Save all material receipts for when the job is complete.
 
 Thanks,
 ${DB.settings.yourName||DB.settings.bizName||'Aedex Anima'}`;
@@ -2640,6 +2670,35 @@ ${DB.settings.yourName||DB.settings.bizName||'Aedex Anima'}`;
   // Re-render portal section with new token
   const updatedJob=DB.jobs.find(j=>j.id===currentJobId);
   renderPortalSection(updatedJob);
+}
+
+// Check KV for a submission that hasn't been pulled into the job record yet.
+// Called when opening a job modal that has a token but no contractorEstimate.
+async function checkPortalSubmission(job){
+  if(!job||!job.portalToken||job.contractorEstimate)return;
+  try{
+    const r=await fetch(`/api/portal/get?token=${job.portalToken}&include=submission`);
+    const data=await r.json();
+    if(!data.ok||data.status!=='submitted'||!data.submission)return;
+    const sub=data.submission;
+    const idx=DB.jobs.findIndex(j=>j.id===job.id);
+    if(idx===-1)return;
+    DB.jobs[idx].contractorEstimate={
+      laborItems:sub.laborItems||[],
+      laborSubtotal:sub.laborSubtotal||0,
+      materialsTotal:sub.materialsTotal||0,
+      materialsNotes:sub.materialsNotes||'',
+      grandTotal:sub.grandTotal||0,
+      submittedAt:sub.submittedAt||new Date().toISOString(),
+      photoFileIds:[],
+      receiptFileId:null
+    };
+    DB.jobs[idx].status='estimate-sent';
+    DB.jobs[idx].updatedAt=now();
+    saveAndSync();
+    renderPortalSection(DB.jobs[idx]);
+    toast('Contractor estimate received','success');
+  }catch(e){console.warn('checkPortalSubmission error:',e.message);}
 }
 
 async function acceptContractorPhotos(token){
@@ -3116,17 +3175,19 @@ function saveDoc(){
   // Auto-create or auto-advance job when a document is saved
   const isNew=!currentDocId||!existing;
   // Prefer the explicitly linked job (via _docForJobId), then fall back to active job for client+property
-  let linkedJob=DB.jobs.find(j=>j.id===doc.jobId)||DB.jobs.find(j=>j.clientId===doc.clientId&&j.propertyId===doc.propertyId&&j.status!=='paid');
+  let linkedJob=DB.jobs.find(j=>j.id===doc.jobId)||DB.jobs.find(j=>j.clientId===doc.clientId&&j.propertyId===doc.propertyId&&j.status!=='complete');
 
   if(!linkedJob){
     // No active job exists — create one automatically
-    const newStatus=doc.type==='estimate'?'estimate-sent':'invoice-sent';
+    const newStatus=doc.type==='estimate'?'estimate-sent':'in-progress';
+    const newJobNum=nextJobNumber();
     linkedJob={
       id:uid(),
       clientId:doc.clientId,
       propertyId:doc.propertyId,
       title:`Job #${doc.number}`,
       status:newStatus,
+      jobNumber:newJobNum,
       startDate:doc.date||ts.slice(0,10),
       endDate:'',value:doc.total,materials:0,
       photoNotes:'',notes:'',
@@ -3138,11 +3199,11 @@ function saveDoc(){
     doc.jobId=linkedJob.id;
     DB.docs=DB.docs.map(d=>d.id===doc.id?doc:d);
     logActivity('Created','Job',linkedJob.id,`Auto-created from ${doc.type} #${doc.number} — ${clientFullName(getClient(doc.clientId))}`);
-  } else if(doc.type==='invoice'&&linkedJob.status!=='invoice-sent'){
-    // Job exists — advance to Invoice Sent when invoice is saved
-    linkedJob.status='invoice-sent';
+  } else if(doc.type==='invoice'&&linkedJob.status==='estimate-sent'){
+    // Job exists with estimate sent — advance to In Progress when invoice is created
+    linkedJob.status='in-progress';
     linkedJob.updatedAt=ts;
-    logActivity('Updated','Job',linkedJob.id,`Status → Invoice Sent (invoice #${doc.number})`);
+    logActivity('Updated','Job',linkedJob.id,`Status → In Progress (invoice #${doc.number})`);
   }
 
   logActivity(currentDocId?'Updated':'Created','Document',doc.id,`${doc.type} ${fmt(doc.total)} — ${clientFullName(getClient(doc.clientId))}`);
@@ -4371,7 +4432,7 @@ function parseImportProperties(data,get){
 }
 
 function parseImportJobs(data,get){
-  const VALID_STATUSES=new Set(['estimate-sent','approved','in-progress','invoice-sent','paid','completed','cancelled','progress','awaiting-payment']);
+  const VALID_STATUSES=new Set(['unassigned','assigned-for-estimate','estimate-sent','in-progress','complete','approved','invoice-sent','paid','completed','cancelled','progress','awaiting-payment']);
   const existingTitles=new Set(DB.jobs.map(j=>j.clientId+'|'+j.title.toLowerCase()));
   return data.map(r=>{
     const clientEmail=get(r,'clientemail'),title=get(r,'title'),propertyAddr=get(r,'propertyaddress');

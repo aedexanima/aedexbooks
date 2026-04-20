@@ -9,4 +9,4 @@ id = "20d2c2856c0748c59c544da10f98876d"
 # Then replace REPLACE_WITH_REAL_ID below with the returned id.
 [[kv_namespaces]]
 binding = "PORTAL_TOKENS"
-id = "REPLACE_WITH_REAL_ID"
+id = "23df3f4378e54346a70cc3b719480722"

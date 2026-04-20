@@ -97,7 +97,7 @@ assert('contractorInstructions serialized', syncBody.includes('contractorInstruc
 
 console.log('\n4. loadFromSheet — new job fields parsed');
 
-const loadJobsLine = src.match(/DB\.jobs\s*=\s*parse\([^;]+;/)?.[0] || '';
+const loadJobsLine = src.match(/(?:DB\.jobs|sheetJobs)\s*=\s*parse\([^;]+;/)?.[0] || '';
 assert('portalToken parsed in loadFromSheet', loadJobsLine.includes('portalToken'));
 assert('contractorEstimate parsed with safeJSON', loadJobsLine.includes('contractorEstimate') && loadJobsLine.includes('safeJSON'));
 assert('clientEstimate parsed with safeJSON', loadJobsLine.includes('clientEstimate') && loadJobsLine.includes('safeJSON'));
@@ -160,7 +160,7 @@ assert('submitEstimate defined', submitFnBody.length > 0);
 assert('_submitting guard prevents double-submit', submitFnBody.includes('_submitting'));
 assert('submit button disabled during submit', submitFnBody.includes('btn.disabled = true') || submitFnBody.includes('btn.disabled=true'));
 assert('submit button re-enabled on error', submitFnBody.includes('btn.disabled = false') || submitFnBody.includes('btn.disabled=false'));
-assert('photos converted to base64 before send', submitFnBody.includes('fileToBase64'));
+assert('photos converted to base64 before send', submitFnBody.includes('fileToBase64') || submitFnBody.includes('resizeToBase64'));
 assert('token included in submission body', submitFnBody.includes('token: _token') || submitFnBody.includes("token:_token"));
 
 // ─── 10. contractorEstimate separate from clientEstimate ──────────────────────

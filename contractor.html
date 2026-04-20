@@ -107,8 +107,8 @@ textarea{resize:vertical;min-height:72px}
 
     <div class="alert">
       <div class="alert-icon">⚠️</div>
-      <strong>Save all material receipts and submit them with your invoice.</strong>
-      Upload a photo or scan of your receipt in the Materials section below.
+      <strong>Save all material receipts for when the job is complete.</strong>
+      You can attach material quotes or references in the Materials section below.
     </div>
 
     <!-- Job info -->
@@ -164,12 +164,12 @@ textarea{resize:vertical;min-height:72px}
         <textarea id="materials-notes" placeholder="List the materials needed or already purchased…"></textarea>
       </div>
       <div style="margin-top:4px">
-        <div class="card-title">Receipt</div>
-        <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Attach a photo or scan of your receipt.</div>
+        <div class="card-title">Material Quotes / References <span style="font-weight:400;font-size:12px;color:var(--text3)">(optional)</span></div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Attach material quotes, supplier references, or other documents to support your estimate.</div>
         <div id="receipt-preview" style="margin-bottom:10px"></div>
         <div class="upload-btn-wrap">
           <input type="file" id="receipt-input" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,.pdf,image/jpeg,image/png,image/heic,image/heif,image/webp,application/pdf" style="display:none" onchange="handleReceipt(this)">
-          <button type="button" id="receipt-btn" class="btn" onclick="document.getElementById('receipt-input').click()">+ Attach Receipt</button>
+          <button type="button" id="receipt-btn" class="btn" onclick="document.getElementById('receipt-input').click()">+ Attach Document</button>
           <span class="type-hint">JPG, PNG, HEIC, WebP, PDF</span>
         </div>
       </div>
@@ -426,7 +426,7 @@ function renderReceiptPreview() {
   const btn = document.getElementById('receipt-btn');
   if (!_receiptFile) {
     el.innerHTML = '';
-    btn.textContent = '+ Attach Receipt';
+    btn.textContent = '+ Attach Document';
     return;
   }
   el.innerHTML = _receiptFile.isPdf
@@ -446,7 +446,7 @@ function renderReceiptPreview() {
           <button onclick="removeReceipt()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:0;margin-top:2px">Remove</button>
         </div>
       </div>`;
-  btn.textContent = 'Replace Receipt';
+  btn.textContent = 'Replace Document';
 }
 
 function removeReceipt() {
@@ -503,20 +503,16 @@ async function submitEstimate() {
     const mat = parseFloat(document.getElementById('materials-total').value) || 0;
     const matNotes = document.getElementById('materials-notes').value;
 
-    // Convert photos to base64
-    const beforePhotosB64 = await Promise.all(_beforePhotos.map(async p => ({
-      name: p.name,
-      type: p.type,
-      data: await fileToBase64(p.file),
-    })));
+    // Convert photos to base64 (images resized to max 1920px before encoding)
+    const beforePhotosB64 = await Promise.all(_beforePhotos.map(async p => {
+      const { data, type } = await resizeToBase64(p.file);
+      return { name: p.name, type, data };
+    }));
 
     let receiptDataB64 = null;
     if (_receiptFile) {
-      receiptDataB64 = {
-        name: _receiptFile.name,
-        type: _receiptFile.type,
-        data: await fileToBase64(_receiptFile.file),
-      };
+      const { data, type } = await resizeToBase64(_receiptFile.file);
+      receiptDataB64 = { name: _receiptFile.name, type, data };
     }
 
     // Rough size check (~15MB payload limit)
@@ -565,6 +561,43 @@ function fileToBase64(file) {
     reader.onload = () => resolve(reader.result.split(',')[1]); // strip data:...;base64, prefix
     reader.onerror = reject;
     reader.readAsDataURL(file);
+  });
+}
+
+// Resize an image file to max 1920px on the longest edge at 0.85 quality.
+// Returns a Promise<{blob, type}> — skips resize for PDFs.
+function resizeImage(file, maxEdge = 1920, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    if (file.type === 'application/pdf') { resolve({ blob: file, type: file.type }); return; }
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const { naturalWidth: w, naturalHeight: h } = img;
+      const longest = Math.max(w, h);
+      if (longest <= maxEdge) { resolve({ blob: file, type: file.type }); return; }
+      const scale = maxEdge / longest;
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => {
+        if (!blob) { resolve({ blob: file, type: file.type }); return; }
+        resolve({ blob, type: 'image/jpeg' });
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve({ blob: file, type: file.type }); };
+    img.src = url;
+  });
+}
+
+async function resizeToBase64(file) {
+  const { blob, type } = await resizeImage(file);
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({ data: reader.result.split(',')[1], type });
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
   });
 }
 </script>
