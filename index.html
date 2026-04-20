@@ -319,6 +319,7 @@ textarea{resize:vertical;min-height:60px}
         Sign in with Google
       </button>
       <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:18px;line-height:1.6">Your data syncs to a Google Sheet in your own Drive.<br>We never store your data on our servers.</p>
+      <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:12px"><a href="https://aedexanima.com/privacy" target="_blank" style="color:var(--accent);text-decoration:none">Privacy Policy</a> · <a href="https://aedexanima.com/terms" target="_blank" style="color:var(--accent);text-decoration:none">Terms of Service</a></p>
     </div>
   </div>
 </div>
@@ -415,6 +416,7 @@ textarea{resize:vertical;min-height:60px}
       <div class="user-pill"><div class="user-av" id="nav-av">?</div><div class="user-nm" id="nav-user">Not signed in</div></div>
       <button class="btn sm" style="width:100%;justify-content:center;margin-bottom:6px" id="auth-btn" onclick="handleAuth()">Sign in with Google</button>
       <div style="font-size:10px;color:rgba(255,255,255,.3);text-align:center" id="sync-status">⚪ Not connected</div>
+      <div style="text-align:center;margin-top:8px"><a href="https://aedexanima.com/privacy" target="_blank" style="font-size:10px;color:rgba(255,255,255,.25);text-decoration:none" onmouseover="this.style.color='rgba(255,255,255,.5)'" onmouseout="this.style.color='rgba(255,255,255,.25)'">Privacy Policy</a></div>
     </div>
   </nav>
 
@@ -743,19 +745,19 @@ textarea{resize:vertical;min-height:60px}
       <div>
         <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;letter-spacing:.3px">BEFORE</div>
         <div id="jm-before-strip" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"></div>
-        <input type="file" id="jm-before-input" accept="image/*" multiple style="display:none" onchange="handleJobPhotoUpload(this,'before')">
+        <input type="file" id="jm-before-input" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/jpeg,image/png,image/heic,image/heif,image/webp" multiple style="display:none" onchange="handleJobPhotoUpload(this,'before')">
         <button type="button" id="jm-before-btn" class="btn sm" onclick="document.getElementById('jm-before-input').click()">+ Before</button>
       </div>
       <div>
         <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;letter-spacing:.3px">AFTER</div>
         <div id="jm-after-strip" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"></div>
-        <input type="file" id="jm-after-input" accept="image/*" multiple style="display:none" onchange="handleJobPhotoUpload(this,'after')">
+        <input type="file" id="jm-after-input" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/jpeg,image/png,image/heic,image/heif,image/webp" multiple style="display:none" onchange="handleJobPhotoUpload(this,'after')">
         <button type="button" id="jm-after-btn" class="btn sm" onclick="document.getElementById('jm-after-input').click()">+ After</button>
       </div>
       <div>
         <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;letter-spacing:.3px">GENERAL</div>
         <div id="jm-photo-strip" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"></div>
-        <input type="file" id="jm-photo-input" accept="image/*" multiple style="display:none" onchange="handleJobPhotoUpload(this,'general')">
+        <input type="file" id="jm-photo-input" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/jpeg,image/png,image/heic,image/heif,image/webp" multiple style="display:none" onchange="handleJobPhotoUpload(this,'general')">
         <button type="button" id="jm-photo-upload-btn" class="btn sm" onclick="document.getElementById('jm-photo-input').click()">+ General</button>
       </div>
     </div>
@@ -908,7 +910,8 @@ textarea{resize:vertical;min-height:60px}
         <option>Materials & Supplies</option><option>Tools & Equipment</option>
         <option>Vehicle / Mileage</option><option>Advertising</option>
         <option>Insurance</option><option>Phone / Internet</option>
-        <option>Office Supplies</option><option>Subcontractors</option><option>Other</option>
+        <option>Office Supplies</option><option>Subcontractors</option>
+        <option>Contractor</option><option>Other</option>
       </select>
     </div>
     <div class="field"><label>Linked job</label>
@@ -1030,6 +1033,21 @@ let currentClientId=null,currentJobId=null,currentDocId=null,_editingExpenseId=n
 let docLineItems=[],docFilter='all',clientSearch='',jobSearch='',jobPastDueFilter=false,_sendingReminder=false;
 let propFields=[]; // temp property fields in client modal
 let accessToken=null,signedIn=false,gapiReady=false;
+
+// ---- Token persistence (survives page refresh + browser restart within 1hr) ----
+const _TOKEN_KEY='ab_token';
+function saveToken(token){
+  try{localStorage.setItem(_TOKEN_KEY,JSON.stringify({token,expiry:Date.now()+55*60*1000}));}catch{}
+}
+function loadToken(){
+  try{
+    const s=JSON.parse(localStorage.getItem(_TOKEN_KEY)||'null');
+    if(s&&s.token&&s.expiry>Date.now()) return s.token;
+  }catch{}
+  localStorage.removeItem(_TOKEN_KEY);
+  return null;
+}
+function clearToken(){localStorage.removeItem(_TOKEN_KEY);}
 let currentPreviewDoc=null;
 function formatPhone(input){
   let v=input.value.replace(/\D/g,'').slice(0,10);
@@ -1096,7 +1114,7 @@ function showApp(){
   // Default header to sign-in button until auth completes
   document.getElementById('mob-user-pill').style.display='none';
   document.getElementById('mob-signin-btn').style.display='block';
-  if(DB.settings.logoFileId){getDriveImageUrl(DB.settings.logoFileId).then(updateLogoPreview).catch(()=>{});}
+  if(DB.settings.logoFileId){getDriveImageUrl(DB.settings.logoFileId).then(updateLogoPreview).catch(e=>console.warn('[logo] showApp fetch failed (expected — no token yet):',e.message));}
   document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   renderAll();loadSettingsForm();
 }
@@ -1118,6 +1136,8 @@ function loadGapi(){
     gapi.load('client',()=>{
       gapi.client.init({}).then(()=>gapi.client.load('https://sheets.googleapis.com/$discovery/rest?version=v4'))
       .then(()=>{gapiReady=true;setSyncStatus('⚪ Not connected');
+        // If token was restored before GAPI was ready, set it on gapi.client now
+        if(signedIn&&accessToken) gapi.client.setToken({access_token:accessToken});
         // If user already signed in before Sheets was ready, load now
         if(signedIn){
           if(!DB.settings.sheetId) findOrCreateSheet();
@@ -1159,6 +1179,7 @@ function initTokenClient(){
       }
       _manualSignIn=false;
       accessToken=resp.access_token;
+      saveToken(accessToken);
       gapi.client.setToken({access_token:accessToken});
       signedIn=true;
       // Immediately update all sign-in UI so no button reads "Sign in" during async onSignedIn()
@@ -1177,10 +1198,23 @@ function initTokenClient(){
     toast('Ready — tap Sign in again','');
     return;
   }
-  // Try silent sign-in for returning users (no popup, uses stored session)
+  // 1. Try restoring a stored token first (survives refresh + browser restart within 1hr)
+  const _stored=loadToken();
+  if(_stored){
+    accessToken=_stored;
+    signedIn=true;
+    // Don't call gapi.client.setToken() here — GAPI may not be loaded yet.
+    // The GAPI ready callback checks signedIn and sets the token before calling loadFromSheet().
+    onSignedIn();
+    scheduleTokenRefresh();
+    return;
+  }
+  // 2. No stored token — try silent OAuth re-auth (works when browser has Google session cookie)
   if(DB.settings.userEmail){
+    setSyncStatus('⏳ Reconnecting…');
     tokenClient.requestAccessToken({prompt:'',login_hint:DB.settings.userEmail});
   }
+  // 3. If silent re-auth also fails, the callback error handler leaves the sign-in button visible
 }
 
 async function onSignedIn(){
@@ -1255,7 +1289,7 @@ async function onSignedIn(){
 function handleAuth(){
   if(signedIn){
     google.accounts.oauth2.revoke(accessToken,()=>{});
-    accessToken=null;signedIn=false;gapi.client.setToken(null);
+    accessToken=null;signedIn=false;gapi.client.setToken(null);clearToken();
     if(tokenRefreshTimer){clearTimeout(tokenRefreshTimer);tokenRefreshTimer=null;}
     document.getElementById('nav-user').textContent='Not signed in';
     document.getElementById('nav-av').textContent='?';
@@ -1287,7 +1321,7 @@ function setSyncStatus(m){
 const HEADERS={
   Clients:['id','firstName','lastName','phone','email','billingAddr','ref','notes','createdAt','updatedAt','archived','clientType','company','altEmail'],
   Properties:['id','clientId','address','type','tenantFirstName','tenantLastName','tenantPhone','tenantEmail','notes','moveInDate','createdAt','updatedAt'],
-  Jobs:['id','clientId','propertyId','title','status','startDate','endDate','value','materials','photoNotes','notes','estRef','createdAt','updatedAt','workDetails','contractorIds','archived','photos'],
+  Jobs:['id','clientId','propertyId','title','status','startDate','endDate','value','materials','photoNotes','notes','estRef','createdAt','updatedAt','workDetails','contractorIds','archived','photos','afterFolderId'],
   Documents:['id','number','estRef','type','clientId','propertyId','date','dueDate','paymentMethod','notes','lineItems','taxRate','subtotal','taxAmt','total','paid','createdAt','updatedAt','paymentTerms','laborDisclaimer','archived','jobId'],
   Expenses:['id','date','amount','desc','category','jobId','createdAt','updatedAt','receiptFileId','receiptFileName','receiptWebViewLink'],
   ActivityLog:['id','ts','action','recordType','recordId','detail'],
@@ -1363,7 +1397,7 @@ async function syncToSheet(){
     const writes={
       Clients:DB.clients.map(c=>[c.id,c.firstName||'',c.lastName||'',c.phone,c.email,c.billingAddr,c.ref,c.notes,c.createdAt,c.updatedAt,c.archived?'true':'false',c.clientType||'handyman',c.company||'',c.altEmail||'']),
       Properties:DB.properties.map(p=>[p.id,p.clientId,p.address,p.type,p.tenantFirstName||'',p.tenantLastName||'',p.tenantPhone,p.tenantEmail,p.notes,p.moveInDate||'',p.createdAt,p.updatedAt]),
-      Jobs:DB.jobs.map(j=>[j.id,j.clientId,j.propertyId,j.title,j.status,j.startDate,j.endDate,j.value,j.materials,j.photoNotes,j.notes,j.estRef,j.createdAt,j.updatedAt,j.workDetails||'',JSON.stringify(j.contractorIds||[]),j.archived?'true':'false',JSON.stringify(j.photos||[])]),
+      Jobs:DB.jobs.map(j=>[j.id,j.clientId,j.propertyId,j.title,j.status,j.startDate,j.endDate,j.value,j.materials,j.photoNotes,j.notes,j.estRef,j.createdAt,j.updatedAt,j.workDetails||'',JSON.stringify(j.contractorIds||[]),j.archived?'true':'false',JSON.stringify(j.photos||[]),j.afterFolderId||'']),
       Documents:DB.docs.map(d=>[d.id,d.number||'',d.estRef||'',d.type,d.clientId,d.propertyId,d.date,d.dueDate,d.paymentMethod,d.notes,JSON.stringify(d.lineItems),d.taxRate,d.subtotal,d.taxAmt,d.total,d.paid?'true':'false',d.createdAt,d.updatedAt,d.paymentTerms||'',d.laborDisclaimer===false?'false':'true',d.archived?'true':'false',d.jobId||'']),
       Expenses:DB.expenses.map(e=>[e.id,e.date,e.amount,e.desc,e.category,e.jobId,e.createdAt,e.updatedAt,e.receiptFileId||'',e.receiptFileName||'',e.receiptWebViewLink||'']),
       ActivityLog:DB.activity.map(a=>[a.id,a.ts,a.action,a.recordType,a.recordId,a.detail]),
@@ -1411,7 +1445,7 @@ async function loadFromSheet(){
 
     DB.clients   =parse(dataRes[0].result.values,clientKeys).map(c=>({...c,archived:String(c.archived).toLowerCase()==='true',clientType:c.clientType||'handyman',company:c.company||'',altEmail:c.altEmail||''}));
     DB.properties=parse(dataRes[1].result.values,propKeys);
-    DB.jobs      =parse(dataRes[2].result.values,HEADERS.Jobs).map(j=>({...j,value:+j.value||0,contractorIds:safeJSON(j.contractorIds,[]),archived:String(j.archived).toLowerCase()==='true',photos:safeJSON(j.photos,[])}));
+    DB.jobs      =parse(dataRes[2].result.values,HEADERS.Jobs).map(j=>({...j,value:+j.value||0,contractorIds:safeJSON(j.contractorIds,[]),archived:String(j.archived).toLowerCase()==='true',photos:safeJSON(j.photos,[]),afterFolderId:j.afterFolderId||''}));
     DB.docs      =parse(dataRes[3].result.values,HEADERS.Documents).map(d=>({...d,jobId:d.jobId||'',lineItems:safeJSON(d.lineItems,[]),taxRate:+d.taxRate||0,subtotal:+d.subtotal||0,taxAmt:+d.taxAmt||0,total:+d.total||0,paid:String(d.paid).toLowerCase()==='true',laborDisclaimer:String(d.laborDisclaimer).toLowerCase()!=='false',archived:String(d.archived).toLowerCase()==='true'}));
     migrateNames(); // runs after all data is loaded so invoice back-fill can find docs
     DB.expenses  =parse(dataRes[4].result.values,HEADERS.Expenses).map(e=>({...e,amount:+e.amount||0,receiptFileId:e.receiptFileId||'',receiptFileName:e.receiptFileName||'',receiptWebViewLink:e.receiptWebViewLink||''}));
@@ -1448,7 +1482,8 @@ async function loadFromSheet(){
         loadSettingsForm();
         // Load logo into sidebar/preview after settings sync
         if(DB.settings.logoFileId){
-          getDriveImageUrl(DB.settings.logoFileId).then(updateLogoPreview).catch(()=>{});
+          console.log('[logo] loadFromSheet: attempting fetch, fileId='+DB.settings.logoFileId+', hasToken='+!!accessToken);
+          getDriveImageUrl(DB.settings.logoFileId).then(url=>{console.log('[logo] loadFromSheet: success, blobUrl='+url.slice(0,40));updateLogoPreview(url);}).catch(e=>console.warn('[logo] loadFromSheet fetch failed:',e.message));
         }
       }
     }
@@ -2284,6 +2319,7 @@ function updateContractorPickerStyle(cb){
 function openJobModal(clientId=''){
   currentJobId=null;
   _jobPhotos=[];
+  _stagingAfterFolderId='';
   document.getElementById('jm-title').textContent='New Job';
   document.getElementById('jm-del').style.display='none';
   document.getElementById('jm-restore').style.display='none';
@@ -2304,6 +2340,7 @@ function editJob(id){
   const j=DB.jobs.find(x=>x.id===id);if(!j)return;
   currentJobId=id;
   _jobPhotos=[...(j.photos||[])];
+  _stagingAfterFolderId='';
   document.getElementById('jm-title').textContent='Edit Job';
   document.getElementById('jm-del').style.display=j.archived?'none':'inline-flex';
   document.getElementById('jm-restore').style.display=j.archived?'inline-flex':'none';
@@ -2355,6 +2392,8 @@ function saveJob(){
     estRef:document.getElementById('jm-est-ref').value,
     contractorIds:[...document.querySelectorAll('#jm-contractors input[type=checkbox]:checked')].map(cb=>cb.value),
     photos:[..._jobPhotos],
+    // Preserve stored afterFolderId; use staging var if uploading photos to a new job
+    afterFolderId:existing?.afterFolderId||_stagingAfterFolderId||'',
     workDetails:existing?.workDetails||'',
     archived:existing?.archived||false,
     createdAt:existing?.createdAt||ts,updatedAt:ts
@@ -2799,14 +2838,14 @@ function viewDoc(id){const d=DB.docs.find(x=>x.id===id);if(d)showDocPreview(d);}
 async function showDocPreview(d){
   // Ensure logo is in blob cache before rendering so it appears on first open
   if(DB.settings.logoFileId&&!_blobCache[DB.settings.logoFileId]){
-    try{await getDriveImageUrl(DB.settings.logoFileId);}catch(e){}
+    try{await getDriveImageUrl(DB.settings.logoFileId);}catch(e){console.warn('[logo] showDocPreview fetch failed:',e.message);}
   }
   currentPreviewDoc=d;
   const s=DB.settings;const c=getClient(d.clientId);const prop=getProperty(d.propertyId);
   const isEst=d.type==='estimate';
   const docNum=d.number?('#'+d.number):'';
   const colHeader=isEst?'LABOR':'AMOUNT';
-  const renderRows=items=>items.map(i=>{
+  const renderRows=items=>items.filter(i=>i.desc||parseFloat(i.price)).map(i=>{
     const amt=(parseFloat(i.price)||0)*(parseFloat(i.qty)||1);
     return `<tr><td style="padding:7px 14px;border-bottom:1px solid #f0f0f0;font-size:13px;color:#333">${i.desc||'—'}</td><td style="padding:9px 14px;border-bottom:1px solid #f0f0f0;text-align:right;font-size:13px;color:#333;font-family:'DM Sans',sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap">${fmt(amt)}</td></tr>`;
   }).join('');
@@ -2934,6 +2973,7 @@ async function getDocFolder(type){
 
 // ---- Job photo / expense receipt uploads ----
 let _jobPhotos=[];          // photos staged in open job modal
+let _stagingAfterFolderId=''; // afterFolderId resolved during new-job photo upload (before job saved)
 let _expenseReceipt=null;   // {fileId,name,webViewLink} for open expense modal
 let _sendAfterFolderId=null;// after folder ID for current send modal
 let _docForJobId=null;      // jobId pre-filled when opening doc modal from a job row
@@ -2977,8 +3017,23 @@ async function getJobFolders(jobId){
   const j=DB.jobs.find(x=>x.id===jobId);
   if(!j) throw new Error('Job not found');
   const folders=await _buildJobFolders(clientFullName(getClient(j.clientId)),j.startDate?.slice(0,10),j.title);
+  // If afterFolderId is already stored on the job, trust it — don't let a stale Drive search
+  // overwrite it with a newly-created duplicate folder (drive.file scope may not find old folders)
+  if(j.afterFolderId) folders.afterFolderId=j.afterFolderId;
   _jobFolderCache[jobId]=folders;
   return folders;
+}
+
+// Resolve the After Drive folder for a job by reading the parent of an existing after photo.
+// Uses files.get (not files.list) — works reliably with drive.file scope across sessions.
+// Safe for legacy jobs that have after photos but no afterFolderId stored yet.
+async function resolveAfterFolderFromPhotos(job){
+  const afterPhoto=(job.photos||[]).find(p=>p.category==='after');
+  if(!afterPhoto) return null;
+  try{
+    const r=await driveRequest('GET',`https://www.googleapis.com/drive/v3/files/${afterPhoto.fileId}?fields=parents`);
+    return r.parents?.[0]||null;
+  }catch(e){console.warn('[after-folder] resolveAfterFolderFromPhotos failed:',e.message);return null;}
 }
 
 async function uploadFileToDrive(file,folderId){
@@ -2998,7 +3053,7 @@ async function getDriveImageUrl(fileId){
   if(!accessToken) throw new Error('Not signed in');
   const r=await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
     {headers:{Authorization:'Bearer '+accessToken}});
-  if(!r.ok) throw new Error('Load failed');
+  if(!r.ok){console.warn('[logo] Drive media fetch HTTP '+r.status+' for fileId='+fileId);throw new Error('Load failed: HTTP '+r.status);}
   const blob=await r.blob();
   if(!blob.type.startsWith('image/')) throw new Error('Not an image');
   _blobCache[fileId]=URL.createObjectURL(blob);
@@ -3062,10 +3117,33 @@ function renderJobPhotoStrip(){
   loadStripImages('#jm-photo-strip');
 }
 
+// Allowed photo extensions and MIME types for job/expense photo uploads.
+// Extension is the primary check — MIME type is unreliable for HEIC on some browsers.
+const PHOTO_EXTS=new Set(['jpg','jpeg','png','heic','heif','webp']);
+const PHOTO_MIMES=new Set(['image/jpeg','image/png','image/heic','image/heif','image/webp']);
+
+function validatePhotoFiles(files,allowPdf=false){
+  const invalid=[];
+  for(const f of files){
+    const ext=(f.name.split('.').pop()||'').toLowerCase();
+    const mime=(f.type||'').toLowerCase();
+    const extOk=PHOTO_EXTS.has(ext)||(allowPdf&&ext==='pdf');
+    const mimeOk=PHOTO_MIMES.has(mime)||(allowPdf&&mime==='application/pdf');
+    // Pass if extension is valid — MIME is unreliable for HEIC so don't require both
+    if(!extOk&&!mimeOk) invalid.push(f.name);
+  }
+  return invalid; // empty = all valid
+}
+
 async function handleJobPhotoUpload(input,category='general'){
   if(!signedIn||!accessToken){toast('Sign in to upload photos','error');input.value='';return;}
   const files=[...input.files];
   if(!files.length) return;
+  const invalid=validatePhotoFiles(files);
+  if(invalid.length){
+    toast('Unsupported file type: '+invalid.join(', ')+'. Use JPG, PNG, HEIC, or WebP.','error');
+    input.value='';return;
+  }
   const btnId={before:'jm-before-btn',after:'jm-after-btn',general:'jm-photo-upload-btn'}[category];
   const btn=document.getElementById(btnId);
   if(btn){btn.textContent='Uploading…';btn.disabled=true;}
@@ -3084,6 +3162,20 @@ async function handleJobPhotoUpload(input,category='general'){
     for(const file of files){
       const result=await uploadFileToDrive(file,folderId);
       _jobPhotos.push({fileId:result.id,name:result.name,webViewLink:result.webViewLink,category});
+    }
+    // Persist afterFolderId to the job record immediately so it survives session restarts.
+    // For existing jobs: write directly to DB and sync.
+    // For new jobs being created: stash in staging var; saveJob() picks it up.
+    if(category==='after'&&folders.afterFolderId){
+      if(currentJobId){
+        const idx=DB.jobs.findIndex(j=>j.id===currentJobId);
+        if(idx!==-1&&DB.jobs[idx].afterFolderId!==folders.afterFolderId){
+          DB.jobs[idx].afterFolderId=folders.afterFolderId;
+          saveAndSync();
+        }
+      } else {
+        _stagingAfterFolderId=folders.afterFolderId;
+      }
     }
     renderJobPhotoStrip();
     toast(`${files.length} photo${files.length!==1?'s':''} uploaded`,'success');
@@ -3128,6 +3220,11 @@ async function handleExpenseReceiptUpload(input){
   if(!signedIn||!accessToken){toast('Sign in to upload receipts','error');input.value='';return;}
   const file=input.files[0];
   if(!file) return;
+  const invalid=validatePhotoFiles([file],true); // allowPdf=true for receipts
+  if(invalid.length){
+    toast('Unsupported file type: '+invalid[0]+'. Use JPG, PNG, HEIC, WebP, or PDF.','error');
+    input.value='';return;
+  }
   const btn=document.getElementById('em-receipt-btn');
   btn.textContent='Uploading…';btn.disabled=true;
   try{
@@ -3151,6 +3248,17 @@ async function handleExpenseReceiptUpload(input){
 
 function removeExpenseReceipt(){_expenseReceipt=null;renderExpenseReceiptDisplay();}
 
+async function captureDocCanvas(el){
+  // Use onclone so html2canvas renders at full width regardless of mobile viewport
+  return await html2canvas(el,{
+    scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false,
+    onclone:(clonedDoc)=>{
+      const cloned=clonedDoc.getElementById('preview-content');
+      if(cloned){cloned.style.width='720px';cloned.style.minWidth='720px';}
+    }
+  });
+}
+
 async function downloadDocPdf(){
   if(!currentPreviewDoc){toast('No document open','error');return;}
   const d=currentPreviewDoc;
@@ -3158,7 +3266,7 @@ async function downloadDocPdf(){
   btn.textContent='Generating…';btn.disabled=true;
   try{
     const el=document.getElementById('preview-content');
-    const canvas=await html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false});
+    const canvas=await captureDocCanvas(el);
     const imgData=canvas.toDataURL('image/jpeg',0.95);
     const{jsPDF}=window.jspdf;
     const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
@@ -3198,7 +3306,7 @@ async function savePdfToDrive(){
   btn.textContent='Saving…';btn.disabled=true;
   try{
     const el=document.getElementById('preview-content');
-    const canvas=await html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false});
+    const canvas=await captureDocCanvas(el);
     const imgData=canvas.toDataURL('image/jpeg',0.95);
     const{jsPDF}=window.jspdf;
     const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
@@ -3271,11 +3379,22 @@ ${DB.settings.phone?DB.settings.phone+'\n':''}${DB.settings.email||''}`.trim();
     afterWrap.style.display='block';
     afterCheck.checked=false;
     afterUrlEl.textContent='';
-    // Pre-resolve the after folder ID so the URL is ready
-    getJobFolders(jobWithAfter.id).then(f=>{
-      _sendAfterFolderId=f.afterFolderId;
-      afterUrlEl.textContent=`drive.google.com/drive/folders/${f.afterFolderId}`;
-    }).catch(()=>{});
+    if(jobWithAfter.afterFolderId){
+      // Stored on the job record — use directly, no Drive API call needed
+      _sendAfterFolderId=jobWithAfter.afterFolderId;
+      afterUrlEl.textContent=`drive.google.com/drive/folders/${jobWithAfter.afterFolderId}`;
+    } else {
+      // Legacy job: derive folder from existing photo's parent (safe with drive.file scope,
+      // avoids creating a duplicate empty folder via getJobFolders/_buildJobFolders)
+      resolveAfterFolderFromPhotos(jobWithAfter).then(folderId=>{
+        if(!folderId) return;
+        _sendAfterFolderId=folderId;
+        afterUrlEl.textContent=`drive.google.com/drive/folders/${folderId}`;
+        // Backfill the stored ID so next time we don't need the Drive call
+        const idx=DB.jobs.findIndex(j=>j.id===jobWithAfter.id);
+        if(idx!==-1){DB.jobs[idx].afterFolderId=folderId;saveAndSync();}
+      }).catch(()=>{});
+    }
   } else {
     afterWrap.style.display='none';
   }
@@ -3380,7 +3499,7 @@ async function sendInvoiceEmail(){
     document.getElementById('preview-modal').classList.add('open');
     await new Promise(r=>setTimeout(r,100));
     const el=document.getElementById('preview-content');
-    const canvas=await html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false});
+    const canvas=await captureDocCanvas(el);
     document.getElementById('preview-modal').classList.remove('open');
 
     const imgData=canvas.toDataURL('image/jpeg',0.95);
@@ -3499,7 +3618,10 @@ function openExpenseModal(id=''){
   document.getElementById('em-date').value=exp?exp.date:today();
   document.getElementById('em-amount').value=exp?exp.amount:'';
   document.getElementById('em-desc').value=exp?exp.desc:'';
-  document.getElementById('em-cat').value=exp?exp.category:'Materials & Supplies';
+  const _catSel=document.getElementById('em-cat');
+  const _catVal=exp?exp.category:'Materials & Supplies';
+  _catSel.value=_catVal;
+  if(_catVal&&_catSel.value!==_catVal){const _opt=document.createElement('option');_opt.value=_catVal;_opt.textContent=_catVal;_catSel.appendChild(_opt);_catSel.value=_catVal;}
   document.getElementById('em-job').innerHTML='<option value="">— none —</option>'+DB.jobs.filter(j=>!j.archived).map(j=>`<option value="${j.id}"${j.id===(exp?.jobId||'')?'selected':''}>${clientFullName(getClient(j.clientId))}: ${j.title}</option>`).join('');
   renderExpenseReceiptDisplay();
   document.getElementById('expense-modal').classList.add('open');
