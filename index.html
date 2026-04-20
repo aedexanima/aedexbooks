@@ -747,18 +747,21 @@ textarea{resize:vertical;min-height:60px}
         <div id="jm-before-strip" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"></div>
         <input type="file" id="jm-before-input" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/jpeg,image/png,image/heic,image/heif,image/webp" multiple style="display:none" onchange="handleJobPhotoUpload(this,'before')">
         <button type="button" id="jm-before-btn" class="btn sm" onclick="document.getElementById('jm-before-input').click()">+ Before</button>
+        <div style="font-size:11px;color:var(--text3);margin-top:5px">JPG, PNG, HEIC, WebP</div>
       </div>
       <div>
         <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;letter-spacing:.3px">AFTER</div>
         <div id="jm-after-strip" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"></div>
         <input type="file" id="jm-after-input" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/jpeg,image/png,image/heic,image/heif,image/webp" multiple style="display:none" onchange="handleJobPhotoUpload(this,'after')">
         <button type="button" id="jm-after-btn" class="btn sm" onclick="document.getElementById('jm-after-input').click()">+ After</button>
+        <div style="font-size:11px;color:var(--text3);margin-top:5px">JPG, PNG, HEIC, WebP</div>
       </div>
       <div>
         <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;letter-spacing:.3px">GENERAL</div>
         <div id="jm-photo-strip" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"></div>
         <input type="file" id="jm-photo-input" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/jpeg,image/png,image/heic,image/heif,image/webp" multiple style="display:none" onchange="handleJobPhotoUpload(this,'general')">
         <button type="button" id="jm-photo-upload-btn" class="btn sm" onclick="document.getElementById('jm-photo-input').click()">+ General</button>
+        <div style="font-size:11px;color:var(--text3);margin-top:5px">JPG, PNG, HEIC, WebP</div>
       </div>
     </div>
   </div>
@@ -923,6 +926,7 @@ textarea{resize:vertical;min-height:60px}
     <div id="em-receipt-display" style="margin-bottom:6px"></div>
     <input type="file" id="em-receipt-input" accept="image/*,.pdf" style="display:none" onchange="handleExpenseReceiptUpload(this)">
     <button type="button" id="em-receipt-btn" class="btn sm" onclick="document.getElementById('em-receipt-input').click()">+ Attach Receipt</button>
+    <div style="font-size:11px;color:var(--text3);margin-top:5px">JPG, PNG, HEIC, WebP, PDF</div>
   </div>
   <div class="btn-row">
     <button class="btn accent" id="em-save-btn" onclick="saveExpense()">Save expense</button>

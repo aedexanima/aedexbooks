@@ -195,6 +195,27 @@ if (jobUploadFn) {
   assert('error message mentions WebP', errRegion.toLowerCase().includes('webp'));
 }
 
+// ─── 11. User-facing file type hints visible near each upload button ──────────
+
+console.log('\n11. File type hint text near upload buttons');
+
+assert('before photo button has type hint', src.includes('jm-before-btn') && (() => {
+  const idx = src.indexOf('jm-before-btn');
+  return src.slice(idx, idx + 300).includes('JPG') && src.slice(idx, idx + 300).includes('HEIC');
+})());
+assert('after photo button has type hint', src.includes('jm-after-btn') && (() => {
+  const idx = src.indexOf('jm-after-btn');
+  return src.slice(idx, idx + 300).includes('JPG') && src.slice(idx, idx + 300).includes('HEIC');
+})());
+assert('general photo button has type hint', src.includes('jm-photo-upload-btn') && (() => {
+  const idx = src.indexOf('jm-photo-upload-btn');
+  return src.slice(idx, idx + 300).includes('JPG') && src.slice(idx, idx + 300).includes('HEIC');
+})());
+assert('receipt button has type hint including PDF', src.includes('em-receipt-btn') && (() => {
+  const idx = src.indexOf('em-receipt-btn');
+  return src.slice(idx, idx + 300).includes('PDF') && src.slice(idx, idx + 300).includes('HEIC');
+})());
+
 // ─── Summary ─────────────────────────────────────────────────────────────────
 
 console.log(`\n${'─'.repeat(50)}`);
