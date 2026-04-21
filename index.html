@@ -2515,7 +2515,7 @@ function renderPortalSection(job){
   } else if(!hasToken){
     portalHtml=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <span style="font-size:13px;color:var(--text2)">Send portal link to <strong>${ctr.name}</strong>${ctr.email?' ('+ctr.email+')':''}</span>
-      <button class="btn sm accent" id="jm-send-portal-btn" onclick="sendPortalLink()">Send Portal Link</button>
+      <button class="btn sm accent" id="jm-send-portal-btn" onclick="sendPortalLink()">Send to Contractor</button>
     </div>`;
   } else {
     const portalUrl=`${location.origin}/contractor?token=${job.portalToken}`;
@@ -2630,7 +2630,7 @@ async function sendPortalLink(){
     if(!r.ok) throw new Error('Portal create failed');
   }catch(e){
     toast('Could not create portal link: '+e.message,'error');
-    if(btn){btn.textContent='Send Portal Link';btn.disabled=false;}
+    if(btn){btn.textContent='Send to Contractor';btn.disabled=false;}
     return;
   }
 
