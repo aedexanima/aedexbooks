@@ -1053,6 +1053,7 @@ let currentClientId=null,currentJobId=null,currentDocId=null,_editingExpenseId=n
 let docLineItems=[],docFilter='all',clientSearch='',jobSearch='',jobPastDueFilter=false,_sendingReminder=false;
 let propFields=[]; // temp property fields in client modal
 let accessToken=null,signedIn=false,gapiReady=false;
+let _migrationWarnings=[]; // flagged doc/job pairs from jobId backfill — shown once after load
 
 // ---- Token persistence (survives page refresh + browser restart within 1hr) ----
 const _TOKEN_KEY='ab_token';
@@ -1095,6 +1096,55 @@ function nextNumber(){
 }
 
 function migrateNames(){
+  // ── Safe jobId backfill ──────────────────────────────────────────────────────
+  // Only uses explicit links already in the data — no guessing by client/property/date.
+  // Rule 1: estimate — job.estRef === doc.number (explicit link stored on job)
+  // Rule 2: invoice  — invoice.estRef === estimate.id, and that estimate has a jobId (transitive)
+  // Guards: skip if a job would end up with >1 estimate or >1 invoice; skip if the
+  //         invoice's estRef doesn't trace to the estimate already on that job.
+  // Anything that doesn't pass all checks is flagged and skipped.
+
+  // Pass 1: link estimates via job.estRef
+  DB.docs.forEach(d=>{
+    if(d.jobId||d.type!=='estimate') return;
+    const jobs=DB.jobs.filter(j=>j.estRef&&j.estRef===d.number);
+    if(jobs.length===0) return; // no job claims this estimate
+    if(jobs.length>1){
+      _migrationWarnings.push({reason:'Multiple jobs share estRef',docType:'estimate',docNumber:d.number,docId:d.id,jobIds:jobs.map(j=>j.id),jobNumbers:jobs.map(j=>j.jobNumber)});
+      return;
+    }
+    const job=jobs[0];
+    // Guard: job must not already have another estimate linked
+    const existing=DB.docs.filter(x=>x.id!==d.id&&x.type==='estimate'&&x.jobId===job.id);
+    if(existing.length>0){
+      _migrationWarnings.push({reason:'Job already has a linked estimate',docType:'estimate',docNumber:d.number,docId:d.id,jobId:job.id,jobNumber:job.jobNumber,conflictDocNumbers:existing.map(x=>x.number)});
+      return;
+    }
+    d.jobId=job.id;
+  });
+
+  // Pass 2: link invoices via invoice.estRef → estimate.id → estimate.jobId
+  DB.docs.forEach(d=>{
+    if(d.jobId||d.type!=='invoice'||!d.estRef) return;
+    const est=DB.docs.find(x=>x.id===d.estRef&&x.type==='estimate');
+    if(!est||!est.jobId) return; // estimate not found or not yet linked — skip
+    const job=DB.jobs.find(j=>j.id===est.jobId);
+    if(!job) return;
+    // Guard: job must not already have another invoice linked
+    const existing=DB.docs.filter(x=>x.id!==d.id&&x.type==='invoice'&&x.jobId===job.id);
+    if(existing.length>0){
+      _migrationWarnings.push({reason:'Job already has a linked invoice',docType:'invoice',docNumber:d.number,docId:d.id,jobId:job.id,jobNumber:job.jobNumber,conflictDocNumbers:existing.map(x=>x.number)});
+      return;
+    }
+    // Guard: invoice's estRef must trace back to the estimate on this job (consistency)
+    if(est.jobId!==job.id){
+      _migrationWarnings.push({reason:'Invoice estRef traces to wrong job',docType:'invoice',docNumber:d.number,docId:d.id,jobId:job.id,jobNumber:job.jobNumber});
+      return;
+    }
+    d.jobId=job.id;
+  });
+  // ── End jobId backfill ───────────────────────────────────────────────────────
+
   // Migrate JOB-XXXX numbers to unified 5-digit format
   DB.jobs.forEach(j=>{
     const m=(j.jobNumber||'').match(/^JOB-(\d+)$/);
@@ -1134,6 +1184,23 @@ function migrateNames(){
   });
 }
 
+
+function flushMigrationWarnings(){
+  if(!_migrationWarnings.length) return;
+  console.group(`%c⚠ Job-Doc Backfill: ${_migrationWarnings.length} flagged item(s) — review required`,'color:orange;font-weight:bold');
+  _migrationWarnings.forEach((w,i)=>{
+    const jobLabel=w.jobNumbers?w.jobNumbers.join(', '):(w.jobNumber||w.jobId||'?');
+    const conflict=w.conflictDocNumbers?` | conflicts with: ${w.conflictDocNumbers.join(', ')}`:'';
+    console.warn(`[${i+1}] ${w.reason} | ${w.docType} #${w.docNumber} | job(s): ${jobLabel}${conflict}`);
+  });
+  console.groupEnd();
+  const lines=_migrationWarnings.map((w,i)=>{
+    const jobLabel=w.jobNumbers?w.jobNumbers.join(', '):(w.jobNumber||w.jobId||'?');
+    return `${i+1}. ${w.reason} — ${w.docType} #${w.docNumber} (job: ${jobLabel})`;
+  });
+  alert(`⚠ Job-Doc Backfill: ${_migrationWarnings.length} item(s) skipped — review required.\n\nCheck the browser console for full details.\n\n${lines.join('\n')}`);
+  _migrationWarnings=[];
+}
 
 // ============================================================
 // INIT
@@ -1566,6 +1633,7 @@ async function loadFromSheet(){
 
     seedTestClient();seedCatalog();
     saveLocal();renderAll();
+    setTimeout(flushMigrationWarnings,1000);
     // If catalog tab was empty (new user), write defaults to sheet now
     if(catalogWasEmpty&&DB.catalog.length) syncToSheet();
     setSyncStatus('🟢 Synced '+new Date().toLocaleTimeString());
