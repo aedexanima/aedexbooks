@@ -2290,15 +2290,7 @@ function renderJobs(){
   if(search) jobs=jobs.filter(j=>j.title?.toLowerCase().includes(search)||clientFullName(getClient(j.clientId)).toLowerCase().includes(search));
   const stageLabel=STAGE_LABEL;
   const jobDocLinks=(j)=>{
-    let docs=DB.docs.filter(d=>!d.archived&&d.jobId===j.id);
-    if(!docs.length){
-      let loose=DB.docs.filter(d=>!d.archived&&d.clientId===j.clientId&&d.propertyId===j.propertyId);
-      if(!loose.length) loose=DB.docs.filter(d=>!d.archived&&d.clientId===j.clientId);
-      loose.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-      const est=loose.find(d=>d.type==='estimate');
-      const inv=loose.find(d=>d.type==='invoice');
-      docs=[est,inv].filter(Boolean);
-    }
+    const docs=DB.docs.filter(d=>!d.archived&&d.jobId===j.id);
     return docs.map(d=>`<button class="btn sm${d.type==='invoice'?' primary':''}" onclick="viewDoc('${d.id}')">${d.type==='invoice'?'Inv':'Est'} #${d.number||'—'}</button>`).join('');
   };
 
