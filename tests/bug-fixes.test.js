@@ -168,22 +168,26 @@ assert('CSS badge for assigned-for-estimate defined',
 
 // ─── 3. Job numbers — format, uniqueness, auto-assignment ─────────────────────
 
-console.log('\n3. Job numbers — JOB-0001 format, auto-assignment, uniqueness');
+console.log('\n3. Job numbers — unified 5-digit format, auto-assignment, uniqueness');
 
-assert('nextJobNumber function defined', src.includes('function nextJobNumber'));
+assert('nextNumber function defined (unified counter)',
+  src.includes('function nextNumber('));
 
-const nextJobFn = extractFn(src, 'nextJobNumber') || '';
-assert("nextJobNumber uses 'JOB-' prefix",
-  nextJobFn.includes("'JOB-'") || nextJobFn.includes('"JOB-"'));
-assert('nextJobNumber pads to 4 digits (padStart 4)',
-  nextJobFn.includes("padStart(4,'0')") || nextJobFn.includes("padStart(4, '0')"));
-assert('nextJobNumber finds max existing number (increments correctly)',
-  nextJobFn.includes('Math.max') && nextJobFn.includes('parseInt'));
-assert('nextJobNumber reads from DB.jobs',
-  nextJobFn.includes('DB.jobs'));
+const nextNumberFn = extractFn(src, 'nextNumber') || '';
+assert('nextNumber pads to 5 digits (padStart 5)',
+  nextNumberFn.includes("padStart(5,'0')") || nextNumberFn.includes("padStart(5, '0')"));
+assert('nextNumber finds max across DB.docs AND DB.jobs',
+  nextNumberFn.includes('DB.docs') && nextNumberFn.includes('DB.jobs'));
+assert('nextNumber uses Math.max with parseInt',
+  nextNumberFn.includes('Math.max') && nextNumberFn.includes('parseInt'));
+assert('nextNumber falls back to 03001 when no existing numbers',
+  nextNumberFn.includes("'03001'"));
+
+assert('nextDocNumber delegates to nextNumber()',
+  src.includes('function nextDocNumber') && src.includes('nextNumber()'));
 
 assert('saveJob assigns jobNumber to new jobs',
-  saveJobFn.includes('jobNumber') && saveJobFn.includes('nextJobNumber()'));
+  saveJobFn.includes('jobNumber') && saveJobFn.includes('nextNumber()'));
 
 assert('saveJob preserves existing jobNumber on update',
   saveJobFn.includes('existing?.jobNumber') || saveJobFn.includes('existing.jobNumber'));
@@ -224,7 +228,7 @@ assert('jobNumber displayed in jobs table (desktop)',
 const docSaveFnIdx = src.indexOf('function saveDoc(');
 const docSaveFn = docSaveFnIdx !== -1 ? src.slice(docSaveFnIdx, docSaveFnIdx + 3000) : '';
 assert('auto-created jobs from saveDoc get a jobNumber',
-  docSaveFn.includes('jobNumber') && docSaveFn.includes('nextJobNumber'));
+  docSaveFn.includes('jobNumber') && docSaveFn.includes('nextNumber'));
 
 // ─── 4. Migration — existing jobs without numbers get assigned ────────────────
 
@@ -233,8 +237,11 @@ console.log('\n4. Migration — migrateNames assigns job numbers to existing job
 const migrateNamesFn = extractFn(src, 'migrateNames') || '';
 assert('migrateNames function defined', migrateNamesFn.length > 0);
 
-assert('migrateNames calls nextJobNumber for jobs missing a number',
-  migrateNamesFn.includes('nextJobNumber'));
+assert('migrateNames calls nextNumber() for jobs missing a number',
+  migrateNamesFn.includes('nextNumber()'));
+
+assert('migrateNames migrates JOB-XXXX numbers to 5-digit format',
+  migrateNamesFn.includes('JOB-') && migrateNamesFn.includes('padStart(5,'));
 
 assert('migrateNames checks for missing jobNumber (!j.jobNumber)',
   migrateNamesFn.includes('!j.jobNumber'));

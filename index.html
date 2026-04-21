@@ -1078,19 +1078,23 @@ const TABS=['Clients','Properties','Jobs','Documents','Expenses','ActivityLog','
 // ============================================================
 // DATA MIGRATION
 // ============================================================
-function nextJobNumber(){
-  // Find the highest existing JOB-XXXX number and increment
-  let max=0;
-  DB.jobs.forEach(j=>{
-    const m=(j.jobNumber||'').match(/^JOB-(\d+)$/);
-    if(m) max=Math.max(max,parseInt(m[1],10));
-  });
-  return 'JOB-'+(max+1).toString().padStart(4,'0');
+function nextNumber(){
+  // Unified counter across jobs + docs — finds max numeric value in either, then increments
+  const docNums=DB.docs.map(d=>parseInt(d.number)).filter(n=>!isNaN(n));
+  const jobNums=DB.jobs.map(j=>parseInt(j.jobNumber)).filter(n=>!isNaN(n));
+  const allNums=[...docNums,...jobNums];
+  const bump=3+Math.floor(Math.random()*2); // random 3 or 4
+  return allNums.length?String(Math.max(...allNums)+bump).padStart(5,'0'):'03001';
 }
 
 function migrateNames(){
-  // Assign job numbers to any jobs that don't have one yet (idempotent)
-  DB.jobs.forEach(j=>{if(!j.jobNumber) j.jobNumber=nextJobNumber();});
+  // Migrate JOB-XXXX numbers to unified 5-digit format
+  DB.jobs.forEach(j=>{
+    const m=(j.jobNumber||'').match(/^JOB-(\d+)$/);
+    if(m) j.jobNumber=String(parseInt(m[1],10)).padStart(5,'0');
+  });
+  // Assign numbers to jobs that still don't have one
+  DB.jobs.forEach(j=>{if(!j.jobNumber) j.jobNumber=nextNumber();});
 
   // Migrate old job statuses to new values
   const statusMap={'quoted':'estimate-sent','complete':'complete','invoiced':'complete','paid':'complete','approved':'in-progress','progress':'in-progress','awaiting-payment':'complete'};
@@ -2312,7 +2316,7 @@ function renderJobs(){
       <div class="job-card-m-top" onclick="editJob('${j.id}')">
         <div style="flex:1;min-width:0">
           <div class="job-card-m-client">${clientFullName(getClient(j.clientId))}</div>
-          <div class="job-card-m-title">${j.jobNumber?`<span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);margin-right:3px">${j.jobNumber}</span>`:''}${j.title}${j.photos?.length?` <span style="font-size:11px;color:var(--text3)">📷${j.photos.length}</span>`:''}</div>
+          <div class="job-card-m-title">${j.jobNumber?`<span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);margin-right:3px">#${j.jobNumber}</span>`:''}${j.title}${j.photos?.length?` <span style="font-size:11px;color:var(--text3)">📷${j.photos.length}</span>`:''}</div>
         </div>
         <span class="badge ${j.status}" style="flex-shrink:0">${stageLabel[j.status]||j.status}</span>
       </div>
@@ -2336,7 +2340,7 @@ function renderJobs(){
     return`<tr${j.archived?' style="opacity:.5"':''}>
     <td><strong>${clientFullName(getClient(j.clientId))}</strong></td>
     <td style="font-size:12px;color:var(--text2)">${getProperty(j.propertyId).address||'—'}</td>
-    <td>${j.jobNumber?`<span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);margin-right:4px">${j.jobNumber}</span>`:''}${j.title}${j.archived?' <span class="badge" style="font-size:10px;background:#e0e0e0;color:#666">Archived</span>':''}${overdueDays!==null?` <span class="badge" style="font-size:10px;background:var(--red-light);color:var(--red)">⚠ ${overdueDays}d overdue</span>`:''}${j.photos?.length?` <span style="font-size:10px;color:var(--text3)">📷 ${j.photos.length}</span>`:''}</td>
+    <td>${j.jobNumber?`<span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);margin-right:4px">#${j.jobNumber}</span>`:''}${j.title}${j.archived?' <span class="badge" style="font-size:10px;background:#e0e0e0;color:#666">Archived</span>':''}${overdueDays!==null?` <span class="badge" style="font-size:10px;background:var(--red-light);color:var(--red)">⚠ ${overdueDays}d overdue</span>`:''}${j.photos?.length?` <span style="font-size:10px;color:var(--text3)">📷 ${j.photos.length}</span>`:''}</td>
     <td><span class="badge ${j.status}">${stageLabel[j.status]||j.status}</span></td>
     <td style="font-size:12px;color:var(--text2)">${ctrs.length?ctrs.join(', '):'—'}</td>
     <td style="font-family:'DM Mono',monospace">${fmt(j.value)}</td>
@@ -2391,7 +2395,7 @@ function editJob(id){
   currentJobId=id;
   _jobPhotos=[...(j.photos||[])];
   _stagingAfterFolderId='';
-  document.getElementById('jm-title').textContent=j.jobNumber?`Edit Job — ${j.jobNumber}`:'Edit Job';
+  document.getElementById('jm-title').textContent=j.jobNumber?`Edit Job — #${j.jobNumber}`:'Edit Job';
   document.getElementById('jm-del').style.display=j.archived?'none':'inline-flex';
   document.getElementById('jm-restore').style.display=j.archived?'inline-flex':'none';
   document.getElementById('jm-title-inp').value=j.title||'';
@@ -2456,7 +2460,7 @@ function saveJob(){
     contractorEstimate:existing?.contractorEstimate||null,
     clientEstimate:existing?.clientEstimate||null,
     // Job number: preserve existing, or assign a new one for new jobs
-    jobNumber:existing?.jobNumber||nextJobNumber(),
+    jobNumber:existing?.jobNumber||nextNumber(),
     createdAt:existing?.createdAt||ts,updatedAt:ts
   };
   // Auto-advance status: if a contractor was just assigned and job is still Unassigned, move to Assigned for Estimate
@@ -2973,11 +2977,7 @@ function renderDocs(){
 function filterDocs(f,el){docFilter=f;document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderDocs();}
 function markPaid(id){const d=DB.docs.find(x=>x.id===id);if(d&&confirm('Mark as paid?')){d.paid=true;d.updatedAt=now();logActivity('Marked Paid','Document',id,`${fmt(d.total)} — ${clientFullName(getClient(d.clientId))}`);saveAndSync();renderDocs();renderDashboard();toast('Invoice marked as paid ✓','success');}}
 
-function nextDocNumber(){
-  const nums=DB.docs.map(d=>parseInt(d.number)).filter(n=>!isNaN(n));
-  const bump=3+Math.floor(Math.random()*2); // random 3 or 4
-  return nums.length?String(Math.max(...nums)+bump).padStart(5,'0'):'03001';
-}
+function nextDocNumber(){ return nextNumber(); }
 function openNewDoc(){
   currentDocId=null;docLineItems=[];_docForJobId=null;
   document.getElementById('dm-title').textContent='New Document';
@@ -3190,7 +3190,7 @@ function saveDoc(){
   if(!linkedJob){
     // No active job exists — create one automatically
     const newStatus=doc.type==='estimate'?'estimate-sent':'in-progress';
-    const newJobNum=nextJobNumber();
+    const newJobNum=nextNumber();
     linkedJob={
       id:uid(),
       clientId:doc.clientId,
