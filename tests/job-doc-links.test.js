@@ -2,14 +2,17 @@
  * Job document link isolation tests.
  *
  * Verifies that jobDocLinks() in renderJobs() only shows documents
- * explicitly linked to a job via doc.jobId — never by client/property fallback.
+ * explicitly linked to a job via doc.jobId — never by loose client/property fallback.
+ * Also verifies the migrateNames() backfill that populates jobId on legacy docs.
  *
- * 1. New job with no linked docs shows nothing
- * 2. Job shows only its own docs (matched by jobId)
- * 3. Docs for a different job on the same client do NOT appear
- * 4. Docs for a different job on the same client+property do NOT appear
- * 5. Multiple jobs in sequence don't share docs (no crossover)
- * 6. No loose fallback by clientId or clientId+propertyId in source
+ * 1. Source: jobDocLinks uses only jobId filter, no loose fallback
+ * 2. Job with directly linked estimate shows it
+ * 3. Job with directly linked invoice shows it
+ * 4. New job with no linked documents shows nothing
+ * 5. Docs for another job on same client+property do NOT appear
+ * 6. Multiple jobs in sequence — no document crossover
+ * 7. migrateNames backfills jobId on docs that lack it
+ * 8. migrateNames does NOT overwrite an already-set jobId
  */
 
 const fs = require('fs');
@@ -25,111 +28,144 @@ function assert(name, condition, detail = '') {
   else { console.error(`  ✗ ${name}${detail ? ' — ' + detail : ''}`); failed++; }
 }
 
-// ─── Extract jobDocLinks logic ─────────────────────────────────────────────
+// ─── Extract jobDocLinks source ───────────────────────────────────────────────
 
-// Pull the jobDocLinks arrow function body out of renderJobs
 const jobDocLinksMatch = src.match(/const jobDocLinks=\(j\)=>\{([\s\S]*?)\};/);
 const jobDocLinksFn = jobDocLinksMatch ? jobDocLinksMatch[0] : '';
 
-// ─── 1. Static source checks ───────────────────────────────────────────────
+// ─── 1. Source checks ─────────────────────────────────────────────────────────
 
-console.log('\n1. Source: no loose fallback logic');
+console.log('\n1. Source: jobDocLinks uses strict jobId filter only');
 
-assert('jobDocLinks defined in renderJobs',
-  jobDocLinksFn.length > 0);
+assert('jobDocLinks defined in renderJobs', jobDocLinksFn.length > 0);
 
-assert('jobDocLinks filters only by jobId (d.jobId===j.id)',
+assert('filters by d.jobId===j.id',
   jobDocLinksFn.includes('d.jobId===j.id') || jobDocLinksFn.includes("d.jobId === j.id"));
 
-assert('no fallback filter by clientId alone',
+assert('no fallback filter by clientId',
   !jobDocLinksFn.includes('d.clientId===j.clientId') && !jobDocLinksFn.includes("d.clientId === j.clientId"));
 
 assert('no fallback filter by propertyId',
   !jobDocLinksFn.includes('d.propertyId===j.propertyId') && !jobDocLinksFn.includes("d.propertyId === j.propertyId"));
 
-assert('no "loose" variable in jobDocLinks',
-  !jobDocLinksFn.includes('loose'));
+assert('no "loose" variable',  !jobDocLinksFn.includes('loose'));
 
-// ─── 2–5. Runtime simulation ───────────────────────────────────────────────
+// ─── Runtime helpers ──────────────────────────────────────────────────────────
 
-console.log('\n2. Runtime: new job shows no documents');
-
-// Minimal stub of jobDocLinks extracted from source
 function jobDocLinks(j, docs) {
-  const linked = docs.filter(d => !d.archived && d.jobId === j.id);
-  return linked;
+  return docs.filter(d => !d.archived && d.jobId === j.id);
+}
+
+// Simulate migrateNames backfill logic extracted from source
+function migrateDocJobIds(docs, jobs) {
+  docs.forEach(d => {
+    if (!d.jobId) {
+      const linked = jobs.find(j => j.clientId === d.clientId && j.propertyId === d.propertyId && !j.archived);
+      if (linked) d.jobId = linked.id;
+    }
+  });
 }
 
 const clientId = 'cli-001';
 const propertyId = 'prp-001';
 
-const job1 = { id: 'job-001', clientId, propertyId };
-const job2 = { id: 'job-002', clientId, propertyId };
-const job3 = { id: 'job-003', clientId, propertyId: 'prp-002' };
-const newJob = { id: 'job-new', clientId, propertyId };
+const job1 = { id: 'job-001', clientId, propertyId, archived: false };
+const job2 = { id: 'job-002', clientId, propertyId, archived: false };
+const newJob = { id: 'job-new', clientId, propertyId: 'prp-999', archived: false };
 
-const est1 = { id: 'doc-001', type: 'estimate', number: '03725', clientId, propertyId, jobId: 'job-001', archived: false };
-const inv1 = { id: 'doc-002', type: 'invoice',  number: '03729', clientId, propertyId, jobId: 'job-001', archived: false };
-const est2 = { id: 'doc-003', type: 'estimate', number: '03730', clientId, propertyId, jobId: 'job-002', archived: false };
-const est3 = { id: 'doc-004', type: 'estimate', number: '03731', clientId, propertyId: 'prp-002', jobId: 'job-003', archived: false };
+// ─── 2. Job with directly linked estimate shows it ───────────────────────────
 
-const allDocs = [est1, inv1, est2, est3];
+console.log('\n2. Job with directly linked estimate shows it');
 
-// New job — no docs linked to it
-const newJobDocs = jobDocLinks(newJob, allDocs);
-assert('new job returns no documents', newJobDocs.length === 0,
-  `got ${newJobDocs.length} doc(s): ${newJobDocs.map(d=>d.number).join(', ')}`);
+const estLinked = { id: 'doc-est', type: 'estimate', number: '03725', clientId, propertyId, jobId: 'job-001', archived: false };
+const allDocs = [estLinked];
 
-console.log('\n3. Runtime: job shows only its own docs');
+const result2 = jobDocLinks(job1, allDocs);
+assert('job1 shows its linked estimate', result2.length === 1 && result2[0].id === 'doc-est');
+assert('linked estimate number is correct', result2[0]?.number === '03725');
 
-const job1Docs = jobDocLinks(job1, allDocs);
-assert('job1 returns 2 docs (est + inv)', job1Docs.length === 2,
-  `got ${job1Docs.length}`);
-assert('job1 docs are est1 and inv1',
-  job1Docs.some(d => d.id === 'doc-001') && job1Docs.some(d => d.id === 'doc-002'));
-assert('job1 does NOT include job2\'s estimate',
-  !job1Docs.some(d => d.id === 'doc-003'));
+// ─── 3. Job with directly linked invoice shows it ────────────────────────────
 
-console.log('\n4. Runtime: same client+property — no crossover');
+console.log('\n3. Job with directly linked invoice shows it');
 
-const job2Docs = jobDocLinks(job2, allDocs);
-assert('job2 shows only its own estimate (not job1\'s docs)',
-  job2Docs.length === 1 && job2Docs[0].id === 'doc-003',
-  `got ${job2Docs.map(d=>d.id).join(', ')}`);
-assert('job2 does NOT show job1\'s estimate', !job2Docs.some(d => d.id === 'doc-001'));
-assert('job2 does NOT show job1\'s invoice',  !job2Docs.some(d => d.id === 'doc-002'));
+const invLinked = { id: 'doc-inv', type: 'invoice', number: '03729', clientId, propertyId, jobId: 'job-001', archived: false };
+const docsWithInv = [estLinked, invLinked];
 
-console.log('\n5. Runtime: different property on same client — no crossover');
+const result3 = jobDocLinks(job1, docsWithInv);
+assert('job1 shows both its estimate and invoice', result3.length === 2);
+assert('invoice is present', result3.some(d => d.type === 'invoice' && d.number === '03729'));
+assert('estimate is present', result3.some(d => d.type === 'estimate' && d.number === '03725'));
 
-const job3Docs = jobDocLinks(job3, allDocs);
-assert('job3 shows only its own estimate', job3Docs.length === 1 && job3Docs[0].id === 'doc-004');
-assert('job3 does NOT show job1 docs', !job3Docs.some(d => d.jobId === 'job-001'));
-assert('job3 does NOT show job2 docs', !job3Docs.some(d => d.jobId === 'job-002'));
+// ─── 4. New job with no linked documents shows nothing ───────────────────────
 
-console.log('\n6. Runtime: opening multiple jobs in sequence — no state bleed');
+console.log('\n4. New job with no linked documents shows nothing');
 
-// Simulates iterating renderJobs over all jobs, as the render loop does
-const results = [job1, job2, job3, newJob].map(j => ({
-  jobId: j.id,
-  docIds: jobDocLinks(j, allDocs).map(d => d.id)
-}));
+const result4 = jobDocLinks(newJob, docsWithInv);
+assert('new job returns no documents', result4.length === 0,
+  `got ${result4.length}: ${result4.map(d => d.number).join(', ')}`);
 
-assert('job-001 has 2 docs in sequence render', results[0].docIds.length === 2);
-assert('job-002 has 1 doc in sequence render', results[1].docIds.length === 1);
-assert('job-003 has 1 doc in sequence render', results[2].docIds.length === 1);
-assert('new job has 0 docs in sequence render', results[3].docIds.length === 0);
+// ─── 5. Same client+property — no crossover ──────────────────────────────────
 
-// No doc appears in more than one job's results
-const allRendered = results.flatMap(r => r.docIds.map(id => ({ jobId: r.jobId, docId: id })));
+console.log('\n5. Same client+property docs do not bleed into another job');
+
+const est2 = { id: 'doc-est2', type: 'estimate', number: '03730', clientId, propertyId, jobId: 'job-002', archived: false };
+const mixedDocs = [estLinked, invLinked, est2];
+
+const result5a = jobDocLinks(job1, mixedDocs);
+const result5b = jobDocLinks(job2, mixedDocs);
+assert('job1 does not see job2\'s estimate', !result5a.some(d => d.id === 'doc-est2'));
+assert('job2 does not see job1\'s estimate', !result5b.some(d => d.id === 'doc-est'));
+assert('job2 does not see job1\'s invoice',  !result5b.some(d => d.id === 'doc-inv'));
+assert('job2 sees only its own estimate', result5b.length === 1 && result5b[0].id === 'doc-est2');
+
+// ─── 6. Sequential render — no crossover across all jobs ─────────────────────
+
+console.log('\n6. Sequential render of all jobs — no document crossover');
+
+const allJobs = [job1, job2, newJob];
+const rendered = allJobs.map(j => ({ jobId: j.id, docIds: jobDocLinks(j, mixedDocs).map(d => d.id) }));
+
+assert('job-001: 2 docs in sequence', rendered[0].docIds.length === 2);
+assert('job-002: 1 doc in sequence',  rendered[1].docIds.length === 1);
+assert('job-new: 0 docs in sequence', rendered[2].docIds.length === 0);
+
 const docJobMap = {};
-allRendered.forEach(({ jobId, docId }) => {
+rendered.flatMap(r => r.docIds.map(id => ({ jobId: r.jobId, docId: id }))).forEach(({ jobId, docId }) => {
   if (!docJobMap[docId]) docJobMap[docId] = [];
   docJobMap[docId].push(jobId);
 });
 const crossover = Object.entries(docJobMap).filter(([, jobs]) => jobs.length > 1);
-assert('no document appears in more than one job\'s rendered output',
-  crossover.length === 0,
-  crossover.map(([id, jobs]) => `doc ${id} in jobs: ${jobs.join(', ')}`).join('; '));
+assert('no document appears in more than one job\'s output', crossover.length === 0,
+  crossover.map(([id, jobs]) => `${id} in ${jobs.join(', ')}`).join('; '));
+
+// ─── 7. migrateNames backfills jobId on legacy docs ──────────────────────────
+
+console.log('\n7. migrateNames backfills jobId on docs that lack it');
+
+assert('migrateNames backfill present in source',
+  src.includes('Backfill jobId on documents') || (src.includes('!d.jobId') && src.includes('d.jobId=linked.id')));
+
+// Simulate: doc has no jobId, job exists for that client+property
+const legacyDoc = { id: 'doc-legacy', type: 'estimate', number: '03000', clientId: 'cli-A', propertyId: 'prp-A', jobId: '', archived: false };
+const legacyJob = { id: 'job-legacy', clientId: 'cli-A', propertyId: 'prp-A', archived: false };
+const legacyDocs = [legacyDoc];
+const legacyJobs = [legacyJob];
+
+migrateDocJobIds(legacyDocs, legacyJobs);
+assert('legacy doc gets jobId backfilled', legacyDoc.jobId === 'job-legacy');
+
+// After backfill, jobDocLinks finds the doc
+const resultAfterMigrate = jobDocLinks(legacyJob, legacyDocs);
+assert('job finds its backfilled doc after migration', resultAfterMigrate.length === 1 && resultAfterMigrate[0].id === 'doc-legacy');
+
+// ─── 8. migrateNames does NOT overwrite an already-set jobId ─────────────────
+
+console.log('\n8. migrateNames does not overwrite an existing jobId');
+
+const docWithId = { id: 'doc-set', type: 'invoice', number: '03001', clientId: 'cli-B', propertyId: 'prp-B', jobId: 'job-correct', archived: false };
+const wrongJob  = { id: 'job-wrong',   clientId: 'cli-B', propertyId: 'prp-B', archived: false };
+migrateDocJobIds([docWithId], [wrongJob]);
+assert('existing jobId is not overwritten', docWithId.jobId === 'job-correct');
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
 

@@ -1088,6 +1088,16 @@ function nextNumber(){
 }
 
 function migrateNames(){
+  // Backfill jobId on documents that predate the jobId field.
+  // Uses the same client+property match the old loose fallback used, but stores it permanently
+  // so the strict d.jobId===j.id filter in renderJobs() can find them going forward.
+  DB.docs.forEach(d=>{
+    if(!d.jobId){
+      const linked=DB.jobs.find(j=>j.clientId===d.clientId&&j.propertyId===d.propertyId&&!j.archived);
+      if(linked) d.jobId=linked.id;
+    }
+  });
+
   // Migrate JOB-XXXX numbers to unified 5-digit format
   DB.jobs.forEach(j=>{
     const m=(j.jobNumber||'').match(/^JOB-(\d+)$/);
