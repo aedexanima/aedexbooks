@@ -2314,7 +2314,7 @@ function renderPipeline(){
         ${ctrs.length?`<div style="font-size:10px;color:var(--text3);margin-top:2px">👷 ${ctrs.join(', ')}</div>`:''}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
           <div class="pipe-card-amt">${fmt(j.value)}</div>
-          ${j.contractorEstimate?`<span onclick="event.stopPropagation();${j.clientEstimate?.docId?`convertToClientEstimate('${j.id}')`:`viewContractorEstimate('${j.id}')`}" style="font-size:10px;font-weight:600;background:var(--accent-light);color:var(--accent-text);padding:2px 6px;border-radius:10px;cursor:pointer;white-space:nowrap">${j.clientEstimate?.docId?'Est. →':'Est. ✓'}</span>`:''}
+          ${j.contractorEstimate?`<span onclick="event.stopPropagation();${j.clientEstimate?.docId?`convertToClientEstimate('${j.id}')`:`viewContractorEstimate('${j.id}')`}" style="font-size:10px;font-weight:600;background:${j.clientEstimate?.docId?'var(--accent-light)':'var(--amber-light)'};color:${j.clientEstimate?.docId?'var(--accent-text)':'var(--amber)'};padding:2px 6px;border-radius:10px;cursor:pointer;white-space:nowrap">${j.clientEstimate?.docId?'Est. →':'Est. ✓'}</span>`:''}
         </div>
         ${j.contractorEstimate?.grandTotal?`<div style="font-size:10px;color:var(--text3);margin-top:2px">🔧 Sub quote: <span style="font-family:'DM Mono',monospace;font-weight:600">${fmt(j.contractorEstimate.grandTotal)}</span></div>`:''}
       </div>`;}).join('')}
@@ -2705,7 +2705,7 @@ function renderJobs(){
       ${overdueDays!==null?`<div style="margin-bottom:8px"><span class="badge" style="font-size:11px;background:var(--red-light);color:var(--red)">⚠ ${overdueDays}d overdue</span></div>`:''}
       <div class="job-card-m-actions">
         <button class="btn sm" onclick="editJob('${j.id}')">Edit</button>
-        ${j.contractorEstimate?`<button class="btn sm${j.clientEstimate?.docId?' accent':''}" onclick="${j.clientEstimate?.docId?`convertToClientEstimate('${j.id}')`:`viewContractorEstimate('${j.id}')`}">${j.clientEstimate?.docId?'Est. →':'Est. ✓'}</button>`:''}
+        ${j.contractorEstimate?`<button class="btn sm" style="${j.clientEstimate?.docId?'background:var(--accent);color:#fff;border-color:var(--accent)':'background:var(--amber-light);color:var(--amber);border-color:var(--amber)'}" onclick="${j.clientEstimate?.docId?`convertToClientEstimate('${j.id}')`:`viewContractorEstimate('${j.id}')`}">${j.clientEstimate?.docId?'Est. →':'Est. ✓'}</button>`:''}
         ${jobDocLinks(j)}
         <button class="btn sm success" onclick="newDocForJob('${j.id}')">+ Doc</button>
       </div>
@@ -2725,7 +2725,7 @@ function renderJobs(){
     <td style="font-family:'DM Mono',monospace">${fmt(j.value)}</td>
     <td class="ts">${fmtDate(j.startDate)}</td>
     <td class="ts">${fmtTs(j.updatedAt)}</td>
-    <td><div class="btn-row"><button class="btn sm" onclick="editJob('${j.id}')">Edit</button>${j.contractorEstimate?`<button class="btn sm${j.clientEstimate?.docId?' accent':''}" onclick="${j.clientEstimate?.docId?`convertToClientEstimate('${j.id}')`:`viewContractorEstimate('${j.id}')`}">${j.clientEstimate?.docId?'Est. →':'Est. ✓'}</button>`:''} ${jobDocLinks(j)}<button class="btn sm success" onclick="newDocForJob('${j.id}')">+ Doc</button></div></td>
+    <td><div class="btn-row"><button class="btn sm" onclick="editJob('${j.id}')">Edit</button>${j.contractorEstimate?`<button class="btn sm" style="${j.clientEstimate?.docId?'background:var(--accent);color:#fff;border-color:var(--accent)':'background:var(--amber-light);color:var(--amber);border-color:var(--amber)'}" onclick="${j.clientEstimate?.docId?`convertToClientEstimate('${j.id}')`:`viewContractorEstimate('${j.id}')`}">${j.clientEstimate?.docId?'Est. →':'Est. ✓'}</button>`:''} ${jobDocLinks(j)}<button class="btn sm success" onclick="newDocForJob('${j.id}')">+ Doc</button></div></td>
   </tr>`;}).join('')}</tbody></table>`;
 
   document.getElementById('jobs-table').innerHTML=
@@ -5338,8 +5338,8 @@ const GUIDE_CONTENT={
       'Click any card to open that job and make changes.',
       '<strong>Drag a card</strong> from one column to another to change the job\'s status instantly.',
       'The number in each column header shows how many jobs are in that stage, and the total dollar value appears at the bottom.',
-      'A green <strong>Est. ✓</strong> badge means a contractor estimate is waiting. Click it to review it.',
-      'A green <strong>Est. →</strong> badge means a client estimate already exists. Click it to jump straight to that document.',
+      'An orange <strong>Est. ✓</strong> badge means a contractor estimate has been submitted and is waiting for your review.',
+      'A green <strong>Est. →</strong> badge means you\'ve already converted it to a client estimate. Click it to open that document.',
       'Click <strong>+ New Job</strong> to add a new job to the pipeline.',
     ],
     tips:[
@@ -5357,7 +5357,7 @@ const GUIDE_CONTENT={
       'Use the <strong>search bar</strong> to filter by job title or client name.',
       'Click <strong>Edit</strong> on any row to open and make changes.',
       'Click <strong>+ Doc</strong> to create a new estimate or invoice already linked to that job.',
-      'Click <strong>Est. ✓</strong> to review a contractor estimate submitted through the portal.',
+      'Click the orange <strong>Est. ✓</strong> button to review a contractor estimate submitted through the portal.',
       'Check <strong>Show archived</strong> to see completed or cancelled jobs.',
     ],
     tips:[
