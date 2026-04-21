@@ -56,15 +56,6 @@ function jobDocLinks(j, docs) {
   return docs.filter(d => !d.archived && d.jobId === j.id);
 }
 
-// Simulate migrateNames backfill logic extracted from source
-function migrateDocJobIds(docs, jobs) {
-  docs.forEach(d => {
-    if (!d.jobId) {
-      const linked = jobs.find(j => j.clientId === d.clientId && j.propertyId === d.propertyId && !j.archived);
-      if (linked) d.jobId = linked.id;
-    }
-  });
-}
 
 const clientId = 'cli-001';
 const propertyId = 'prp-001';
@@ -138,34 +129,16 @@ const crossover = Object.entries(docJobMap).filter(([, jobs]) => jobs.length > 1
 assert('no document appears in more than one job\'s output', crossover.length === 0,
   crossover.map(([id, jobs]) => `${id} in ${jobs.join(', ')}`).join('; '));
 
-// ─── 7. migrateNames backfills jobId on legacy docs ──────────────────────────
+// ─── 7. No loose backfill migration in source ────────────────────────────────
 
-console.log('\n7. migrateNames backfills jobId on docs that lack it');
+console.log('\n7. Source: no loose client/property backfill migration in migrateNames');
 
-assert('migrateNames backfill present in source',
-  src.includes('Backfill jobId on documents') || (src.includes('!d.jobId') && src.includes('d.jobId=linked.id')));
+assert('migrateNames does NOT contain client+property backfill',
+  !src.includes('d.clientId===d.clientId') &&
+  !(src.match(/migrateNames[\s\S]{0,2000}d\.clientId===j\.clientId/)));
 
-// Simulate: doc has no jobId, job exists for that client+property
-const legacyDoc = { id: 'doc-legacy', type: 'estimate', number: '03000', clientId: 'cli-A', propertyId: 'prp-A', jobId: '', archived: false };
-const legacyJob = { id: 'job-legacy', clientId: 'cli-A', propertyId: 'prp-A', archived: false };
-const legacyDocs = [legacyDoc];
-const legacyJobs = [legacyJob];
-
-migrateDocJobIds(legacyDocs, legacyJobs);
-assert('legacy doc gets jobId backfilled', legacyDoc.jobId === 'job-legacy');
-
-// After backfill, jobDocLinks finds the doc
-const resultAfterMigrate = jobDocLinks(legacyJob, legacyDocs);
-assert('job finds its backfilled doc after migration', resultAfterMigrate.length === 1 && resultAfterMigrate[0].id === 'doc-legacy');
-
-// ─── 8. migrateNames does NOT overwrite an already-set jobId ─────────────────
-
-console.log('\n8. migrateNames does not overwrite an existing jobId');
-
-const docWithId = { id: 'doc-set', type: 'invoice', number: '03001', clientId: 'cli-B', propertyId: 'prp-B', jobId: 'job-correct', archived: false };
-const wrongJob  = { id: 'job-wrong',   clientId: 'cli-B', propertyId: 'prp-B', archived: false };
-migrateDocJobIds([docWithId], [wrongJob]);
-assert('existing jobId is not overwritten', docWithId.jobId === 'job-correct');
+assert('no d.jobId assignment in migrateNames via loose match',
+  !src.includes('Backfill jobId on documents'));
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
 
