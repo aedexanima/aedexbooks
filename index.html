@@ -5601,6 +5601,43 @@ function resetFeedbackForm(){
 }
 
 // ============================================================
+// BACKGROUND SYNC
+// ============================================================
+const SYNC_INTERVAL = 10 * 60 * 1000;  // 10 minutes
+const VISIBILITY_THRESHOLD = 5 * 60 * 1000; // re-sync if hidden for >5 min
+let _lastSync = 0;
+let _hiddenAt = 0;
+
+function backgroundSync(){
+  if(!signedIn||!DB.settings.sheetId)return;
+  if(Date.now()-_lastSync < SYNC_INTERVAL)return;
+  loadFromSheet();
+}
+
+// Track when the tab was last synced (hook into loadFromSheet completion)
+const _origLoadFromSheet = loadFromSheet;
+loadFromSheet = async function(){
+  const result = await _origLoadFromSheet.apply(this, arguments);
+  _lastSync = Date.now();
+  return result;
+};
+
+// Re-sync when tab becomes visible after being hidden for >5 min
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='hidden'){
+    _hiddenAt=Date.now();
+  } else {
+    if(_hiddenAt && Date.now()-_hiddenAt > VISIBILITY_THRESHOLD){
+      backgroundSync();
+    }
+    _hiddenAt=0;
+  }
+});
+
+// Periodic sync every 10 min while tab is active
+setInterval(backgroundSync, SYNC_INTERVAL);
+
+// ============================================================
 // SETUP
 // ============================================================
 
