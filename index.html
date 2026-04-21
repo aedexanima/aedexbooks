@@ -1096,6 +1096,15 @@ function nextNumber(){
 }
 
 function migrateNames(){
+  // ── One-time reset: clear all doc jobIds so the safe backfill runs from scratch ──
+  // The previous loose client+property migration wrote bad jobId values to the sheet.
+  // This clears them once, then the safe backfill below re-links using only explicit estRef chains.
+  if(!DB.settings.docJobIdReset){
+    DB.docs.forEach(d=>{d.jobId='';});
+    DB.settings.docJobIdReset=true;
+    saveSettingsLocal();
+  }
+
   // ── Safe jobId backfill ──────────────────────────────────────────────────────
   // Only uses explicit links already in the data — no guessing by client/property/date.
   // Rule 1: estimate — job.estRef === doc.number (explicit link stored on job)
@@ -1634,6 +1643,11 @@ async function loadFromSheet(){
     seedTestClient();seedCatalog();
     saveLocal();renderAll();
     setTimeout(flushMigrationWarnings,1000);
+    // If doc jobIds were just reset, sync corrected data back to sheet immediately
+    if(DB.settings.docJobIdReset&&!DB.settings.docJobIdSynced){
+      DB.settings.docJobIdSynced=true;saveSettingsLocal();syncToSheet();
+      toast('Job-doc links corrected and synced to sheet','success');
+    }
     // If catalog tab was empty (new user), write defaults to sheet now
     if(catalogWasEmpty&&DB.catalog.length) syncToSheet();
     setSyncStatus('🟢 Synced '+new Date().toLocaleTimeString());
