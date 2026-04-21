@@ -130,7 +130,8 @@ textarea{resize:vertical;min-height:60px}
 .t-row{display:flex;justify-content:space-between;padding:3px 0;font-size:13px;color:var(--text2)}
 .t-row.grand{font-size:15px;font-weight:600;color:var(--text);border-top:1px solid var(--border);padding-top:9px;margin-top:5px}
 /* PIPELINE */
-.pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px}
+.pipeline{display:flex;overflow-x:auto;gap:10px;margin-bottom:22px;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+.pipe-col{min-width:200px;flex:1 1 200px;flex-shrink:0}
 .pipe-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px}
 .pipe-col-hdr{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:10px;display:flex;justify-content:space-between}
 .pipe-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:9px 10px;margin-bottom:6px;cursor:pointer;transition:all .15s}
@@ -243,6 +244,43 @@ textarea{resize:vertical;min-height:60px}
 .dash-job-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
 .dash-job-item:last-child{border-bottom:none}
 
+/* ── GUIDE OVERLAY ── */
+.guide-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+.guide-overlay.open{display:flex}
+.guide-panel{background:var(--surface);border-radius:14px;width:100%;max-width:600px;box-shadow:0 20px 60px rgba(0,0,0,.25);margin:auto;display:flex;flex-direction:column;max-height:calc(100vh - 80px)}
+.guide-hdr{display:flex;align-items:center;justify-content:space-between;padding:22px 26px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.guide-title{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.guide-close{background:none;border:none;cursor:pointer;font-size:22px;color:var(--text3);padding:0 2px;line-height:1;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center}
+.guide-close:hover{color:var(--text);background:var(--surface2)}
+.guide-body{padding:20px 26px;overflow-y:auto;flex:1}
+.guide-intro{font-size:14px;color:var(--text2);line-height:1.65;margin-bottom:20px;padding:14px 16px;background:var(--accent-light);border-radius:var(--rs);border-left:3px solid var(--accent)}
+.guide-body h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin:20px 0 10px}
+.guide-body h3:first-of-type{margin-top:0}
+.guide-body ol{padding-left:20px}
+.guide-body ol li{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:8px}
+.guide-body ul{padding-left:0;list-style:none}
+.guide-body ul li{font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:7px;padding-left:18px;position:relative}
+.guide-body ul li::before{content:'→';position:absolute;left:0;color:var(--accent);font-size:11px;top:1px}
+.guide-foot{border-top:1px solid var(--border);padding:14px 26px;display:flex;justify-content:flex-end;flex-shrink:0}
+.guide-foot a{font-size:13px;color:var(--accent);cursor:pointer;text-decoration:none;font-weight:500}
+.guide-foot a:hover{text-decoration:underline}
+/* GUIDE ? BUTTON */
+.guide-btn{width:34px;height:34px;min-height:34px;padding:0;border-radius:50%;font-weight:700;font-size:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text3);border-color:var(--border)}
+.guide-btn:hover{color:var(--text);background:var(--surface2)}
+/* HELP PAGE */
+.onboarding-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:20px;box-shadow:var(--shadow);max-width:640px}
+.onboarding-progress{height:6px;background:var(--surface2);border-radius:3px;margin:10px 0 16px;overflow:hidden}
+.onboarding-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .35s}
+.onboarding-item{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--bg)}
+.onboarding-item:last-child{border-bottom:none;padding-bottom:2px}
+.ob-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;transition:all .2s;color:transparent}
+.ob-check.done{background:var(--accent);border-color:var(--accent);color:#fff}
+.ob-label{flex:1;font-size:13px;font-weight:500;color:var(--text)}
+.ob-label.done{color:var(--text3);text-decoration:line-through}
+.ob-action{font-size:12px;color:var(--accent);cursor:pointer;text-decoration:none;white-space:nowrap;font-weight:500;border:none;background:none;padding:0}
+.ob-action:hover{text-decoration:underline}
+.fb-cat-label{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--rs);background:var(--surface);margin-bottom:6px;transition:border-color .15s}
+.fb-cat-label:has(input:checked){border-color:var(--accent);background:var(--accent-light)}
 @media(max-width:768px){
   /* Hide old top bar, sidebar */
   .mob-bar{display:none !important}
@@ -286,6 +324,10 @@ textarea{resize:vertical;min-height:60px}
   .modal-bg{padding:0;align-items:flex-end}
   .modal{border-radius:20px 20px 0 0;max-width:100%;width:100%;max-height:94vh;overflow-y:auto;margin:0}
 
+  /* Guide overlay: bottom sheet on mobile */
+  .guide-overlay{padding:0;align-items:flex-end}
+  .guide-panel{border-radius:20px 20px 0 0;max-width:100%;max-height:90vh;margin:0}
+  .guide-btn{width:44px;height:44px;min-height:44px}
   /* Topbar: compact single row on mobile */
   .topbar{flex-direction:row;gap:6px;flex-wrap:wrap;align-items:center}
   .topbar .btn{font-size:12px;padding:7px 10px;white-space:nowrap}
@@ -390,6 +432,7 @@ textarea{resize:vertical;min-height:60px}
       <button class="mob-more-item" onclick="goto('contractors');closeMoreDrawer()"><span class="ico">👷</span>Contractors</button>
       <button class="mob-more-item" onclick="goto('activity');closeMoreDrawer()"><span class="ico">◷</span>Activity Log</button>
       <button class="mob-more-item" onclick="goto('settings');closeMoreDrawer()"><span class="ico">⚙</span>Settings</button>
+      <button class="mob-more-item" onclick="goto('help');closeMoreDrawer()"><span class="ico">?</span>Help & Feedback</button>
       <div class="mob-more-divider"></div>
       <button class="mob-more-signout" id="mob-auth-btn" onclick="if(Date.now()-_drawerOpenedAt>500){handleAuth();closeMoreDrawer();}">Sign in with Google</button>
     </div>
@@ -419,6 +462,8 @@ textarea{resize:vertical;min-height:60px}
       <button class="nav-item" onclick="goto('activity')" id="nav-activity"><span class="ico">◷</span>Activity Log</button>
       <div class="nav-sec">Settings</div>
       <button class="nav-item" onclick="goto('settings')" id="nav-settings"><span class="ico">⚙</span>Settings</button>
+      <div class="nav-sec">Support</div>
+      <button class="nav-item" onclick="goto('help')" id="nav-help"><span class="ico">?</span>Help & Feedback</button>
     </div>
     <div class="sb-foot">
       <div class="user-pill"><div class="user-av" id="nav-av">?</div><div class="user-nm" id="nav-user">Not signed in</div></div>
@@ -438,6 +483,7 @@ textarea{resize:vertical;min-height:60px}
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <select id="dash-year" onchange="renderDashboard()" class="input" style="width:110px;padding:6px 10px;font-size:13px"></select>
           <button class="btn" onclick="downloadTaxReport()" title="Download tax-ready CSV for selected year">⬇ Tax Report</button>
+          <button class="btn guide-btn" onclick="openGuide('dashboard')" title="How to use this page" aria-label="Guide">?</button>
           <button class="btn accent" onclick="goto('documents');openNewDoc()">+ New Document</button>
         </div>
       </div>
@@ -456,7 +502,10 @@ textarea{resize:vertical;min-height:60px}
     <div class="page" id="page-pipeline">
       <div class="topbar">
         <div><div class="pg-title">Job Pipeline</div><div class="pg-sub">Track every job from quote to payment</div></div>
-        <button class="btn accent" onclick="openJobModal()">+ New Job</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn guide-btn" onclick="openGuide('pipeline')" title="How to use this page" aria-label="Guide">?</button>
+          <button class="btn accent" onclick="openJobModal()">+ New Job</button>
+        </div>
       </div>
       <div class="pipeline" id="pipeline-board"></div>
     </div>
@@ -465,7 +514,10 @@ textarea{resize:vertical;min-height:60px}
     <div class="page" id="page-clients">
       <div class="topbar">
         <div><div class="pg-title">Clients & Properties</div><div class="pg-sub">Manage clients, their properties and tenants</div></div>
-        <button class="btn accent" onclick="openClientModal()">+ New Client</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn guide-btn" onclick="openGuide('clients')" title="How to use this page" aria-label="Guide">?</button>
+          <button class="btn accent" onclick="openClientModal()">+ New Client</button>
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:16px">
         <div class="search-wrap" style="flex:1;min-width:120px"><span class="search-ico">🔍</span><input type="text" placeholder="Search clients..." oninput="filterClients(this.value)" id="client-search"></div>
@@ -478,7 +530,10 @@ textarea{resize:vertical;min-height:60px}
     <div class="page" id="page-jobs">
       <div class="topbar">
         <div><div class="pg-title">Jobs</div></div>
-        <button class="btn accent" onclick="openJobModal()">+ New Job</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn guide-btn" onclick="openGuide('jobs')" title="How to use this page" aria-label="Guide">?</button>
+          <button class="btn accent" onclick="openJobModal()">+ New Job</button>
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:16px">
         <div class="search-wrap" style="flex:1;min-width:120px"><span class="search-ico">🔍</span><input type="text" placeholder="Search jobs..." oninput="filterJobs(this.value)"></div>
@@ -492,7 +547,10 @@ textarea{resize:vertical;min-height:60px}
     <div class="page" id="page-documents">
       <div class="topbar">
         <div><div class="pg-title">Estimates & Invoices</div></div>
-        <button class="btn accent" onclick="openNewDoc()">+ New Document</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn guide-btn" onclick="openGuide('documents')" title="How to use this page" aria-label="Guide">?</button>
+          <button class="btn accent" onclick="openNewDoc()">+ New Document</button>
+        </div>
       </div>
       <div class="tabs">
         <button class="tab active" onclick="filterDocs('all',this)">All</button>
@@ -500,6 +558,27 @@ textarea{resize:vertical;min-height:60px}
         <button class="tab" onclick="filterDocs('invoice',this)">Invoices</button>
         <button class="tab" onclick="filterDocs('unpaid',this)">Unpaid</button>
         <label class="hide-mobile" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);white-space:nowrap;cursor:pointer;margin-left:auto"><input type="checkbox" id="doc-show-archived" onchange="renderDocs()"> Show archived</label>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 2px;align-items:center">
+        <select id="doc-filter-client" onchange="renderDocs()" style="height:36px;border:1px solid var(--border);border-radius:6px;padding:0 8px;font-size:13px;color:var(--text1);background:var(--surface);min-width:140px;max-width:200px">
+          <option value="">All Clients</option>
+        </select>
+        <select id="doc-filter-status" onchange="renderDocs()" style="height:36px;border:1px solid var(--border);border-radius:6px;padding:0 8px;font-size:13px;color:var(--text1);background:var(--surface);min-width:120px;max-width:160px">
+          <option value="">All Statuses</option>
+          <option value="draft">Draft</option>
+          <option value="sent">Sent</option>
+          <option value="paid">Paid</option>
+          <option value="unpaid">Unpaid</option>
+          <option value="converted">Converted</option>
+        </select>
+        <div style="display:flex;align-items:center;gap:4px;height:36px;border:1px solid var(--border);border-radius:6px;padding:0 8px;background:var(--surface)">
+          <span style="font-size:12px;color:var(--text3);white-space:nowrap">From</span>
+          <input type="date" id="doc-filter-from" onchange="renderDocs()" style="border:none;background:transparent;font-size:13px;color:var(--text1);height:100%;outline:none;cursor:pointer">
+          <span style="font-size:12px;color:var(--text3);margin:0 2px">–</span>
+          <span style="font-size:12px;color:var(--text3);white-space:nowrap">To</span>
+          <input type="date" id="doc-filter-to" onchange="renderDocs()" style="border:none;background:transparent;font-size:13px;color:var(--text1);height:100%;outline:none;cursor:pointer">
+        </div>
+        <button id="doc-filter-clear" onclick="clearDocFilters()" style="display:none;height:36px;padding:0 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text2);background:var(--surface);cursor:pointer">✕ Clear</button>
       </div>
       <div id="docs-cards-m" class="doc-cards-m"></div>
       <div class="card doc-table-d"><div id="docs-table"></div></div>
@@ -509,7 +588,10 @@ textarea{resize:vertical;min-height:60px}
     <div class="page" id="page-expenses">
       <div class="topbar">
         <div><div class="pg-title">Expenses</div><div class="pg-sub">IRS Schedule C categories</div></div>
-        <button class="btn accent" onclick="openExpenseModal()">+ Log Expense</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn guide-btn" onclick="openGuide('expenses')" title="How to use this page" aria-label="Guide">?</button>
+          <button class="btn accent" onclick="openExpenseModal()">+ New Expense</button>
+        </div>
       </div>
       <div class="metrics m3">
         <div class="metric"><div class="met-label">Total this year</div><div class="met-val red" id="exp-total">$0</div></div>
@@ -523,7 +605,10 @@ textarea{resize:vertical;min-height:60px}
     <div class="page" id="page-contractors">
       <div class="topbar">
         <div><div class="pg-title">Contractors</div><div class="pg-sub">Subcontractors and trades people</div></div>
-        <button class="btn accent" onclick="openContractorModal()">+ Add Contractor</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn guide-btn" onclick="openGuide('contractors')" title="How to use this page" aria-label="Guide">?</button>
+          <button class="btn accent" onclick="openContractorModal()">+ Add Contractor</button>
+        </div>
       </div>
       <div class="card"><div id="contractors-table"></div></div>
     </div>
@@ -621,6 +706,40 @@ textarea{resize:vertical;min-height:60px}
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- HELP CENTER -->
+    <div class="page" id="page-help">
+      <div class="topbar">
+        <div><div class="pg-title">Help & Feedback</div><div class="pg-sub">Guides, tips, and direct feedback</div></div>
+      </div>
+      <div id="help-onboarding-wrap"></div>
+      <div class="card" style="max-width:640px">
+        <div class="card-title">Send Feedback or Get Help</div>
+        <div id="help-feedback-wrap">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">What kind of feedback?</div>
+              <div id="feedback-category-group">
+                <label class="fb-cat-label"><input type="radio" name="fb-cat" value="Bug Report" style="width:auto;min-height:auto"> 🐛 <strong>Bug Report</strong>&nbsp;— something is broken</label>
+                <label class="fb-cat-label"><input type="radio" name="fb-cat" value="Feature Request" style="width:auto;min-height:auto"> 💡 <strong>Feature Request</strong>&nbsp;— something I wish existed</label>
+                <label class="fb-cat-label"><input type="radio" name="fb-cat" value="Question" style="width:auto;min-height:auto"> ❓ <strong>Question</strong>&nbsp;— I don't understand how to do something</label>
+                <label class="fb-cat-label"><input type="radio" name="fb-cat" value="General Feedback" style="width:auto;min-height:auto"> 💬 <strong>General Feedback</strong>&nbsp;— anything else</label>
+              </div>
+            </div>
+            <div class="field"><label>Subject</label><input type="text" id="fb-subject" placeholder="Brief summary of your feedback"></div>
+            <div class="field"><label>Message</label><textarea id="fb-message" style="min-height:120px" placeholder="Describe what happened, what you expected, or what you need..."></textarea></div>
+            <div class="field"><label>Your email (so we can follow up)</label><input type="email" id="fb-email" placeholder="you@example.com"></div>
+            <div><button class="btn accent" onclick="submitFeedback()" id="fb-submit-btn" style="min-width:160px">Send Feedback</button></div>
+          </div>
+        </div>
+        <div id="help-feedback-confirm" style="display:none;padding:24px 0;text-align:center">
+          <div style="font-size:32px;margin-bottom:10px">✅</div>
+          <div style="font-size:15px;font-weight:600;margin-bottom:6px">Feedback sent — thanks!</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:20px">We'll take a look and follow up if needed.</div>
+          <button class="btn sm" onclick="resetFeedbackForm()">Send more feedback</button>
+        </div>
       </div>
     </div>
 
@@ -733,6 +852,7 @@ textarea{resize:vertical;min-height:60px}
         <option value="assigned-for-estimate">Assigned for Estimate</option>
         <option value="estimate-sent">Estimate Sent</option>
         <option value="in-progress">In Progress</option>
+        <option value="invoice-sent">Invoice Sent</option>
         <option value="complete">Complete</option>
       </select>
     </div>
@@ -953,6 +1073,18 @@ textarea{resize:vertical;min-height:60px}
 </div>
 
 <!-- PREVIEW MODAL -->
+<div class="modal-bg" id="est-view-modal">
+<div class="modal" style="max-width:480px">
+  <div id="est-view-content"></div>
+  <div id="est-view-photos" style="margin-top:12px"></div>
+  <div class="btn-row" style="margin-top:16px">
+    <button class="btn" id="est-view-upload-btn" onclick="acceptContractorPhotosFromView()" style="display:none">↑ Save Photos to Drive</button>
+    <button class="btn accent" id="est-view-convert-btn" onclick="convertFromEstView()" style="display:none">Convert to Client Estimate →</button>
+    <button class="btn" onclick="closeModal('est-view-modal')">Close</button>
+  </div>
+</div>
+</div>
+
 <div class="modal-bg" id="preview-modal">
 <div class="modal" style="max-width:660px">
   <div id="preview-content"></div>
@@ -1034,6 +1166,20 @@ textarea{resize:vertical;min-height:60px}
   <div id="photo-lightbox-name" style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:10px;font-family:var(--mono)"></div>
 </div>
 
+<!-- GUIDE OVERLAY -->
+<div id="guide-overlay" class="guide-overlay" onclick="if(event.target===this)closeGuide()">
+  <div class="guide-panel" id="guide-panel">
+    <div class="guide-hdr">
+      <span class="guide-title" id="guide-title"></span>
+      <button class="guide-close" onclick="closeGuide()" aria-label="Close guide">×</button>
+    </div>
+    <div class="guide-body" id="guide-body"></div>
+    <div class="guide-foot">
+      <a onclick="closeGuide();goto('help')">Send Feedback →</a>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1081,6 +1227,7 @@ function formatPhone(input){
 const GOOGLE_CLIENT_ID='44604318754-j48brnn15erhh1jqtme85r2fd5dpgrah.apps.googleusercontent.com';
 const SCOPES='https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/gmail.send email profile';
 const TABS=['Clients','Properties','Jobs','Documents','Expenses','ActivityLog','SentLog','Contractors','Settings','ServiceCatalog'];
+const APP_VERSION='2026-04-21';
 
 // ============================================================
 // ============================================================
@@ -1162,13 +1309,133 @@ function migrateNames(){
   // Assign numbers to jobs that still don't have one
   DB.jobs.forEach(j=>{if(!j.jobNumber) j.jobNumber=nextNumber();});
 
+  // One-time: renumber legacy jobs to match their linked invoice/estimate number
+  if(!DB.settings.jobNumFromEstRef){
+    DB.jobs.forEach(j=>{if(j.estRef) j.jobNumber=j.estRef;});
+    DB.settings.jobNumFromEstRef=true;saveSettingsLocal();
+  }
+
   // Migrate old job statuses to new values
-  const statusMap={'quoted':'estimate-sent','complete':'complete','invoiced':'complete','paid':'complete','approved':'in-progress','progress':'in-progress','awaiting-payment':'complete'};
-  const validStatuses=new Set(['unassigned','assigned-for-estimate','estimate-sent','in-progress','complete']);
+  const statusMap={'quoted':'estimate-sent','complete':'complete','invoiced':'invoice-sent','paid':'complete','approved':'in-progress','progress':'in-progress','awaiting-payment':'invoice-sent'};
+  const validStatuses=new Set(['unassigned','assigned-for-estimate','estimate-sent','in-progress','invoice-sent','complete']);
   DB.jobs.forEach(j=>{
     if(statusMap[j.status]) j.status=statusMap[j.status];
     if(!j.status||!validStatuses.has(j.status)) j.status='unassigned';
   });
+
+  // ── One-time data fix: invoice 03691 total $150 → $195 ───────────────────────
+  if(!DB.settings.doc037AmountFix){
+    const d=DB.docs.find(x=>x.number==='03691'&&x.type==='invoice');
+    if(d){
+      d.total=195;
+      d.subtotal=195;
+      d.taxAmt=d.taxAmt||0;
+      // Update line items: if only one item exists, correct its amount; otherwise add a correction note
+      if(Array.isArray(d.lineItems)&&d.lineItems.length===1){
+        d.lineItems[0].amount=195;
+        if(d.lineItems[0].qty&&d.lineItems[0].unitPrice) d.lineItems[0].unitPrice=195;
+      }
+    }
+    DB.settings.doc037AmountFix=true;
+    saveSettingsLocal();
+  }
+
+  // ── One-time invoice merges: consolidate duplicate invoice numbers ───────────
+  // Each group is merged into one primary doc with all line items; duplicates are archived.
+
+  // 03341 — Patio Door + Boiler/Pipe, Mold/Drywall (both PRP-001 · 16909 Dorman Dr)
+  if(!DB.settings.mergeInv03341){
+    const primary=DB.docs.find(d=>d.id==='DOC-019');
+    const dup=DB.docs.find(d=>d.id==='DOC-020');
+    if(primary){
+      primary.lineItems=[
+        {desc:'Replace Sliding Glass Patio Door',qty:1,rate:1950,amount:1950},
+        {desc:'Fix Boiler/Pipe, Mold/Drywall',qty:1,rate:800,amount:800}
+      ];
+      primary.subtotal=2750;primary.total=2750;primary.taxAmt=0;
+      if(dup) dup.archived=true;
+    }
+    DB.settings.mergeInv03341=true;saveSettingsLocal();
+  }
+
+  // 03347 — 5 jobs at 3807 John Simpson Trail (all PRP-003)
+  if(!DB.settings.mergeInv03347){
+    const primary=DB.docs.find(d=>d.id==='DOC-021');
+    if(primary){
+      primary.lineItems=[
+        {desc:'Water Leak - Pressure Valve',qty:1,rate:600,amount:600},
+        {desc:'Sprinkler Repair',qty:1,rate:645,amount:645},
+        {desc:'HVAC Maintenance',qty:1,rate:250,amount:250},
+        {desc:'Washer Machine Springs',qty:1,rate:125,amount:125},
+        {desc:'Dishwasher Seal Replacement',qty:1,rate:400,amount:400}
+      ];
+      primary.subtotal=2020;primary.total=2020;primary.taxAmt=0;
+      ['DOC-023','DOC-024','DOC-025','DOC-026'].forEach(id=>{
+        const d=DB.docs.find(x=>x.id===id);if(d) d.archived=true;
+      });
+    }
+    DB.settings.mergeInv03347=true;saveSettingsLocal();
+  }
+
+  // 03355 — Dryer (3807 John Simpson Trail) + AC Fan (11121 Harvest Time Dr)
+  if(!DB.settings.mergeInv03355){
+    const primary=DB.docs.find(d=>d.id==='DOC-027');
+    const dup=DB.docs.find(d=>d.id==='DOC-028');
+    if(primary){
+      primary.lineItems=[
+        {desc:'Dryer Part Replacement',qty:1,rate:400,amount:400},
+        {desc:'AC Fan Replacement (11121 Harvest Time Dr, Austin, TX 78754)',qty:1,rate:450,amount:450}
+      ];
+      primary.subtotal=850;primary.total=850;primary.taxAmt=0;
+      if(dup) dup.archived=true;
+    }
+    DB.settings.mergeInv03355=true;saveSettingsLocal();
+  }
+
+  // 03691 — Flooring + Toilets/Shower/Bidet (16909 Dorman Dr) + Garage Door + Deck (8305 Caledonia Dr)
+  // Note: doc037AmountFix above already corrected DOC-037 to $195; the merge uses $195 directly.
+  if(!DB.settings.mergeInv03691){
+    const primary=DB.docs.find(d=>d.id==='DOC-035');
+    if(primary){
+      primary.lineItems=[
+        {desc:'Flooring Install',qty:1,rate:7800,amount:7800},
+        {desc:'Repair Toilets/Shower/Bidet',qty:1,rate:195,amount:195},
+        {desc:'Garage Door Repair (8305 Caledonia Dr, Austin, TX 78717)',qty:1,rate:375,amount:375},
+        {desc:'Deck Repair 1+2 (8305 Caledonia Dr, Austin, TX 78717)',qty:1,rate:472.4,amount:472.4}
+      ];
+      primary.subtotal=8842.4;primary.total=8842.4;primary.taxAmt=0;
+      ['DOC-037','DOC-039','DOC-040'].forEach(id=>{
+        const d=DB.docs.find(x=>x.id===id);if(d) d.archived=true;
+      });
+    }
+    DB.settings.mergeInv03691=true;saveSettingsLocal();
+  }
+
+  // 03692 — DOC-041 + DOC-043 (CLT-006, 3007 Crownover St) merged; DOC-042 (CLT-007) renumbered 03693
+  if(!DB.settings.mergeInv03692){
+    const primary=DB.docs.find(d=>d.id==='DOC-041');
+    const dup=DB.docs.find(d=>d.id==='DOC-043');
+    const doc042=DB.docs.find(d=>d.id==='DOC-042');
+    if(primary){
+      primary.lineItems=[
+        {desc:'Door Knob/Deadbolt/Lawn',qty:1,rate:250,amount:250},
+        {desc:'Dish Racks/Fan/Disposal Repair',qty:1,rate:650,amount:650}
+      ];
+      primary.subtotal=900;primary.total=900;primary.taxAmt=0;
+      primary.notes='Inv#03692';
+      if(dup) dup.archived=true;
+    }
+    if(doc042){doc042.number='03693';doc042.notes='Inv#03693';}
+    DB.settings.mergeInv03692=true;saveSettingsLocal();
+  }
+  // 00166 (Michal Cohen, no address, $0) + 03225 (Paul Kao, $0) — archive
+  if(!DB.settings.archiveZeroDocs){
+    ['DOC-006','DOC-017'].forEach(id=>{
+      const d=DB.docs.find(x=>x.id===id);if(d) d.archived=true;
+    });
+    DB.settings.archiveZeroDocs=true;saveSettingsLocal();
+  }
+  // ── End invoice merges ───────────────────────────────────────────────────────
 
   // Split old combined name fields into firstName/lastName.
   // Safe to call multiple times — only acts on records that still have the old field.
@@ -1529,7 +1796,8 @@ async function syncToSheet(){
         ['addr',DB.settings.addr||''],
         ['license',DB.settings.license||''],
         ['taxRate',String(DB.settings.taxRate||0)],
-        ['logoFileId',DB.settings.logoFileId||'']
+        ['logoFileId',DB.settings.logoFileId||''],
+        ['onboarding',JSON.stringify(DB.settings.onboarding||{})]
       ],
       ServiceCatalog:DB.catalog.map(i=>[i.id,i.name,i.type,i.price,i.cat])
     };
@@ -1572,6 +1840,11 @@ async function loadFromSheet(){
     if(sheetProps.length  ||!DB.properties.length)DB.properties=sheetProps;
     if(sheetJobs.length   ||!DB.jobs.length)      DB.jobs      =sheetJobs;
     if(sheetDocs.length   ||!DB.docs.length)      DB.docs      =sheetDocs;
+    // If invoice merges haven't been synced yet, clear their flags so they re-run
+    // against the fresh sheet data (not the stale localStorage copy from init())
+    if(!DB.settings.mergeInvSynced){
+      ['mergeInv03341','mergeInv03347','mergeInv03355','mergeInv03691','mergeInv03692','archiveZeroDocs','doc037AmountFix','doc037AmountSynced','jobNumFromEstRef'].forEach(f=>{delete DB.settings[f];});
+    }
     migrateNames(); // runs after all data is loaded so invoice back-fill can find docs
     DB.expenses  =parse(dataRes[4].result.values,HEADERS.Expenses).map(e=>({...e,amount:+e.amount||0,receiptFileId:e.receiptFileId||'',receiptFileName:e.receiptFileName||'',receiptWebViewLink:e.receiptWebViewLink||''}));
     DB.activity  =parse(dataRes[5].result.values,HEADERS.ActivityLog);
@@ -1594,6 +1867,7 @@ async function loadFromSheet(){
         DB.settings.license=sm.license||DB.settings.license;
         DB.settings.taxRate=parseFloat(sm.taxRate)||DB.settings.taxRate||0;
         if(sm.logoFileId!==undefined)DB.settings.logoFileId=sm.logoFileId||'';
+        if(sm.onboarding!==undefined)DB.settings.onboarding=safeJSON(sm.onboarding,DB.settings.onboarding||{});
         // Migrate old catalog blob from Settings tab into DB.catalog if ServiceCatalog tab is empty
         if(sm.catalog){
           const oldCatalog=safeJSON(sm.catalog,[]);
@@ -1643,13 +1917,21 @@ async function loadFromSheet(){
     seedTestClient();seedCatalog();
     saveLocal();renderAll();
     setTimeout(flushMigrationWarnings,1000);
-    // If doc jobIds were just reset, sync corrected data back to sheet immediately
+    // Consolidate all one-time migration syncs into a single syncToSheet() call
+    let _needsSync=false;
+    let _syncToast='';
     if(DB.settings.docJobIdReset&&!DB.settings.docJobIdSynced){
-      DB.settings.docJobIdSynced=true;saveSettingsLocal();syncToSheet();
-      toast('Job-doc links corrected and synced to sheet','success');
+      DB.settings.docJobIdSynced=true;_needsSync=true;_syncToast='Job-doc links corrected and synced';
     }
-    // If catalog tab was empty (new user), write defaults to sheet now
-    if(catalogWasEmpty&&DB.catalog.length) syncToSheet();
+    if(DB.settings.doc037AmountFix&&!DB.settings.doc037AmountSynced){
+      DB.settings.doc037AmountSynced=true;_needsSync=true;_syncToast='Invoice data corrected and synced';
+    }
+    const _mergeFlags=['mergeInv03341','mergeInv03347','mergeInv03355','mergeInv03691','mergeInv03692','archiveZeroDocs','jobNumFromEstRef'];
+    if(_mergeFlags.some(f=>DB.settings[f])&&!DB.settings.mergeInvSynced){
+      DB.settings.mergeInvSynced=true;_needsSync=true;_syncToast='Invoice records consolidated and synced';
+    }
+    if(catalogWasEmpty&&DB.catalog.length) _needsSync=true;
+    if(_needsSync){saveSettingsLocal();syncToSheet();if(_syncToast)toast(_syncToast,'success');}
     setSyncStatus('🟢 Synced '+new Date().toLocaleTimeString());
     toast('Data loaded from Google Sheets','success');
     // If Settings tab was empty but we have settings locally, push them up now
@@ -1729,6 +2011,12 @@ function clientFullName(c){return c?.company?.trim()||[c?.firstName,c?.lastName]
 function clientContactName(c){return[c?.firstName,c?.lastName].filter(Boolean).join(' ')||'';}
 function tenantFullName(p){return[p.tenantFirstName,p.tenantLastName].filter(Boolean).join(' ');}
 function getProperty(id){return DB.properties.find(p=>p.id===id)||{address:'Unknown property'};}
+function docPropertyLabel(d){
+  const prop=DB.properties.find(p=>p.id===d.propertyId);
+  if(prop) return prop.address||'No property';
+  const job=d.jobId?DB.jobs.find(j=>j.id===d.jobId):null;
+  return job?.title||'No property';
+}
 function closeModal(id){
   document.getElementById(id).classList.remove('open');
   // When the job modal closes, immediately reset photo state so no previous job's
@@ -1753,10 +2041,12 @@ function logActivity(action,recordType,recordId,detail){
 // ============================================================
 // NAVIGATION
 // ============================================================
-const PAGE_TITLES={dashboard:'Dashboard',pipeline:'Pipeline',clients:'Clients',jobs:'Jobs',documents:'Documents',expenses:'Expenses',contractors:'Contractors',activity:'Activity',settings:'Settings'};
+const PAGE_TITLES={dashboard:'Dashboard',pipeline:'Pipeline',clients:'Clients',jobs:'Jobs',documents:'Documents',expenses:'Expenses',contractors:'Contractors',activity:'Activity',settings:'Settings',help:'Help & Feedback'};
 const MOB_TABS=['dashboard','jobs','clients','documents'];
+let _currentPage='dashboard';
 
 function goto(page){
+  _currentPage=page;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.querySelectorAll('.mob-tab').forEach(t=>t.classList.remove('active'));
@@ -1780,6 +2070,7 @@ function goto(page){
   if(page==='contractors')renderContractors();
   if(page==='activity')renderActivity();
   if(page==='settings'){loadSettingsForm();showSheetLink();renderCatalogSettings();}
+  if(page==='help')renderHelpPage();
   closeSidebar();
 }
 
@@ -1979,8 +2270,7 @@ function downloadTaxReport(){
   csv+=row('Date','Invoice #','Client','Property','Description','Amount');
   [...paidInvs].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).forEach(d=>{
     const desc=d.lineItems?.map(li=>li.desc).join('; ')||d.notes||'';
-    const prop=getProperty(d.propertyId).address||'';
-    csv+=row(d.date||'',d.number||'',clientFullName(getClient(d.clientId)),prop,desc,d.total.toFixed(2));
+    csv+=row(d.date||'',d.number||'',clientFullName(getClient(d.clientId)),docPropertyLabel(d),desc,d.total.toFixed(2));
   });
   csv+=blank();
 
@@ -2002,13 +2292,13 @@ function downloadTaxReport(){
 // ============================================================
 // PIPELINE
 // ============================================================
-const STAGES=[{key:'unassigned',label:'Unassigned'},{key:'assigned-for-estimate',label:'Assigned for Estimate'},{key:'estimate-sent',label:'Estimate Sent'},{key:'in-progress',label:'In Progress'},{key:'complete',label:'Complete'}];
-const STAGE_LABEL={['unassigned']:'Unassigned',['assigned-for-estimate']:'Assigned for Estimate',['estimate-sent']:'Estimate Sent',['in-progress']:'In Progress',['complete']:'Complete',
+const STAGES=[{key:'unassigned',label:'Unassigned'},{key:'assigned-for-estimate',label:'Assigned for Estimate'},{key:'estimate-sent',label:'Estimate Sent'},{key:'in-progress',label:'In Progress'},{key:'invoice-sent',label:'Invoice Sent'},{key:'complete',label:'Complete'}];
+const STAGE_LABEL={['unassigned']:'Unassigned',['assigned-for-estimate']:'Assigned for Estimate',['estimate-sent']:'Estimate Sent',['in-progress']:'In Progress',['invoice-sent']:'Invoice Sent',['complete']:'Complete',
   // Legacy status display (for any old data not yet migrated)
-  ['approved']:'Approved',['invoice-sent']:'Invoice Sent',['paid']:'Complete',['progress']:'In Progress',['awaiting-payment']:'Invoice Sent'};
+  ['approved']:'Approved',['paid']:'Complete',['progress']:'In Progress',['awaiting-payment']:'Invoice Sent'};
 function renderPipeline(){
   document.getElementById('pipeline-board').innerHTML=STAGES.map(s=>{
-    const jobs=DB.jobs.filter(j=>j.status===s.key&&!j.archived);
+    const jobs=DB.jobs.filter(j=>j.status===s.key&&!j.archived).sort((a,b)=>(b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
     const total=jobs.reduce((a,j)=>a+(+j.value||0),0);
     return`<div class="pipe-col" data-stage="${s.key}"
       ondragover="event.preventDefault();this.classList.add('drag-over')"
@@ -2022,7 +2312,11 @@ function renderPipeline(){
         <div class="pipe-card-client">${clientFullName(getClient(j.clientId))}</div>
         <div class="pipe-card-prop">${getProperty(j.propertyId).address||'—'}</div>
         ${ctrs.length?`<div style="font-size:10px;color:var(--text3);margin-top:2px">👷 ${ctrs.join(', ')}</div>`:''}
-        <div class="pipe-card-amt">${fmt(j.value)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+          <div class="pipe-card-amt">${fmt(j.value)}</div>
+          ${j.contractorEstimate?`<span onclick="event.stopPropagation();${j.clientEstimate?.docId?`convertToClientEstimate('${j.id}')`:`viewContractorEstimate('${j.id}')`}" style="font-size:10px;font-weight:600;background:var(--accent-light);color:var(--accent-text);padding:2px 6px;border-radius:10px;cursor:pointer;white-space:nowrap">${j.clientEstimate?.docId?'Est. →':'Est. ✓'}</span>`:''}
+        </div>
+        ${j.contractorEstimate?.grandTotal?`<div style="font-size:10px;color:var(--text3);margin-top:2px">🔧 Sub quote: <span style="font-family:'DM Mono',monospace;font-weight:600">${fmt(j.contractorEstimate.grandTotal)}</span></div>`:''}
       </div>`;}).join('')}
       ${jobs.length?`<div style="font-size:10px;color:var(--text3);margin-top:6px;font-family:'DM Mono',monospace">Total: ${fmt(total)}</div>`:''}
     </div>`;
@@ -2324,6 +2618,8 @@ function saveClient(){
 
   logActivity(currentClientId?'Updated':'Created','Client',client.id,`${clientFullName(client)} — ${tempProps.length} properties`);
   saveAndSync();renderClients();renderPipeline();
+  tickOnboarding('addedClient');
+  if(tempProps.length)tickOnboarding('addedProperty');
   closeModal('client-modal');toast('Client saved','success');
 }
 
@@ -2373,7 +2669,7 @@ function renderJobs(){
     jobs=jobs.filter(j=>getJobOverdueDays(j)!==null);
     jobs.sort((a,b)=>(getJobOverdueDays(b)||0)-(getJobOverdueDays(a)||0));
   } else {
-    jobs.sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
+    jobs.sort((a,b)=>(b.updatedAt||b.createdAt||'').localeCompare(a.updatedAt||a.createdAt||''));
   }
 
   if(search) jobs=jobs.filter(j=>j.title?.toLowerCase().includes(search)||clientFullName(getClient(j.clientId)).toLowerCase().includes(search));
@@ -2409,6 +2705,7 @@ function renderJobs(){
       ${overdueDays!==null?`<div style="margin-bottom:8px"><span class="badge" style="font-size:11px;background:var(--red-light);color:var(--red)">⚠ ${overdueDays}d overdue</span></div>`:''}
       <div class="job-card-m-actions">
         <button class="btn sm" onclick="editJob('${j.id}')">Edit</button>
+        ${j.contractorEstimate?`<button class="btn sm${j.clientEstimate?.docId?' accent':''}" onclick="${j.clientEstimate?.docId?`convertToClientEstimate('${j.id}')`:`viewContractorEstimate('${j.id}')`}">${j.clientEstimate?.docId?'Est. →':'Est. ✓'}</button>`:''}
         ${jobDocLinks(j)}
         <button class="btn sm success" onclick="newDocForJob('${j.id}')">+ Doc</button>
       </div>
@@ -2428,7 +2725,7 @@ function renderJobs(){
     <td style="font-family:'DM Mono',monospace">${fmt(j.value)}</td>
     <td class="ts">${fmtDate(j.startDate)}</td>
     <td class="ts">${fmtTs(j.updatedAt)}</td>
-    <td><div class="btn-row"><button class="btn sm" onclick="editJob('${j.id}')">Edit</button>${jobDocLinks(j)}<button class="btn sm success" onclick="newDocForJob('${j.id}')">+ Doc</button></div></td>
+    <td><div class="btn-row"><button class="btn sm" onclick="editJob('${j.id}')">Edit</button>${j.contractorEstimate?`<button class="btn sm${j.clientEstimate?.docId?' accent':''}" onclick="${j.clientEstimate?.docId?`convertToClientEstimate('${j.id}')`:`viewContractorEstimate('${j.id}')`}">${j.clientEstimate?.docId?'Est. →':'Est. ✓'}</button>`:''} ${jobDocLinks(j)}<button class="btn sm success" onclick="newDocForJob('${j.id}')">+ Doc</button></div></td>
   </tr>`;}).join('')}</tbody></table>`;
 
   document.getElementById('jobs-table').innerHTML=
@@ -2552,8 +2849,14 @@ function saveJob(){
     // Invalidate cached Drive folder so renames/client changes get a fresh folder path
     delete _jobFolderCache[currentJobId];
   } else DB.jobs.push(job);
+  // Cascade client change to all linked documents (job is source of truth)
+  if(currentJobId&&existing&&existing.clientId!==job.clientId){
+    DB.docs.forEach(d=>{if(d.jobId===job.id&&d.clientId!==job.clientId){d.clientId=job.clientId;d.updatedAt=ts;}});
+  }
   logActivity(currentJobId?'Updated':'Created','Job',job.id,`${job.title} — ${clientFullName(getClient(job.clientId))}`);
   saveAndSync();renderPipeline();renderJobs();renderDashboard();
+  tickOnboarding('createdJob');
+  if(job.contractorIds.length>0)tickOnboarding('assignedContractor');
   closeModal('job-modal');toast('Job saved','success');
 }
 
@@ -2629,42 +2932,19 @@ function renderPortalSection(job){
       <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600"><span>Grand total</span><span style="font-family:'DM Mono',monospace;color:var(--accent)">$${(+est.grandTotal||0).toFixed(2)}</span></div>
       <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
         ${!est.photoFileIds?.length&&job.portalToken?`<button class="btn sm" onclick="acceptContractorPhotos('${job.portalToken}')">↑ Upload Photos to Drive</button>`:''}
-        ${!cEst?`<button class="btn sm accent" onclick="convertToClientEstimate()">Convert to Client Estimate →</button>`:''}
+        ${!cEst?`<button class="btn sm accent" onclick="convertToClientEstimate('${job.id}')">Convert to Client Estimate →</button>`:''}
       </div>
     </div>`;
   }
 
   // ── Client estimate section ──
   let cEstHtml='';
-  if(cEst){
-    const locked=!!cEst.lockedAt;
-    const cRows=(cEst.lineItems||[]).map((li,i)=>`<div style="display:grid;grid-template-columns:2fr 70px 80px 80px 26px;gap:6px;align-items:center;margin-bottom:6px">
-      ${locked
-        ?`<span style="font-size:13px">${li.desc||'—'}</span><span style="font-size:12px;text-align:center">${li.qty||1}</span><span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace">$${(+li.rate||0).toFixed(2)}</span><span style="font-size:12px;text-align:right;font-family:'DM Mono',monospace">$${(+li.amount||0).toFixed(2)}</span><span></span>`
-        :`<input type="text" value="${(li.desc||'').replace(/"/g,'&quot;')}" oninput="updateClientEstimateLine(${i},'desc',this.value)" style="font-size:12px;padding:5px 7px">
-         <input type="number" value="${li.qty||1}" min="0" step="0.01" oninput="updateClientEstimateLine(${i},'qty',this.value)" style="font-size:12px;padding:5px 7px;text-align:center">
-         <input type="number" value="${(+li.rate||0).toFixed(2)}" min="0" step="0.01" oninput="updateClientEstimateLine(${i},'rate',this.value)" style="font-size:12px;padding:5px 7px;text-align:right">
-         <span style="font-size:12px;font-family:'DM Mono',monospace;text-align:right;padding:5px 0">$${(+li.amount||0).toFixed(2)}</span>
-         <button onclick="removeClientEstimateLine(${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:0;width:26px;height:26px;border-radius:4px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text3)'">×</button>`
-      }
-    </div>`).join('');
-    const cSubtotal=(cEst.lineItems||[]).reduce((s,li)=>s+(+li.amount||0),0);
-    cEstHtml=`<div style="margin-top:14px;border:1px solid var(--border);border-radius:var(--rs);padding:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)">Client Estimate${locked?' — Locked (sent)':''}</div>
-        ${locked?'':`<div style="display:flex;gap:6px"><button class="btn sm" onclick="addClientEstimateLine()">+ Line</button><button class="btn sm accent" onclick="saveClientEstimate()">Save</button></div>`}
-      </div>
-      <div style="display:grid;grid-template-columns:2fr 70px 80px 80px 26px;gap:6px;margin-bottom:5px">
-        <span style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase">Description</span>
-        <span style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;text-align:center">Qty</span>
-        <span style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;text-align:right">Rate</span>
-        <span style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;text-align:right">Amount</span>
-        <span></span>
-      </div>
-      ${cRows||'<div style="font-size:12px;color:var(--text3);padding:8px 0">No line items yet</div>'}
-      <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px;display:flex;justify-content:flex-end">
-        <div style="font-size:14px;font-weight:600">Subtotal: <span style="font-family:'DM Mono',monospace;color:var(--accent)">$${cSubtotal.toFixed(2)}</span></div>
-      </div>
+  if(cEst?.docId){
+    const cEstDoc=DB.docs.find(d=>d.id===cEst.docId);
+    const label=cEstDoc?`Estimate #${cEstDoc.number} — ${fmt(cEstDoc.total)}`:'Client Estimate';
+    cEstHtml=`<div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:12px;color:var(--text2)">Client estimate created:</span>
+      <button class="btn sm accent" onclick="closeModal('job-modal');goto('documents');editDoc('${cEst.docId}')">${label} →</button>
     </div>`;
   }
 
@@ -2698,6 +2978,7 @@ async function sendPortalLink(){
   }catch(e){console.warn('Could not resolve job folders:',e.message);}
 
   // Store token in KV via Cloudflare Function
+  const logoBase64=await getLogoBase64().catch(()=>'');
   try{
     const r=await fetch('/api/portal/create',{
       method:'POST',
@@ -2707,7 +2988,10 @@ async function sendPortalLink(){
         contractorId:ctr.id,contractorName:ctr.name,contractorEmail:ctr.email,
         jobTitle:job.title,jobAddress,
         jobInstructions:job.contractorInstructions||'',
-        beforeFolderId,receiptsFolderId
+        beforeFolderId,receiptsFolderId,
+        bizName:DB.settings.bizName||'',
+        ownerEmail:DB.settings.userEmail||DB.settings.email||'',
+        logoBase64
       })
     });
     if(!r.ok) throw new Error('Portal create failed');
@@ -2717,11 +3001,10 @@ async function sendPortalLink(){
     return;
   }
 
-  // Persist token to job record and advance status to Estimate Sent
+  // Persist token to job record — status stays at assigned-for-estimate until client estimate is sent
   const idx=DB.jobs.findIndex(j=>j.id===currentJobId);
   if(idx!==-1){
     DB.jobs[idx].portalToken=token;
-    DB.jobs[idx].status='estimate-sent';
     DB.jobs[idx].updatedAt=now();
   }
   saveAndSync();
@@ -2793,7 +3076,6 @@ async function checkPortalSubmission(job){
       photoFileIds:[],
       receiptFileId:null
     };
-    DB.jobs[idx].status='estimate-sent';
     DB.jobs[idx].updatedAt=now();
     saveAndSync();
     renderPortalSection(DB.jobs[idx]);
@@ -2866,60 +3148,167 @@ function _b64toBlob(b64,type='image/jpeg'){
   return new Blob([arr],{type});
 }
 
-function convertToClientEstimate(){
-  const job=DB.jobs.find(j=>j.id===currentJobId);
-  if(!job||!job.contractorEstimate) return;
-  const ce=job.contractorEstimate;
-  // Pre-populate client estimate from contractor labor items
-  const lineItems=(ce.laborItems||[]).map(li=>({
-    desc:li.desc||'',
-    qty:1,
-    rate:+li.total||0,
-    amount:+li.total||0
-  }));
-  // Add materials as a single line item
-  if(+ce.materialsTotal>0){
-    lineItems.push({desc:ce.materialsNotes||'Materials',qty:1,rate:+ce.materialsTotal||0,amount:+ce.materialsTotal||0});
+let _estViewJobId=null;
+let _estViewPhotos=null; // cached KV photos for current modal open
+
+function _renderEstViewPhotos(ce){
+  const el=document.getElementById('est-view-photos');
+  if(!el) return;
+  if((ce.photoFileIds||[]).length){
+    // Photos already in Drive — show links
+    const links=ce.photoFileIds.map((id,i)=>`<a href="https://drive.google.com/file/d/${id}/view" target="_blank" style="display:inline-block;font-size:12px;color:var(--accent);margin-right:8px;margin-bottom:4px">📷 Photo ${i+1}</a>`).join('');
+    el.innerHTML=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:6px">Before Photos</div>${links}`;
+  } else if(_estViewPhotos&&_estViewPhotos.length){
+    // Base64 thumbnails from KV
+    const imgs=_estViewPhotos.map(p=>`<img src="data:${p.type||'image/jpeg'};base64,${p.data}" alt="${p.name||'photo'}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="this.style.width=this.style.width==='100%'?'80px':'100%';this.style.height=this.style.height==='auto'?'80px':'auto'">`).join('');
+    el.innerHTML=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:6px">Before Photos (${_estViewPhotos.length}) — tap to expand</div><div style="display:flex;flex-wrap:wrap;gap:6px">${imgs}</div>`;
+  } else {
+    el.innerHTML='';
   }
-  const clientEstimate={lineItems,createdAt:now(),lockedAt:null};
-  const idx=DB.jobs.findIndex(j=>j.id===currentJobId);
-  if(idx!==-1){DB.jobs[idx].clientEstimate=clientEstimate;DB.jobs[idx].updatedAt=now();}
+}
+
+async function viewContractorEstimate(jobId){
+  const job=DB.jobs.find(j=>j.id===jobId);
+  if(!job||!job.contractorEstimate){toast('No estimate on file for this job','error');return;}
+  _estViewJobId=jobId;
+  _estViewPhotos=null;
+  const ce=job.contractorEstimate;
+  const ctr=job.contractorIds?.length?DB.contractors.find(c=>c.id===job.contractorIds[0]):null;
+  const submittedDate=ce.submittedAt?new Date(ce.submittedAt).toLocaleDateString():'—';
+  const laborRows=(ce.laborItems||[]).map(li=>`
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span style="color:var(--text1)">${li.desc||'—'}</span>
+      <strong style="font-family:'DM Mono',monospace;white-space:nowrap;margin-left:12px">$${(+li.total||0).toFixed(2)}</strong>
+    </div>`).join('');
+  document.getElementById('est-view-content').innerHTML=`
+    <div style="font-size:18px;font-weight:600;margin-bottom:4px">${job.title||'Job'}</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px">${ctr?ctr.name+' · ':''} Submitted ${submittedDate}</div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:8px">Labor</div>
+    ${laborRows||'<div style="font-size:12px;color:var(--text3);padding:4px 0">No labor items</div>'}
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-top:8px;padding-top:4px">
+      <span>Labor subtotal</span><strong style="font-family:'DM Mono',monospace">$${(+ce.laborSubtotal||0).toFixed(2)}</strong>
+    </div>
+    <div style="border-top:1px solid var(--border);margin:12px 0"></div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:8px">Materials</div>
+    <div style="display:flex;justify-content:space-between;font-size:13px">
+      <span>${ce.materialsNotes||'Materials'}</span>
+      <strong style="font-family:'DM Mono',monospace;white-space:nowrap;margin-left:12px">$${(+ce.materialsTotal||0).toFixed(2)}</strong>
+    </div>
+    ${ce.receiptFileId?`<div style="margin-top:6px"><a href="https://drive.google.com/file/d/${ce.receiptFileId}/view" target="_blank" style="font-size:12px;color:var(--accent)">📎 View attached document</a></div>`:''}
+    <div style="border-top:1px solid var(--border);margin:12px 0"></div>
+    <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700">
+      <span>Grand Total</span><span style="font-family:'DM Mono',monospace;color:var(--accent)">$${(+ce.grandTotal||0).toFixed(2)}</span>
+    </div>`;
+  document.getElementById('est-view-photos').innerHTML='';
+  document.getElementById('est-view-upload-btn').style.display='none';
+  const convertBtn=document.getElementById('est-view-convert-btn');
+  convertBtn.style.display='block';
+  convertBtn.textContent=job.clientEstimate?.docId?'Open Client Estimate →':'Convert to Client Estimate →';
+  document.getElementById('est-view-modal').classList.add('open');
+  // Render photos: Drive links if uploaded, else fetch from KV
+  if((ce.photoFileIds||[]).length){
+    _renderEstViewPhotos(ce);
+  } else if(job.portalToken){
+    document.getElementById('est-view-photos').innerHTML='<div style="font-size:12px;color:var(--text3)">Loading photos…</div>';
+    try{
+      const r=await fetch(`/api/portal/get?token=${job.portalToken}&include=submission`);
+      const data=await r.json();
+      if(data.ok&&data.submission?.beforePhotos?.length){
+        _estViewPhotos=data.submission.beforePhotos;
+        _renderEstViewPhotos(ce);
+        document.getElementById('est-view-upload-btn').style.display='block';
+      } else {
+        document.getElementById('est-view-photos').innerHTML='';
+        // No photos submitted or token expired
+      }
+    }catch(e){
+      document.getElementById('est-view-photos').innerHTML='';
+    }
+  }
+}
+async function acceptContractorPhotosFromView(){
+  const job=DB.jobs.find(j=>j.id===_estViewJobId);
+  if(!job) return;
+  const btn=document.getElementById('est-view-upload-btn');
+  btn.textContent='Uploading…';btn.disabled=true;
+  if(!signedIn||!accessToken){toast('Sign in to upload photos','error');btn.textContent='↑ Save Photos to Drive';btn.disabled=false;return;}
+  try{
+    const folders=await getJobFolders(job.id);
+    const photoFileIds=[];
+    const photos=_estViewPhotos||[];
+    for(const p of photos){
+      const blob=_b64toBlob(p.data,p.type||'image/jpeg');
+      const file=new File([blob],p.name||'before.jpg',{type:p.type||'image/jpeg'});
+      const result=await uploadFileToDrive(file,folders.beforeFolderId);
+      photoFileIds.push({fileId:result.id,name:result.name,webViewLink:result.webViewLink,category:'before'});
+    }
+    // Upload receipt/doc if not already done
+    const ce=job.contractorEstimate||{};
+    let receiptFileId=ce.receiptFileId||'';
+    if(!receiptFileId){
+      const sub=_estViewPhotos?null:null; // receipt handled separately if needed
+    }
+    const idx=DB.jobs.findIndex(j=>j.id===job.id);
+    if(idx!==-1){
+      DB.jobs[idx].contractorEstimate.photoFileIds=photoFileIds.map(p=>p.fileId);
+      DB.jobs[idx].photos=[...(DB.jobs[idx].photos||[]),...photoFileIds];
+      DB.jobs[idx].updatedAt=now();
+    }
+    saveAndSync();
+    // Refresh photo display in modal
+    const updatedCe=DB.jobs[idx]?.contractorEstimate||ce;
+    _renderEstViewPhotos(updatedCe);
+    btn.style.display='none';
+    toast('Photos saved to Drive','success');
+  }catch(e){
+    console.error(e);toast('Upload failed: '+e.message,'error');
+    btn.textContent='↑ Save Photos to Drive';btn.disabled=false;
+  }
+}
+function convertFromEstView(){
+  const job=DB.jobs.find(j=>j.id===_estViewJobId);
+  if(!job) return;
+  closeModal('est-view-modal');
+  convertToClientEstimate(job.id);
+}
+
+function convertToClientEstimate(jobId){
+  const job=DB.jobs.find(j=>j.id===jobId);
+  if(!job||!job.contractorEstimate) return;
+  // If already converted, open the existing doc
+  if(job.clientEstimate?.docId){
+    const existing=DB.docs.find(d=>d.id===job.clientEstimate.docId);
+    if(existing){goto('documents');editDoc(existing.id);return;}
+  }
+  const ce=job.contractorEstimate;
+  // Build line items in the doc modal format: {id, desc, type, price, qty}
+  const lineItems=(ce.laborItems||[]).map(li=>({id:uid(),desc:li.desc||'',type:'labor',price:+li.total||0,qty:1}));
+  if(+ce.materialsTotal>0) lineItems.push({id:uid(),desc:ce.materialsNotes||'Materials',type:'material',price:+ce.materialsTotal||0,qty:1});
+  // Create the estimate doc
+  const ts=now();
+  const taxRate=+(DB.settings.taxRate||0);
+  const sub=lineItems.reduce((s,li)=>s+(parseFloat(li.price)||0)*(parseFloat(li.qty)||1),0);
+  const taxAmt=Math.round(sub*taxRate)/100;
+  const doc={
+    id:uid(),number:nextDocNumber(),estRef:'',type:'estimate',
+    clientId:job.clientId,propertyId:job.propertyId,jobId:job.id,
+    date:ts.slice(0,10),dueDate:'',paymentMethod:'',paymentTerms:'',
+    laborDisclaimer:true,notes:'',
+    lineItems,taxRate,subtotal:sub,taxAmt,total:sub+taxAmt,
+    paid:false,createdAt:ts,updatedAt:ts
+  };
+  DB.docs.push(doc);
+  // Mark job as converted
+  const idx=DB.jobs.findIndex(j=>j.id===job.id);
+  if(idx!==-1){DB.jobs[idx].clientEstimate={docId:doc.id,createdAt:ts};DB.jobs[idx].updatedAt=ts;}
+  logActivity('Created','Document',doc.id,`Estimate ${fmt(doc.total)} converted from contractor estimate — ${clientFullName(getClient(doc.clientId))}`);
   saveAndSync();
-  renderPortalSection(DB.jobs.find(j=>j.id===currentJobId));
-  toast('Client estimate created — edit and adjust before sending','success');
+  // Navigate to the doc modal
+  goto('documents');
+  editDoc(doc.id);
+  toast('Client estimate created — review and send','success');
 }
 
-function updateClientEstimateLine(i,field,val){
-  const job=DB.jobs.find(j=>j.id===currentJobId);
-  if(!job||!job.clientEstimate) return;
-  const line=job.clientEstimate.lineItems[i];
-  if(!line) return;
-  line[field]=field==='desc'?val:parseFloat(val)||0;
-  if(field==='qty'||field==='rate') line.amount=(line.qty||1)*(line.rate||0);
-  renderPortalSection(job);
-}
-
-function removeClientEstimateLine(i){
-  const job=DB.jobs.find(j=>j.id===currentJobId);
-  if(!job||!job.clientEstimate) return;
-  job.clientEstimate.lineItems.splice(i,1);
-  renderPortalSection(job);
-}
-
-function addClientEstimateLine(){
-  const job=DB.jobs.find(j=>j.id===currentJobId);
-  if(!job||!job.clientEstimate) return;
-  job.clientEstimate.lineItems.push({desc:'',qty:1,rate:0,amount:0});
-  renderPortalSection(job);
-}
-
-function saveClientEstimate(){
-  const job=DB.jobs.find(j=>j.id===currentJobId);
-  if(!job||!job.clientEstimate) return;
-  job.updatedAt=now();
-  saveAndSync();
-  toast('Client estimate saved','success');
-}
 
 // ============================================================
 // CONTRACTORS
@@ -3000,12 +3389,51 @@ function deleteCurrentContractor(){
 // ============================================================
 // DOCUMENTS
 // ============================================================
+function clearDocFilters(){
+  const cl=document.getElementById('doc-filter-client');
+  const st=document.getElementById('doc-filter-status');
+  const fr=document.getElementById('doc-filter-from');
+  const to=document.getElementById('doc-filter-to');
+  if(cl)cl.value='';if(st)st.value='';if(fr)fr.value='';if(to)to.value='';
+  renderDocs();
+}
+
 function renderDocs(){
   const showArchived=document.getElementById('doc-show-archived')?.checked;
   let docs=[...DB.docs].filter(d=>showArchived||!d.archived).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+
+  // Tab-based type filter
   if(docFilter==='estimate') docs=docs.filter(d=>d.type==='estimate');
   else if(docFilter==='invoice') docs=docs.filter(d=>d.type==='invoice');
   else if(docFilter==='unpaid') docs=docs.filter(d=>d.type==='invoice'&&!d.paid);
+
+  // Populate client dropdown (preserve selection)
+  const clientSel=document.getElementById('doc-filter-client');
+  if(clientSel){
+    const cur=clientSel.value;
+    const activeClients=[...DB.clients].filter(c=>!c.archived).sort((a,b)=>clientFullName(a).localeCompare(clientFullName(b)));
+    clientSel.innerHTML='<option value="">All Clients</option>'+activeClients.map(c=>`<option value="${c.id}"${c.id===cur?' selected':''}>${clientFullName(c)}</option>`).join('');
+  }
+
+  // Combinable secondary filters
+  const filterClient=document.getElementById('doc-filter-client')?.value||'';
+  const filterStatus=document.getElementById('doc-filter-status')?.value||'';
+  const filterFrom=document.getElementById('doc-filter-from')?.value||'';
+  const filterTo=document.getElementById('doc-filter-to')?.value||'';
+
+  if(filterClient) docs=docs.filter(d=>d.clientId===filterClient);
+  if(filterStatus==='paid')      docs=docs.filter(d=>d.type==='invoice'&&d.paid);
+  else if(filterStatus==='unpaid')    docs=docs.filter(d=>d.type==='invoice'&&!d.paid);
+  else if(filterStatus==='sent')      docs=docs.filter(d=>DB.sentLog.some(s=>s.docId===d.id));
+  else if(filterStatus==='draft')     docs=docs.filter(d=>!d.paid&&!DB.sentLog.some(s=>s.docId===d.id));
+  else if(filterStatus==='converted') docs=docs.filter(d=>d.type==='estimate'&&DB.docs.some(x=>x.estRef===d.id));
+  if(filterFrom) docs=docs.filter(d=>(d.date||'')>=filterFrom);
+  if(filterTo)   docs=docs.filter(d=>(d.date||'')<=filterTo);
+
+  // Show/hide clear button
+  const anyFilter=filterClient||filterStatus||filterFrom||filterTo;
+  const clearBtn=document.getElementById('doc-filter-clear');
+  if(clearBtn)clearBtn.style.display=anyFilter?'block':'none';
 
   const empty='<div class="empty"><div class="empty-ico">📄</div>No documents yet</div>';
 
@@ -3019,7 +3447,7 @@ function renderDocs(){
       <div class="doc-card-m-top">
         <div style="flex:1;min-width:0">
           <div class="doc-card-m-client">${client}</div>
-          <div style="font-size:12px;color:var(--text2);margin-top:2px">${getProperty(d.propertyId).address||''}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">${docPropertyLabel(d)}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
           <span class="badge ${d.type}">${d.type}</span>
@@ -3027,7 +3455,7 @@ function renderDocs(){
         </div>
       </div>
       <div class="doc-card-m-meta">
-        <span>${fmtDate(d.date)}${d.number?` · #${d.number}`:''}</span>
+        <span>${d.number?`<span style="font-family:'DM Mono',monospace;font-weight:600">#${d.number}</span> · `:''}${fmtDate(d.date)}</span>
         <span class="doc-card-m-amount">${fmt(d.total)}</span>
       </div>
       <div class="doc-card-m-actions">
@@ -3041,10 +3469,11 @@ function renderDocs(){
   }).join(''):empty;
 
   // Desktop table
-  document.getElementById('docs-table').innerHTML=docs.length?`<table><thead><tr><th>Type</th><th>Client</th><th>Property</th><th>Date</th><th>Total</th><th>Payment</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody>${docs.map(d=>`<tr${d.archived?' style="opacity:.5"':''}>
+  document.getElementById('docs-table').innerHTML=docs.length?`<table><thead><tr><th>#</th><th>Type</th><th>Client</th><th>Property</th><th>Date</th><th>Total</th><th>Payment</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody>${docs.map(d=>`<tr${d.archived?' style="opacity:.5"':''}>
+    <td style="font-family:'DM Mono',monospace;font-size:13px;white-space:nowrap">${d.number||'—'}</td>
     <td><span class="badge ${d.type}">${d.type}</span>${d.archived?' <span class="badge" style="font-size:10px;background:#e0e0e0;color:#666">Archived</span>':''}</td>
     <td>${clientFullName(getClient(d.clientId))}</td>
-    <td style="font-size:12px;color:var(--text2)">${getProperty(d.propertyId).address||'—'}</td>
+    <td style="font-size:12px;color:var(--text2)">${docPropertyLabel(d)}</td>
     <td class="ts">${fmtDate(d.date)}</td>
     <td><strong style="font-family:'DM Mono',monospace">${fmt(d.total)}</strong></td>
     <td style="font-size:12px;color:var(--text2)">${d.paymentMethod||'—'}</td>
@@ -3268,6 +3697,15 @@ function saveDoc(){
   if(currentDocId) DB.docs=DB.docs.map(d=>d.id===currentDocId?doc:d);
   else DB.docs.push(doc);
 
+  // If client changed on an existing doc with a linked job, prompt to update the job too
+  if(currentDocId&&existing&&existing.clientId!==doc.clientId&&doc.jobId){
+    const linkedJobForPrompt=DB.jobs.find(j=>j.id===doc.jobId);
+    if(linkedJobForPrompt&&confirm(`Update the linked job "${linkedJobForPrompt.title}" client to match?`)){
+      const jIdx=DB.jobs.findIndex(j=>j.id===doc.jobId);
+      if(jIdx!==-1){DB.jobs[jIdx].clientId=doc.clientId;DB.jobs[jIdx].updatedAt=ts;}
+    }
+  }
+
   // Auto-create or auto-advance job when a document is saved
   const isNew=!currentDocId||!existing;
   // Prefer the explicitly linked job (via _docForJobId), then fall back to active job for client+property
@@ -3295,11 +3733,18 @@ function saveDoc(){
     doc.jobId=linkedJob.id;
     DB.docs=DB.docs.map(d=>d.id===doc.id?doc:d);
     logActivity('Created','Job',linkedJob.id,`Auto-created from ${doc.type} #${doc.number} — ${clientFullName(getClient(doc.clientId))}`);
-  } else if(doc.type==='invoice'&&linkedJob.status==='estimate-sent'){
-    // Job exists with estimate sent — advance to In Progress when invoice is created
-    linkedJob.status='in-progress';
-    linkedJob.updatedAt=ts;
-    logActivity('Updated','Job',linkedJob.id,`Status → In Progress (invoice #${doc.number})`);
+  } else {
+    // Update job value from estimate total so pipeline/jobs cards stay in sync
+    if(doc.type==='estimate'&&doc.total){
+      linkedJob.value=doc.total;
+      linkedJob.updatedAt=ts;
+    }
+    if(doc.type==='invoice'&&linkedJob.status==='estimate-sent'){
+      // Advance to In Progress when invoice is created
+      linkedJob.status='in-progress';
+      linkedJob.updatedAt=ts;
+      logActivity('Updated','Job',linkedJob.id,`Status → In Progress (invoice #${doc.number})`);
+    }
   }
 
   logActivity(currentDocId?'Updated':'Created','Document',doc.id,`${doc.type} ${fmt(doc.total)} — ${clientFullName(getClient(doc.clientId))}`);
@@ -3336,20 +3781,29 @@ async function showDocPreview(d){
     try{await getDriveImageUrl(DB.settings.logoFileId);}catch(e){console.warn('[logo] showDocPreview fetch failed:',e.message);}
   }
   currentPreviewDoc=d;
+  // Update send button label to match doc type
+  const sendBtn=document.getElementById('send-email-btn');
+  if(sendBtn) sendBtn.textContent=d.type==='estimate'?'✉ Send Estimate':'✉ Send Invoice';
   const s=DB.settings;const c=getClient(d.clientId);const prop=getProperty(d.propertyId);
   const isEst=d.type==='estimate';
   const docNum=d.number?('#'+d.number):'';
   const colHeader=isEst?'LABOR':'AMOUNT';
-  const renderRows=items=>items.filter(i=>i.desc||parseFloat(i.price)).map(i=>{
-    const amt=(parseFloat(i.price)||0)*(parseFloat(i.qty)||1);
+  const renderRows=items=>items.filter(i=>i.desc||(parseFloat(i.amount)||parseFloat(i.rate))).map(i=>{
+    const amt=parseFloat(i.amount)||((parseFloat(i.rate)||0)*(parseFloat(i.qty)||1));
     return `<tr><td style="padding:7px 14px;border-bottom:1px solid #f0f0f0;font-size:13px;color:#333">${i.desc||'—'}</td><td style="padding:9px 14px;border-bottom:1px solid #f0f0f0;text-align:right;font-size:13px;color:#333;font-family:'DM Sans',sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap">${fmt(amt)}</td></tr>`;
   }).join('');
   const laborItems=d.lineItems.filter(i=>i.type==='labor');
   const matItems=d.lineItems.filter(i=>i.type==='material');
   const otherItems=d.lineItems.filter(i=>i.type==='other');
+  const untypedItems=d.lineItems.filter(i=>!i.type);
   let rowsHtml='';
   if(isEst){rowsHtml=renderRows(d.lineItems);}
-  else{if(laborItems.length)rowsHtml+=renderRows(laborItems);if(matItems.length)rowsHtml+=renderRows(matItems);if(otherItems.length)rowsHtml+=renderRows(otherItems);}
+  else{
+    if(laborItems.length)rowsHtml+=renderRows(laborItems);
+    if(matItems.length)rowsHtml+=renderRows(matItems);
+    if(otherItems.length)rowsHtml+=renderRows(otherItems);
+    if(untypedItems.length)rowsHtml+=renderRows(untypedItems); // legacy items with no type
+  }
   const payLine=s.phone?`Zelle payments can be sent to ${s.phone} (${s.bizName||'AEDEXBOOKS'})`:'';
   document.getElementById('preview-content').innerHTML=`
   <div style="font-family:'DM Sans',sans-serif;max-width:620px;margin:0 auto;background:#fff;padding:36px 40px 32px">
@@ -3533,7 +3987,9 @@ async function resolveAfterFolderFromPhotos(job){
 
 async function uploadFileToDrive(file,folderId){
   const form=new FormData();
-  form.append('metadata',new Blob([JSON.stringify({name:file.name,parents:[folderId]})],{type:'application/json'}));
+  const meta={name:file.name,parents:[folderId]};
+  if(file.type) meta.mimeType=file.type;
+  form.append('metadata',new Blob([JSON.stringify(meta)],{type:'application/json'}));
   form.append('file',file);
   const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',
     {method:'POST',headers:{Authorization:'Bearer '+accessToken},body:form});
@@ -3543,6 +3999,16 @@ async function uploadFileToDrive(file,folderId){
 
 // ---- Blob cache for inline image display ----
 const _blobCache={};
+async function getLogoBase64(){
+  const fileId=DB.settings.logoFileId;
+  if(!fileId||!accessToken) return '';
+  try{
+    const r=await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,{headers:{Authorization:'Bearer '+accessToken}});
+    if(!r.ok) return '';
+    const blob=await r.blob();
+    return await new Promise(res=>{const rd=new FileReader();rd.onloadend=()=>res(rd.result);rd.readAsDataURL(blob);});
+  }catch(e){return '';}
+}
 async function getDriveImageUrl(fileId){
   if(_blobCache[fileId]) return _blobCache[fileId];
   if(!accessToken) throw new Error('Not signed in');
@@ -3550,7 +4016,6 @@ async function getDriveImageUrl(fileId){
     {headers:{Authorization:'Bearer '+accessToken}});
   if(!r.ok){console.warn('[logo] Drive media fetch HTTP '+r.status+' for fileId='+fileId);throw new Error('Load failed: HTTP '+r.status);}
   const blob=await r.blob();
-  if(!blob.type.startsWith('image/')) throw new Error('Not an image');
   _blobCache[fileId]=URL.createObjectURL(blob);
   return _blobCache[fileId];
 }
@@ -3827,35 +4292,46 @@ function openSendEmailModal(){
   if(!currentPreviewDoc){toast('No document open','error');return;}
   if(!signedIn){toast('Sign in first','error');return;}
   _sendingReminder=false;
-  document.getElementById('send-modal-title').textContent='Send Invoice via Email';
   const d=currentPreviewDoc;
   const client=getClient(d.clientId);
   const prop=getProperty(d.propertyId);
-  const prefix=d.type==='invoice'?'Invoice':'Estimate';
+  const isEst=d.type==='estimate';
   const addr=prop.address||clientFullName(client)||'your project';
   const num=d.number||'—';
   const total=fmt(d.total);
   const due=d.dueDate?`\nDue date: ${fmtDate(d.dueDate)}`:'';
-  const workLine=prop.address
-    ?`for work at ${prop.address}`
-    :`for services rendered`;
+  const name=client.firstName||clientFullName(client)||'there';
+  const sig=`${DB.settings.yourName||DB.settings.bizName||'Aedex Anima LLC'}\n${DB.settings.phone?DB.settings.phone+'\n':''}${DB.settings.email||''}`.trim();
 
+  document.getElementById('send-modal-title').textContent=isEst?'Send Estimate via Email':'Send Invoice via Email';
   document.getElementById('send-to').value=client.email||'';
   document.getElementById('send-cc').value=client.altEmail||'';
   document.getElementById('send-bcc').value='';
-  document.getElementById('send-subject').value=`${prefix} #${num} — ${addr}`;
-  document.getElementById('send-message').value=
-`Hi ${client.firstName||clientFullName(client)||'there'},
+  document.getElementById('send-subject').value=isEst
+    ?`Estimate #${num} — ${addr}`
+    :`Invoice #${num} — ${addr}`;
 
-Please find attached ${prefix.toLowerCase()} #${num} ${workLine}.
+  document.getElementById('send-message').value=isEst
+?`Hi ${name},
 
-Amount: ${total}${due}
+Please find attached your estimate #${num} for work at ${addr||'your property'}.
 
-Please don't hesitate to reach out with any questions.
+Estimated total: ${total}
+
+This estimate covers the scope of work discussed. Please review and let us know if you have any questions or would like to make any adjustments before we proceed.
 
 Thank you,
-${DB.settings.yourName||DB.settings.bizName||'Aedex Anima LLC'}
-${DB.settings.phone?DB.settings.phone+'\n':''}${DB.settings.email||''}`.trim();
+${sig}`.trim()
+:`Hi ${name},
+
+Please find attached invoice #${num} for completed work at ${addr||'your property'}.
+
+Amount due: ${total}${due}
+
+Payment can be sent via Zelle to ${DB.settings.phone||'our business number'} (${DB.settings.bizName||'Aedex Anima LLC'}). Please don't hesitate to reach out if you have any questions.
+
+Thank you for your business,
+${sig}`.trim();
 
   // Show previous sends for this doc
   const prev=DB.sentLog.filter(s=>s.docId===d.id);
@@ -4062,8 +4538,26 @@ async function sendInvoiceEmail(){
       sentAt:new Date().toISOString()
     };
     DB.sentLog.push(entry);
-    saveAndSync();
 
+    // Auto-advance linked job status when a doc is emailed
+    if(!_sendingReminder){
+      const linkedJob=DB.jobs.find(j=>j.id===d.jobId);
+      if(linkedJob&&linkedJob.status!=='complete'){
+        if(d.type==='estimate'){
+          linkedJob.status='estimate-sent';
+          linkedJob.updatedAt=new Date().toISOString();
+          logActivity('Updated','Job',linkedJob.id,`Status → Estimate Sent (estimate #${d.number})`);
+        } else if(d.type==='invoice'){
+          linkedJob.status='invoice-sent';
+          linkedJob.updatedAt=new Date().toISOString();
+          logActivity('Updated','Job',linkedJob.id,`Status → Invoice Sent (invoice #${d.number})`);
+        }
+      }
+    }
+
+    saveAndSync();renderPipeline();renderJobs();
+    if(d.type==='estimate')tickOnboarding('sentEstimate');
+    else if(d.type==='invoice')tickOnboarding('sentInvoice');
     toast(`${_sendingReminder?'Reminder':prefix} sent to ${toEmail}`,'success');
     _sendingReminder=false;
     closeModal('send-email-modal');
@@ -4812,6 +5306,289 @@ function connectExistingSheet(){
   document.getElementById('set-sheet-url').value='';
   toast('Connecting to sheet...','');
   loadFromSheet();
+}
+
+// ============================================================
+// GUIDE SYSTEM
+// ============================================================
+const GUIDE_CONTENT={
+  dashboard:{
+    title:'Dashboard',
+    intro:'Your Dashboard is the home base for your whole business. At a glance you can see what you\'ve earned, what\'s outstanding, and how your jobs are moving — all filtered by year.',
+    steps:[
+      'The four metric cards at the top show your revenue, outstanding invoices, active jobs, and total expenses for the selected year.',
+      'Use the <strong>year dropdown</strong> in the top right to flip between years — great for comparing or filing taxes.',
+      '<strong>Recent Jobs</strong> shows your latest active work. Click any row to open that job.',
+      '<strong>Unpaid Invoices</strong> lists everything you haven\'t been paid for yet. Click any row to open the invoice and follow up.',
+      '<strong>Revenue by Client</strong> shows which clients are your best earners for the year.',
+      '<strong>Monthly P&L</strong> compares your income vs expenses month by month so you can spot slow periods.',
+      'Click <strong>⬇ Tax Report</strong> to download a CSV sorted by expense category — hand it straight to your accountant for Schedule C.',
+    ],
+    tips:[
+      'If a number looks wrong, check whether the related invoices are marked as Paid.',
+      'The Dashboard only reads data — nothing you do here changes your records.',
+      'You can create a new document directly from here using <strong>+ New Document</strong> in the top right.',
+    ]
+  },
+  pipeline:{
+    title:'Job Pipeline',
+    intro:'The Pipeline is a Kanban board — one column for each stage of a job\'s life. Every active job shows up here as a card. Drag cards between columns to move a job forward, or click any card to open it.',
+    steps:[
+      'Columns run left to right: <strong>Unassigned → Assigned for Estimate → Estimate Sent → In Progress → Invoice Sent → Complete</strong>.',
+      'Click any card to open that job and make changes.',
+      '<strong>Drag a card</strong> from one column to another to change the job\'s status instantly.',
+      'The number in each column header shows how many jobs are in that stage, and the total dollar value appears at the bottom.',
+      'A green <strong>Est. ✓</strong> badge means a contractor estimate is waiting. Click it to review it.',
+      'A green <strong>Est. →</strong> badge means a client estimate already exists. Click it to jump straight to that document.',
+      'Click <strong>+ New Job</strong> to add a new job to the pipeline.',
+    ],
+    tips:[
+      'Jobs can advance automatically — saving an invoice on an Estimate Sent job moves it to In Progress without you having to drag it.',
+      'The <strong>🔧 Sub quote</strong> line shows what a contractor quoted. That\'s separate from the estimate you send your client.',
+      'The Pipeline only shows active (non-archived) jobs. Use the Jobs page to see everything.',
+    ]
+  },
+  jobs:{
+    title:'Jobs',
+    intro:'The Jobs list shows every job you\'ve ever created in a searchable table. Use it to find something specific, take action on a job, or see all jobs including completed and archived ones.',
+    steps:[
+      'Click <strong>+ New Job</strong> to create a new job. Give it a title, client, property, and start date.',
+      'Assign a contractor by checking their name in the job form — this moves the job to "Assigned for Estimate" automatically.',
+      'Use the <strong>search bar</strong> to filter by job title or client name.',
+      'Click <strong>Edit</strong> on any row to open and make changes.',
+      'Click <strong>+ Doc</strong> to create a new estimate or invoice already linked to that job.',
+      'Click <strong>Est. ✓</strong> to review a contractor estimate submitted through the portal.',
+      'Check <strong>Show archived</strong> to see completed or cancelled jobs.',
+    ],
+    tips:[
+      'Every job gets a 5-digit job number automatically (like 03005). Document numbers share the same sequence.',
+      'The job\'s dollar value updates automatically when you save a linked estimate.',
+      'Archiving a job hides it but never deletes it — you can restore it any time.',
+    ]
+  },
+  documents:{
+    title:'Estimates & Invoices',
+    intro:'Estimates and invoices live here. An estimate is what you send before the work starts — a quote. An invoice is what you send when the work is done and it\'s time to get paid. Both can be emailed as PDFs with a single click.',
+    steps:[
+      'Click <strong>+ New Document</strong>, pick the client, property, and type (estimate or invoice).',
+      'Add line items from your <strong>Service Catalog</strong> by clicking the catalog icon, or type them in manually.',
+      'Set the tax rate if it applies — it defaults to whatever is in your Settings.',
+      'Click <strong>Preview</strong> to see exactly what the client receives, then click <strong>✉ Send Estimate</strong> or <strong>✉ Send Invoice</strong> to email it with a PDF attached.',
+      'Once an invoice is saved on an Estimate Sent job, the job status automatically moves to <strong>In Progress</strong>.',
+      'Click <strong>Mark as Paid</strong> on an invoice once you\'ve received payment — this updates your Dashboard.',
+      'If a contractor submitted an estimate through their portal, open the linked job, review it, then click <strong>Convert to Client Estimate</strong> to turn it into a real document.',
+    ],
+    tips:[
+      'Estimates and invoices share a numbering sequence — so 03001 and 03005 might be different doc types.',
+      'Every email you send is logged in the Activity Log and Sent Log automatically.',
+      'Use the date filter at the top of this page to narrow down documents by date range.',
+    ]
+  },
+  clients:{
+    title:'Clients & Properties',
+    intro:'Clients are the people and companies you do work for. Properties are the job sites. Every job, estimate, and invoice is linked to both a client and a property — so keeping these tidy makes everything else easier to find.',
+    steps:[
+      'Click <strong>+ New Client</strong> to add a client. Fill in their name, phone, and email.',
+      'Add one or more properties directly in the client form — click <strong>Add Property</strong> and enter the address.',
+      'Set the <strong>client type</strong>: "Handyman Client" for individual homeowners, or "Property Manager" for companies that manage multiple properties.',
+      'Click any client row to open and edit them, or add more properties.',
+      'To add a property to an existing client, open the client and click <strong>Add Property</strong>.',
+      'Archive a client to hide them from the list — their job history stays intact.',
+    ],
+    tips:[
+      'A client can have multiple properties, and each property can have multiple jobs.',
+      'If the client has tenants, fill in the tenant fields on the property — useful for scheduling calls.',
+      'Alt Email is a second billing contact — handy for property managers whose billing person is different from their main contact.',
+    ]
+  },
+  contractors:{
+    title:'Contractors',
+    intro:'Contractors are the subcontractors and trades you bring in on jobs. They can submit estimates directly through a secure link you generate — no app account or login required on their end.',
+    steps:[
+      'Click <strong>+ Add Contractor</strong> to add a new subcontractor with their name, trade, phone, and email.',
+      'To assign a contractor to a job, open the job and check their name in the Contractors section.',
+      'Once assigned, click <strong>Send Portal Link</strong> in the job form to generate a unique link and email it to them.',
+      'The contractor visits their link, fills out labor items and materials, and can upload before photos.',
+      'You\'ll get an email notification when they submit. Open the job and click <strong>Check Submission</strong> to pull in their estimate.',
+      'Review their numbers and photos in the job form. Click <strong>Save Photos to Drive</strong> to store the before photos in your Drive folder.',
+      'Click <strong>Convert to Client Estimate</strong> to turn their numbers into a real estimate you can edit and send to your client.',
+    ],
+    tips:[
+      'Contractors never see your client\'s name, billing info, or other jobs — only the job title, address, and your instructions.',
+      'Portal links expire after 30 days. You can resend a new link from the job form.',
+      'Use the <strong>Contractor Instructions</strong> field in the job form to give them specific scope notes — these show up on their portal page.',
+    ]
+  },
+  expenses:{
+    title:'Expenses',
+    intro:'Expenses are the costs of running your business — materials, tools, fuel, subcontractor payments, and anything else deductible. Log them here, attach receipts, and at tax time you\'ll be ready with a clean report.',
+    steps:[
+      'Click <strong>+ New Expense</strong> to log a cost. Enter the date, amount, and a short description.',
+      'Pick an <strong>IRS Schedule C category</strong> — this sorts everything correctly for your tax report.',
+      'Link the expense to a specific job (optional) so you can see the true cost of each job.',
+      'Click <strong>Attach Receipt</strong> to upload a photo or file — it saves to your Google Drive automatically.',
+      'To edit an expense, click the row to open it and make changes.',
+      'Head to the Dashboard and click <strong>⬇ Tax Report</strong> to download a yearly CSV sorted by category.',
+    ],
+    tips:[
+      'The three metric cards at the top show your total expenses, materials, and other deductible costs for the current year.',
+      'Even a phone photo of a receipt is better than nothing at tax time. Upload it while it\'s fresh.',
+      'If an expense isn\'t tied to one job (like a tool purchase), leave the Job field blank or link it to a general overhead job.',
+    ]
+  },
+  help:{
+    title:'Help Center',
+    intro:'You\'re here! Use this page to get help, track your setup progress, or send feedback directly to the developer. You can also get page-specific guidance by tapping the <strong>?</strong> button in the top right of any page.',
+    steps:[
+      'Tap the <strong>?</strong> button in the top right of any page to open a step-by-step guide for that specific page.',
+      'The <strong>Getting Started checklist</strong> above tracks your progress as you set up the app — it checks items off automatically as you complete them.',
+      'To report a bug, select "Bug Report" below, describe what happened, and hit Send.',
+      'To ask how something works, select "Question" and describe what you\'re trying to do.',
+      'Your email is pre-filled from your Google account — edit it if you\'d prefer a different reply address.',
+    ],
+    tips:[
+      'Guides are available on every page: Dashboard, Pipeline, Jobs, Documents, Clients, Contractors, and Expenses.',
+      'The checklist marks items complete automatically — no need to check them off yourself.',
+      'Feedback goes directly to the developer. We read every submission.',
+    ]
+  }
+};
+
+function openGuide(key){
+  const c=GUIDE_CONTENT[key];
+  if(!c)return;
+  document.getElementById('guide-title').textContent=c.title;
+  document.getElementById('guide-body').innerHTML=
+    `<p class="guide-intro">${c.intro}</p>`+
+    `<h3>How to…</h3><ol>${c.steps.map(s=>`<li>${s}</li>`).join('')}</ol>`+
+    `<h3>Tips</h3><ul>${c.tips.map(t=>`<li>${t}</li>`).join('')}</ul>`;
+  document.getElementById('guide-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeGuide(){
+  document.getElementById('guide-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// ============================================================
+// ONBOARDING CHECKLIST
+// ============================================================
+const ONBOARDING_ITEMS=[
+  {key:'addedClient',       label:'Add your first client',    action:"closeMoreDrawer();goto('clients');setTimeout(openClientModal,200)"},
+  {key:'addedProperty',     label:'Add your first property',  action:"closeMoreDrawer();goto('clients');setTimeout(openClientModal,200)"},
+  {key:'createdJob',        label:'Create your first job',    action:"closeMoreDrawer();goto('jobs');setTimeout(openJobModal,200)"},
+  {key:'assignedContractor',label:'Assign a contractor',      action:"closeMoreDrawer();goto('jobs');setTimeout(openJobModal,200)"},
+  {key:'sentEstimate',      label:'Send your first estimate', action:"closeMoreDrawer();goto('documents')"},
+  {key:'sentInvoice',       label:'Send your first invoice',  action:"closeMoreDrawer();goto('documents')"},
+];
+
+function getOnboarding(){
+  if(!DB.settings.onboarding||typeof DB.settings.onboarding!=='object')DB.settings.onboarding={};
+  return DB.settings.onboarding;
+}
+
+function tickOnboarding(key){
+  const ob=getOnboarding();
+  if(ob[key])return;
+  ob[key]=true;
+  saveSettingsLocal();
+  const pg=document.getElementById('page-help');
+  if(pg&&pg.classList.contains('active'))renderOnboardingChecklist();
+}
+
+function renderHelpPage(){
+  renderOnboardingChecklist();
+  prefillFeedbackEmail();
+}
+
+function renderOnboardingChecklist(){
+  const ob=getOnboarding();
+  const done=ONBOARDING_ITEMS.filter(i=>ob[i.key]).length;
+  const total=ONBOARDING_ITEMS.length;
+  const wrap=document.getElementById('help-onboarding-wrap');
+  if(!wrap)return;
+  if(ob.dismissed){
+    wrap.innerHTML=`<div style="margin-bottom:16px"><button class="btn sm" onclick="showOnboardingChecklist()">📋 Show Getting Started checklist (${done}/${total})</button></div>`;
+    return;
+  }
+  wrap.innerHTML=`<div class="onboarding-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:2px">Getting Started</div>
+        <div style="font-size:12px;color:var(--text3)">${done} of ${total} complete</div>
+      </div>
+      <button class="rm-btn" onclick="dismissOnboarding()" title="Dismiss checklist" style="color:var(--text3);font-size:18px">×</button>
+    </div>
+    <div class="onboarding-progress"><div class="onboarding-fill" style="width:${Math.round(done/total*100)}%"></div></div>
+    ${ONBOARDING_ITEMS.map(item=>`
+      <div class="onboarding-item">
+        <div class="ob-check${ob[item.key]?' done':''}">${ob[item.key]?'✓':''}</div>
+        <span class="ob-label${ob[item.key]?' done':''}">${item.label}</span>
+        ${!ob[item.key]?`<button class="ob-action" onclick="${item.action}">Do it →</button>`:''}
+      </div>`).join('')}
+  </div>`;
+}
+
+function dismissOnboarding(){
+  getOnboarding().dismissed=true;
+  saveSettingsLocal();
+  renderOnboardingChecklist();
+}
+
+function showOnboardingChecklist(){
+  getOnboarding().dismissed=false;
+  saveSettingsLocal();
+  renderOnboardingChecklist();
+}
+
+function prefillFeedbackEmail(){
+  const el=document.getElementById('fb-email');
+  if(el&&!el.value&&DB.settings.userEmail)el.value=DB.settings.userEmail;
+}
+
+// ============================================================
+// FEEDBACK FORM
+// ============================================================
+async function submitFeedback(){
+  const catEl=document.querySelector('input[name="fb-cat"]:checked');
+  const subject=(document.getElementById('fb-subject').value||'').trim();
+  const message=(document.getElementById('fb-message').value||'').trim();
+  const email=(document.getElementById('fb-email').value||'').trim();
+  if(!catEl){toast('Please select a feedback type','error');return;}
+  if(!subject){toast('Please enter a subject','error');return;}
+  if(!message){toast('Please enter a message','error');return;}
+  const btn=document.getElementById('fb-submit-btn');
+  btn.textContent='Sending…';btn.disabled=true;
+  try{
+    const resp=await fetch('/api/feedback',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        category:catEl.value,
+        subject,message,email,
+        currentPage:_currentPage,
+        appVersion:APP_VERSION,
+        timestamp:new Date().toISOString()
+      })
+    });
+    if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e.error||'Send failed');}
+    document.getElementById('help-feedback-wrap').style.display='none';
+    document.getElementById('help-feedback-confirm').style.display='block';
+  }catch(e){
+    toast('Failed to send: '+e.message,'error');
+  }finally{
+    btn.textContent='Send Feedback';btn.disabled=false;
+  }
+}
+
+function resetFeedbackForm(){
+  const checked=document.querySelector('input[name="fb-cat"]:checked');
+  if(checked)checked.checked=false;
+  document.getElementById('fb-subject').value='';
+  document.getElementById('fb-message').value='';
+  document.getElementById('help-feedback-wrap').style.display='';
+  document.getElementById('help-feedback-confirm').style.display='none';
 }
 
 // ============================================================
