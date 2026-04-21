@@ -2815,6 +2815,7 @@ function saveJob(){
   const title=document.getElementById('jm-title-inp').value.trim();
   if(!title){toast('Please enter a job title','error');return;}
   const ts=now();
+  const isNewJob=!currentJobId;
   const existing=DB.jobs.find(j=>j.id===currentJobId);
   const job={
     id:currentJobId||uid(),
@@ -2858,6 +2859,14 @@ function saveJob(){
   tickOnboarding('createdJob');
   if(job.contractorIds.length>0)tickOnboarding('assignedContractor');
   closeModal('job-modal');toast('Job saved','success');
+  // Prompt to send portal link when a new job is saved with a contractor assigned
+  if(isNewJob&&job.contractorIds.length>0&&!job.portalToken){
+    const ctr=DB.contractors.find(c=>c.id===job.contractorIds[0]);
+    if(ctr&&ctr.email&&confirm(`Send portal link to ${ctr.name}?`)){
+      currentJobId=job.id;
+      sendPortalLink();
+    }
+  }
 }
 
 function deleteCurrentJob(){
