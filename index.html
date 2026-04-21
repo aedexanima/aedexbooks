@@ -1216,7 +1216,8 @@ function initTokenClient(){
       saveToken(accessToken);
       gapi.client.setToken({access_token:accessToken});
       signedIn=true;
-      // Immediately update all sign-in UI so no button reads "Sign in" during async onSignedIn()
+      // Immediately show the app and update all sign-in UI so no button reads "Sign in" during async onSignedIn()
+      showApp();
       document.getElementById('mob-signin-btn').style.display='none';
       document.getElementById('mob-nav-email').textContent='Signing in…';
       document.getElementById('mob-user-pill').style.display='flex';
