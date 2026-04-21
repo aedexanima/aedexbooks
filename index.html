@@ -1635,7 +1635,17 @@ function clientFullName(c){return c?.company?.trim()||[c?.firstName,c?.lastName]
 function clientContactName(c){return[c?.firstName,c?.lastName].filter(Boolean).join(' ')||'';}
 function tenantFullName(p){return[p.tenantFirstName,p.tenantLastName].filter(Boolean).join(' ');}
 function getProperty(id){return DB.properties.find(p=>p.id===id)||{address:'Unknown property'};}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  // When the job modal closes, immediately reset photo state so no previous job's
+  // photos can bleed into the next new-job session (async uploads completing late,
+  // acceptContractorPhotos resolving after the modal switched, etc.)
+  if(id==='job-modal'){
+    _jobPhotos=[];
+    const strips=['jm-before-strip','jm-after-strip','jm-photo-strip'];
+    strips.forEach(sid=>{const el=document.getElementById(sid);if(el)el.innerHTML='';});
+  }
+}
 function toast(msg,type=''){
   const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(type||'');
   t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);
