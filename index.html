@@ -3858,8 +3858,8 @@ async function showDocPreview(d){
   const isEst=d.type==='estimate';
   const docNum=d.number?('#'+d.number):'';
   const colHeader=isEst?'LABOR':'AMOUNT';
-  const renderRows=items=>items.filter(i=>i.desc||(parseFloat(i.amount)||parseFloat(i.rate))).map(i=>{
-    const amt=parseFloat(i.amount)||((parseFloat(i.rate)||0)*(parseFloat(i.qty)||1));
+  const renderRows=items=>items.filter(i=>i.desc||(parseFloat(i.amount)||parseFloat(i.rate)||parseFloat(i.price))).map(i=>{
+    const amt=parseFloat(i.amount)||(parseFloat(i.price||i.rate||0)*parseFloat(i.qty||1));
     return `<tr><td style="padding:7px 14px;border-bottom:1px solid #f0f0f0;font-size:13px;color:#333">${i.desc||'—'}</td><td style="padding:9px 14px;border-bottom:1px solid #f0f0f0;text-align:right;font-size:13px;color:#333;font-family:'DM Sans',sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap">${fmt(amt)}</td></tr>`;
   }).join('');
   const laborItems=d.lineItems.filter(i=>i.type==='labor');
