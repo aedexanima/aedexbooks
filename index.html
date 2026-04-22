@@ -1517,7 +1517,11 @@ function init(){
   if(s){ const parsed=JSON.parse(s); DB.settings=Object.assign({},DB.settings,parsed); }
   const d=localStorage.getItem('ab_data');
   if(d){const p=JSON.parse(d);DB.clients=p.clients||[];DB.properties=p.properties||[];DB.jobs=p.jobs||[];DB.docs=p.docs||[];DB.expenses=p.expenses||[];DB.activity=p.activity||[];DB.sentLog=p.sentLog||[];DB.contractors=p.contractors||[];DB.catalog=p.catalog||[];migrateNames();seedCatalog();saveLocal();}
-  showApp();loadGapi();
+  // Only show the app immediately if there's a stored token (silent re-auth will follow).
+  // If no token, show the login screen — don't let the user land on a blank dashboard.
+  const _hasStoredToken=!!loadToken();
+  if(_hasStoredToken){showApp();}else{document.getElementById('setup-screen').style.display='block';}
+  loadGapi();
 }
 
 function showApp(){
