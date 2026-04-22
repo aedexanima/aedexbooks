@@ -667,7 +667,7 @@ textarea{resize:vertical;min-height:60px}
         <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Shown on invoices. Fill in only the methods you accept.</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-bottom:14px">
           <div class="field" style="margin-bottom:0"><label>Venmo</label><input type="text" id="set-venmo" placeholder="@username"></div>
-          <div class="field" style="margin-bottom:0"><label>Zelle</label><input type="text" id="set-zelle" placeholder="Phone or email"></div>
+          <div class="field" style="margin-bottom:0"><label>Zelle</label><input type="text" id="set-zelle" placeholder="(512) 555-0100 or email"></div>
           <div class="field" style="margin-bottom:0"><label>PayPal</label><input type="text" id="set-paypal" placeholder="paypal.me/yourbusiness"></div>
           <div class="field" style="margin-bottom:0"><label>Check payable to</label><input type="text" id="set-checkname" placeholder="Business name on checks"></div>
           <div class="field" style="margin-bottom:0"><label>ACH routing #</label><input type="text" id="set-ach-routing" placeholder="9-digit routing number"></div>
@@ -1246,6 +1246,7 @@ function loadToken(){
 }
 function clearToken(){localStorage.removeItem(_TOKEN_KEY);}
 let currentPreviewDoc=null;
+function fmtPhoneIfNum(v){const d=(v||'').replace(/\D/g,'');return d.length===10?'('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6):v||'';}
 function formatPhone(input){
   let v=input.value.replace(/\D/g,'').slice(0,10);
   if(v.length>6) v='('+v.slice(0,3)+') '+v.slice(3,6)+'-'+v.slice(6);
@@ -3875,7 +3876,7 @@ async function showDocPreview(d){
   }
   const payParts=[];
   if(s.payVenmo)payParts.push(`Venmo: ${s.payVenmo}`);
-  if(s.payZelle)payParts.push(`Zelle: ${s.payZelle}`);
+  if(s.payZelle)payParts.push(`Zelle: ${fmtPhoneIfNum(s.payZelle)}`);
   if(s.payPaypal)payParts.push(`PayPal: ${s.payPaypal}`);
   if(s.payCheck)payParts.push(`Check: ${s.payCheck}`);
   if(s.payAchRouting&&s.payAchAccount)payParts.push(`ACH: Routing ${s.payAchRouting} / Acct ****${s.payAchAccount}`);
@@ -4403,7 +4404,7 @@ Please find attached invoice #${num} for completed work at ${addr||'your propert
 
 Amount due: ${total}${due}
 
-${(()=>{const s=DB.settings;if(s.paymentInstructions)return s.paymentInstructions;const parts=[];if(s.payZelle)parts.push('Zelle: '+s.payZelle);if(s.payVenmo)parts.push('Venmo: '+s.payVenmo);if(s.payPaypal)parts.push('PayPal: '+s.payPaypal);if(s.payCheck)parts.push('Check payable to: '+s.payCheck);return parts.length?'Payment methods: '+parts.join(', ')+'.':'Please reach out if you have questions about payment.';})()}
+${(()=>{const s=DB.settings;if(s.paymentInstructions)return s.paymentInstructions;const parts=[];if(s.payZelle)parts.push('Zelle: '+fmtPhoneIfNum(s.payZelle));if(s.payVenmo)parts.push('Venmo: '+s.payVenmo);if(s.payPaypal)parts.push('PayPal: '+s.payPaypal);if(s.payCheck)parts.push('Check payable to: '+s.payCheck);return parts.length?'Payment methods: '+parts.join(', ')+'.':'Please reach out if you have questions about payment.';})()}
 
 Thank you for your business,
 ${sig}`.trim();
