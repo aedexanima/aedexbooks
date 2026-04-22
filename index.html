@@ -663,6 +663,23 @@ textarea{resize:vertical;min-height:60px}
         </div>
       </div>
       <div class="card" style="grid-column:1/-1;margin-top:4px">
+        <div class="card-title">Payment Information</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Shown on invoices. Fill in only the methods you accept.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-bottom:14px">
+          <div class="field" style="margin-bottom:0"><label>Venmo</label><input type="text" id="set-venmo" placeholder="@username"></div>
+          <div class="field" style="margin-bottom:0"><label>Zelle</label><input type="text" id="set-zelle" placeholder="Phone or email"></div>
+          <div class="field" style="margin-bottom:0"><label>PayPal</label><input type="text" id="set-paypal" placeholder="paypal.me/yourbusiness"></div>
+          <div class="field" style="margin-bottom:0"><label>Check payable to</label><input type="text" id="set-checkname" placeholder="Business name on checks"></div>
+          <div class="field" style="margin-bottom:0"><label>ACH routing #</label><input type="text" id="set-ach-routing" placeholder="9-digit routing number"></div>
+          <div class="field" style="margin-bottom:0"><label>ACH account (last 4)</label><input type="text" id="set-ach-account" placeholder="Last 4 digits" maxlength="4"></div>
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label>Payment instructions <span style="font-weight:400;font-size:11px;color:var(--text3)">(shown in invoice email body)</span></label>
+          <textarea id="set-pay-instructions" rows="2" placeholder="e.g. Payment due within 30 days. Contact us for bank transfer details."></textarea>
+        </div>
+        <button class="btn accent" onclick="saveSettings()">Save settings</button>
+      </div>
+      <div class="card" style="grid-column:1/-1;margin-top:4px">
         <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none" onclick="toggleCatalogSection()">
           <div class="card-title" style="margin:0">Service Catalog</div>
           <div style="display:flex;align-items:center;gap:10px">
@@ -1176,6 +1193,19 @@ textarea{resize:vertical;min-height:60px}
     <div class="guide-body" id="guide-body"></div>
     <div class="guide-foot">
       <a onclick="closeGuide();goto('help')">Send Feedback →</a>
+    </div>
+  </div>
+</div>
+
+<!-- Portal prompt modal -->
+<div id="portal-prompt-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)skipPortalPrompt()">
+  <div style="background:#fff;border-radius:14px;padding:28px 24px;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18)">
+    <div style="font-size:18px;font-weight:700;margin-bottom:8px">Send Portal Link?</div>
+    <div style="font-size:14px;color:var(--text2);margin-bottom:6px">Would you like to send the contractor portal link to:</div>
+    <div id="portal-prompt-ctr" style="font-size:15px;font-weight:600;margin-bottom:20px"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn full" onclick="skipPortalPrompt()" style="flex:1">Skip</button>
+      <button class="btn accent full" onclick="confirmSendPortal()" style="flex:2">Send Now</button>
     </div>
   </div>
 </div>
@@ -1797,7 +1827,14 @@ async function syncToSheet(){
         ['license',DB.settings.license||''],
         ['taxRate',String(DB.settings.taxRate||0)],
         ['logoFileId',DB.settings.logoFileId||''],
-        ['onboarding',JSON.stringify(DB.settings.onboarding||{})]
+        ['onboarding',JSON.stringify(DB.settings.onboarding||{})],
+        ['payVenmo',DB.settings.payVenmo||''],
+        ['payZelle',DB.settings.payZelle||''],
+        ['payPaypal',DB.settings.payPaypal||''],
+        ['payCheck',DB.settings.payCheck||''],
+        ['payAchRouting',DB.settings.payAchRouting||''],
+        ['payAchAccount',DB.settings.payAchAccount||''],
+        ['paymentInstructions',DB.settings.paymentInstructions||'']
       ],
       ServiceCatalog:DB.catalog.map(i=>[i.id,i.name,i.type,i.price,i.cat])
     };
@@ -1868,6 +1905,13 @@ async function loadFromSheet(){
         DB.settings.taxRate=parseFloat(sm.taxRate)||DB.settings.taxRate||0;
         if(sm.logoFileId!==undefined)DB.settings.logoFileId=sm.logoFileId||'';
         if(sm.onboarding!==undefined)DB.settings.onboarding=safeJSON(sm.onboarding,DB.settings.onboarding||{});
+        if(sm.payVenmo!==undefined)DB.settings.payVenmo=sm.payVenmo||'';
+        if(sm.payZelle!==undefined)DB.settings.payZelle=sm.payZelle||'';
+        if(sm.payPaypal!==undefined)DB.settings.payPaypal=sm.payPaypal||'';
+        if(sm.payCheck!==undefined)DB.settings.payCheck=sm.payCheck||'';
+        if(sm.payAchRouting!==undefined)DB.settings.payAchRouting=sm.payAchRouting||'';
+        if(sm.payAchAccount!==undefined)DB.settings.payAchAccount=sm.payAchAccount||'';
+        if(sm.paymentInstructions!==undefined)DB.settings.paymentInstructions=sm.paymentInstructions||'';
         // Migrate old catalog blob from Settings tab into DB.catalog if ServiceCatalog tab is empty
         if(sm.catalog){
           const oldCatalog=safeJSON(sm.catalog,[]);
@@ -2862,10 +2906,7 @@ function saveJob(){
   // Prompt to send portal link when a new job is saved with a contractor assigned
   if(isNewJob&&job.contractorIds.length>0&&!job.portalToken){
     const ctr=DB.contractors.find(c=>c.id===job.contractorIds[0]);
-    if(ctr&&ctr.email&&confirm(`Send portal link to ${ctr.name}?`)){
-      currentJobId=job.id;
-      sendPortalLink();
-    }
+    if(ctr&&ctr.email) showPortalPrompt(job.id,ctr);
   }
 }
 
@@ -2961,6 +3002,25 @@ function renderPortalSection(job){
     ${portalHtml}
     ${estHtml}
     ${cEstHtml}`;
+}
+
+let _portalPromptJobId='';
+function showPortalPrompt(jobId,ctr){
+  _portalPromptJobId=jobId;
+  document.getElementById('portal-prompt-ctr').textContent=ctr.name+(ctr.email?' — '+ctr.email:'');
+  const el=document.getElementById('portal-prompt-overlay');
+  el.style.display='flex';
+}
+function skipPortalPrompt(){
+  document.getElementById('portal-prompt-overlay').style.display='none';
+  _portalPromptJobId='';
+}
+function confirmSendPortal(){
+  const jobId=_portalPromptJobId;
+  skipPortalPrompt();
+  if(!jobId)return;
+  currentJobId=jobId;
+  sendPortalLink();
 }
 
 async function sendPortalLink(){
@@ -3813,7 +3873,13 @@ async function showDocPreview(d){
     if(otherItems.length)rowsHtml+=renderRows(otherItems);
     if(untypedItems.length)rowsHtml+=renderRows(untypedItems); // legacy items with no type
   }
-  const payLine=s.phone?`Zelle payments can be sent to ${s.phone} (${s.bizName||'AEDEXBOOKS'})`:'';
+  const payParts=[];
+  if(s.payVenmo)payParts.push(`Venmo: ${s.payVenmo}`);
+  if(s.payZelle)payParts.push(`Zelle: ${s.payZelle}`);
+  if(s.payPaypal)payParts.push(`PayPal: ${s.payPaypal}`);
+  if(s.payCheck)payParts.push(`Check: ${s.payCheck}`);
+  if(s.payAchRouting&&s.payAchAccount)payParts.push(`ACH: Routing ${s.payAchRouting} / Acct ****${s.payAchAccount}`);
+  const payLine=payParts.join(' · ');
   document.getElementById('preview-content').innerHTML=`
   <div style="font-family:'DM Sans',sans-serif;max-width:620px;margin:0 auto;background:#fff;padding:36px 40px 32px">
 
@@ -4337,7 +4403,7 @@ Please find attached invoice #${num} for completed work at ${addr||'your propert
 
 Amount due: ${total}${due}
 
-Payment can be sent via Zelle to ${DB.settings.phone||'our business number'} (${DB.settings.bizName||'Aedex Anima LLC'}). Please don't hesitate to reach out if you have any questions.
+${(()=>{const s=DB.settings;if(s.paymentInstructions)return s.paymentInstructions;const parts=[];if(s.payZelle)parts.push('Zelle: '+s.payZelle);if(s.payVenmo)parts.push('Venmo: '+s.payVenmo);if(s.payPaypal)parts.push('PayPal: '+s.payPaypal);if(s.payCheck)parts.push('Check payable to: '+s.payCheck);return parts.length?'Payment methods: '+parts.join(', ')+'.':'Please reach out if you have questions about payment.';})()}
 
 Thank you for your business,
 ${sig}`.trim();
@@ -4724,6 +4790,13 @@ function loadSettingsForm(){
   document.getElementById('set-addr').value=s.addr||'';
   document.getElementById('set-lic').value=s.license||'';
   document.getElementById('set-tax').value=s.taxRate||0;
+  document.getElementById('set-venmo').value=s.payVenmo||'';
+  document.getElementById('set-zelle').value=s.payZelle||'';
+  document.getElementById('set-paypal').value=s.payPaypal||'';
+  document.getElementById('set-checkname').value=s.payCheck||'';
+  document.getElementById('set-ach-routing').value=s.payAchRouting||'';
+  document.getElementById('set-ach-account').value=s.payAchAccount||'';
+  document.getElementById('set-pay-instructions').value=s.paymentInstructions||'';
   if(s.logoFileId){getDriveImageUrl(s.logoFileId).then(updateLogoPreview).catch(()=>{});}
   else{updateLogoPreview('');}
 }
@@ -4802,6 +4875,13 @@ function saveSettings(){
   DB.settings.addr=document.getElementById('set-addr').value;
   DB.settings.license=document.getElementById('set-lic').value;
   DB.settings.taxRate=parseFloat(document.getElementById('set-tax').value)||0;
+  DB.settings.payVenmo=document.getElementById('set-venmo').value.trim();
+  DB.settings.payZelle=document.getElementById('set-zelle').value.trim();
+  DB.settings.payPaypal=document.getElementById('set-paypal').value.trim();
+  DB.settings.payCheck=document.getElementById('set-checkname').value.trim();
+  DB.settings.payAchRouting=document.getElementById('set-ach-routing').value.trim();
+  DB.settings.payAchAccount=document.getElementById('set-ach-account').value.trim();
+  DB.settings.paymentInstructions=document.getElementById('set-pay-instructions').value.trim();
   saveSettingsLocal();
   syncToSheet();
   document.getElementById('nav-biz').textContent=DB.settings.bizName;
