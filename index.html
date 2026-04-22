@@ -3619,7 +3619,7 @@ function editDoc(id){
   populateDocProperties(d.propertyId);
   document.getElementById('dm-convert').innerHTML='<option value="">—</option>';
   toggleDueDate();
-  docLineItems=JSON.parse(JSON.stringify(d.lineItems||[]));
+  docLineItems=JSON.parse(JSON.stringify(d.lineItems||[])).map(i=>({...i,price:i.price!==undefined?i.price:(parseFloat(i.amount)||parseFloat(i.rate)||0)}));
   renderLineItems();
   document.getElementById('doc-modal').classList.add('open');
 }
@@ -3638,7 +3638,7 @@ function quickConvert(id){
   document.getElementById('dm-payment').value=d.paymentMethod||'';
   setPaymentTerms(d.paymentTerms||'');
   document.getElementById('dm-due').value=d.dueDate||'';
-  docLineItems=JSON.parse(JSON.stringify(d.lineItems||[]));
+  docLineItems=JSON.parse(JSON.stringify(d.lineItems||[])).map(i=>({...i,price:i.price!==undefined?i.price:(parseFloat(i.amount)||parseFloat(i.rate)||0)}));
   renderLineItems();
 }
 
@@ -3655,7 +3655,7 @@ function convertFromEstimate(id){
   document.getElementById('dm-payment').value=d.paymentMethod||'';
   setPaymentTerms(d.paymentTerms||'');
   document.getElementById('dm-due').value=d.dueDate||'';
-  docLineItems=JSON.parse(JSON.stringify(d.lineItems||[]));
+  docLineItems=JSON.parse(JSON.stringify(d.lineItems||[])).map(i=>({...i,price:i.price!==undefined?i.price:(parseFloat(i.amount)||parseFloat(i.rate)||0)}));
   renderLineItems();
 }
 
