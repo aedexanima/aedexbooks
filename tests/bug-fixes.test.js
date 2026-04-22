@@ -111,8 +111,8 @@ assert('saveJob checks both status AND contractorIds.length for advancement',
 
 // sendPortalLink sets status to estimate-sent
 const sendPortalFn = extractFn(src, 'sendPortalLink') || '';
-assert('sendPortalLink sets job status to estimate-sent',
-  sendPortalFn.includes("status='estimate-sent'") || sendPortalFn.includes("status = 'estimate-sent'"));
+assert('sendPortalLink does NOT advance status (stays assigned-for-estimate)',
+  !sendPortalFn.includes("status='estimate-sent'") && !sendPortalFn.includes("status = 'estimate-sent'"));
 
 // checkPortalSubmission exists and handles submitted state
 assert('checkPortalSubmission function defined',
@@ -125,8 +125,8 @@ assert('checkPortalSubmission fetches /api/portal/get with include=submission',
 assert('checkPortalSubmission sets contractorEstimate from submission data',
   checkSubFn.includes('contractorEstimate'));
 
-assert('checkPortalSubmission sets job status to estimate-sent',
-  checkSubFn.includes("status='estimate-sent'") || checkSubFn.includes("status = 'estimate-sent'"));
+assert('checkPortalSubmission does NOT advance status (stays assigned-for-estimate until client estimate sent)',
+  !checkSubFn.includes("status='estimate-sent'") && !checkSubFn.includes("status = 'estimate-sent'"));
 
 assert('checkPortalSubmission calls saveAndSync after update',
   checkSubFn.includes('saveAndSync'));
@@ -157,7 +157,7 @@ assert('Job modal status dropdown has unassigned option',          jmStatusMatch
 assert('Job modal status dropdown has assigned-for-estimate option', jmStatusMatch.includes('assigned-for-estimate'));
 assert('Job modal status dropdown has in-progress option',         jmStatusMatch.includes('in-progress'));
 assert('Job modal status dropdown has complete option',            jmStatusMatch.includes('complete'));
-assert('Job modal status dropdown does NOT have invoice-sent',     !jmStatusMatch.includes('invoice-sent'));
+assert('Job modal status dropdown has invoice-sent option',        jmStatusMatch.includes('invoice-sent'));
 assert('Job modal status dropdown does NOT have paid',             !jmStatusMatch.includes('"paid"'));
 
 // Badge CSS for new statuses
@@ -255,11 +255,12 @@ assert('migrateNames migrates invoice-sent to a valid new status',
 assert('migrateNames sets invalid/missing statuses to unassigned',
   migrateNamesFn.includes("'unassigned'") && migrateNamesFn.includes('validStatuses'));
 
-assert('validStatuses set includes all 5 new statuses',
+assert('validStatuses set includes all 6 statuses',
   migrateNamesFn.includes('unassigned') &&
   migrateNamesFn.includes('assigned-for-estimate') &&
   migrateNamesFn.includes('estimate-sent') &&
   migrateNamesFn.includes('in-progress') &&
+  migrateNamesFn.includes('invoice-sent') &&
   migrateNamesFn.includes('complete'));
 
 // ─── 5. Receipt language — portal copy updated ────────────────────────────────
@@ -308,6 +309,69 @@ assert('sendPortalLink email body does NOT say "submit them with your estimate"'
 
 assert('sendPortalLink email body says "for when the job is complete"',
   src.includes('for when the job is complete'));
+
+// ─── 6. Archive/restore actions call renderDashboard ─────────────────────────
+
+console.log('\n6. Archive/restore actions refresh the dashboard');
+
+// deleteCurrentJob must call renderDashboard so Recent Jobs updates immediately
+const deleteJobFn = extractFn(src, 'deleteCurrentJob') || '';
+assert('deleteCurrentJob calls renderDashboard()',
+  deleteJobFn.includes('renderDashboard()'));
+
+// restoreCurrentJob must call renderDashboard
+const restoreJobFn = extractFn(src, 'restoreCurrentJob') || '';
+assert('restoreCurrentJob calls renderDashboard()',
+  restoreJobFn.includes('renderDashboard()'));
+
+// deleteCurrentDoc must call renderDashboard so Unpaid Invoices updates
+const deleteDocFn = extractFn(src, 'deleteCurrentDoc') || '';
+assert('deleteCurrentDoc calls renderDashboard()',
+  deleteDocFn.includes('renderDashboard()'));
+
+// restoreCurrentDoc must call renderDashboard
+const restoreDocFn = extractFn(src, 'restoreCurrentDoc') || '';
+assert('restoreCurrentDoc calls renderDashboard()',
+  restoreDocFn.includes('renderDashboard()'));
+
+// dropJob (pipeline drag) must call renderDashboard so job statuses update
+const dropJobFn = extractFn(src, 'dropJob') || '';
+assert('dropJob calls renderDashboard()',
+  dropJobFn.includes('renderDashboard()'));
+
+// ─── 7. Full button audit — all key functions are defined ─────────────────────
+
+console.log('\n7. Full button audit — all key JS functions exist');
+
+const fns = [
+  'openJobModal', 'editJob', 'saveJob', 'deleteCurrentJob', 'restoreCurrentJob',
+  'openClientModal', 'editClient', 'saveClient', 'deleteCurrentClient', 'restoreCurrentClient',
+  'openNewDoc', 'editDoc', 'saveDoc', 'deleteCurrentDoc', 'restoreCurrentDoc',
+  'previewDoc', 'viewDoc', 'openSendEmailModal', 'sendInvoiceEmail',
+  'openContractorModal', 'saveContractor', 'deleteCurrentContractor',
+  'openExpenseModal', 'saveExpense', 'deleteExpenseFromModal', 'deleteExpense',
+  'newDocForJob', 'newJobForClient', 'markPaid', 'quickConvert',
+  'openReminderModal', 'sendPortalLink', 'checkPortalSubmission',
+  'dragJobStart', 'dropJob', 'renderPipeline', 'renderJobs', 'renderClients',
+  'renderDocs', 'renderDashboard', 'renderContractors', 'renderExpenses',
+  'saveSettings', 'loadSettingsForm', 'openGuide', 'closeGuide',
+  'submitFeedback', 'resetFeedbackForm', 'togglePastDueFilter',
+  'filterDocs', 'clearDocFilters', 'downloadTaxReport',
+  'renderHelpPage', 'tickOnboarding', 'showOnboardingChecklist', 'dismissOnboarding',
+  'convertToClientEstimate', 'viewContractorEstimate', 'acceptContractorPhotos',
+  'saveCatalogItem', 'deleteCatalogItemById', 'openCatalogItemModal',
+  'downloadImportTemplate', 'confirmImport', 'closeImportModal',
+  'connectExistingSheet', 'reconfigure', 'removeLogo',
+  'addPropertyToClient', 'editProperty', 'addPropertyField',
+  'handleJobPhotoUpload', 'removeJobPhoto', 'renderJobPhotoStrip',
+  'nextNumber', 'nextDocNumber', 'saveAndSync', 'saveLocal', 'loadFromSheet',
+  'handleAuth', 'goto', 'renderAll',
+];
+
+for (const fn of fns) {
+  assert(`function ${fn} is defined`,
+    src.includes(`function ${fn}(`));
+}
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
 

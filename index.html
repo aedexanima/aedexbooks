@@ -2387,7 +2387,7 @@ function dropJob(event,targetStage){
   job.status=targetStage;
   job.updatedAt=now();
   logActivity('Updated','Job',job.id,`${job.title} → ${STAGE_LABEL[targetStage]}`);
-  saveAndSync();renderPipeline();renderJobs();
+  saveAndSync();renderPipeline();renderJobs();renderDashboard();
 }
 
 // ============================================================
@@ -2920,14 +2920,14 @@ function deleteCurrentJob(){
   const j=DB.jobs.find(x=>x.id===currentJobId);
   logActivity('Archived','Job',currentJobId,j?`${j.title} — ${clientFullName(getClient(j.clientId))}`:'');
   if(j){j.archived=true;j.updatedAt=new Date().toISOString();}
-  saveAndSync();renderPipeline();renderJobs();
+  saveAndSync();renderPipeline();renderJobs();renderDashboard();
   closeModal('job-modal');toast('Job archived');
 }
 function restoreCurrentJob(){
   const j=DB.jobs.find(x=>x.id===currentJobId);
   if(j){j.archived=false;j.updatedAt=new Date().toISOString();}
   logActivity('Restored','Job',currentJobId,j?`${j.title} — ${clientFullName(getClient(j.clientId))}`:'');
-  saveAndSync();renderPipeline();renderJobs();
+  saveAndSync();renderPipeline();renderJobs();renderDashboard();
   closeModal('job-modal');toast('Job restored');
 }
 
@@ -3832,13 +3832,13 @@ function deleteCurrentDoc(){
   const d=DB.docs.find(x=>x.id===currentDocId);
   logActivity('Archived','Document',currentDocId,d?`${d.type} #${d.number} — ${clientFullName(getClient(d.clientId))}`:'');
   if(d){d.archived=true;d.updatedAt=new Date().toISOString();}
-  saveAndSync();renderDocs();closeModal('doc-modal');toast('Document archived');
+  saveAndSync();renderDocs();renderDashboard();closeModal('doc-modal');toast('Document archived');
 }
 function restoreCurrentDoc(){
   const d=DB.docs.find(x=>x.id===currentDocId);
   if(d){d.archived=false;d.updatedAt=new Date().toISOString();}
   logActivity('Restored','Document',currentDocId,d?`${d.type} #${d.number} — ${clientFullName(getClient(d.clientId))}`:'');
-  saveAndSync();renderDocs();closeModal('doc-modal');toast('Document restored');
+  saveAndSync();renderDocs();renderDashboard();closeModal('doc-modal');toast('Document restored');
 }
 
 function previewDoc(){
