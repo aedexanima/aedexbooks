@@ -422,6 +422,86 @@ assert('html element has overflow-x:hidden',
 assert('body element has overflow-x:hidden',
   /body\{[^}]*overflow-x:hidden/.test(src) || /body \{[^}]*overflow-x: hidden/.test(src));
 
+// ─── 12. Archive button accessible on mobile ─────────────────────────────────
+
+console.log('\n12. Archive button — accessible on mobile (no .hide-mobile, no display:none)');
+
+// The Archive button must NOT have hide-mobile class
+const archiveBtnHtml = src.match(/id="jm-del"[^>]*/)?.[0] || '';
+assert('Archive button (#jm-del) does not have hide-mobile class',
+  !archiveBtnHtml.includes('hide-mobile'));
+
+// The Archive button must not have display:none as a permanent style (it uses JS to toggle)
+// Acceptable: display:none as initial state set via JS — but it must not be statically hidden at mobile breakpoints
+assert('Archive button is not hidden via CSS at mobile breakpoints (.hide-mobile class absent)',
+  !src.includes('jm-del.*hide-mobile') && !archiveBtnHtml.includes('class="hide-mobile"'));
+
+// The two-tap confirmation replaces confirm() — no native confirm() in deleteCurrentJob
+const deleteJobFnNew = extractFn(src, 'deleteCurrentJob') || '';
+assert('deleteCurrentJob does not use native confirm() — uses two-tap approach instead',
+  !deleteJobFnNew.includes("confirm("));
+
+// Two-tap: first tap sets pending state, second tap executes archive
+assert('deleteCurrentJob sets _deleteJobPending flag on first tap',
+  deleteJobFnNew.includes('_deleteJobPending') && deleteJobFnNew.includes('Tap again to confirm'));
+
+// Modal on mobile has padding-bottom for safe area
+assert('Mobile modal CSS includes padding-bottom for safe area inset',
+  src.includes('env(safe-area-inset-bottom)') &&
+  (src.includes('padding-bottom:max(26px,env(safe-area-inset-bottom))') ||
+   src.includes('padding-bottom: max(26px, env(safe-area-inset-bottom))')));
+
+// ─── 13. renderPipeline excludes archived jobs ────────────────────────────────
+
+console.log('\n13. renderPipeline — excludes archived jobs');
+
+const renderPipelineFn = extractFn(src, 'renderPipeline') || '';
+assert('renderPipeline filters !j.archived',
+  renderPipelineFn.includes('!j.archived'));
+
+assert('renderPipeline uses !j.archived in the jobs filter (not a separate pass)',
+  /filter\([^)]*!j\.archived[^)]*\)/.test(renderPipelineFn) ||
+  renderPipelineFn.includes('&&!j.archived') ||
+  renderPipelineFn.includes('&& !j.archived'));
+
+// ─── 14. Job search excludes archived by default ─────────────────────────────
+
+console.log('\n14. renderJobs — excludes archived by default (show-archived checkbox gates it)');
+
+const renderJobsFn = extractFn(src, 'renderJobs') || '';
+assert('renderJobs checks job-show-archived checkbox before including archived jobs',
+  renderJobsFn.includes('job-show-archived'));
+
+assert('renderJobs filters !j.archived when showArchived is false',
+  renderJobsFn.includes('showArchived||!j.archived') ||
+  renderJobsFn.includes('showArchived || !j.archived'));
+
+// ─── 15. Dashboard revenue filter audit ──────────────────────────────────────
+
+console.log('\n15. renderDashboard — revenue calculation audit');
+
+const renderDashboardFn = extractFn(src, 'renderDashboard') || '';
+
+// Revenue based on paid invoices (docs), not jobs directly — no job archive filtering needed
+assert('renderDashboard computes income from paid invoices (docs), not raw jobs',
+  renderDashboardFn.includes("type==='invoice'") && renderDashboardFn.includes('.paid'));
+
+// Recent jobs section DOES filter archived
+assert('renderDashboard recent-jobs section filters !j.archived',
+  renderDashboardFn.includes('!j.archived'));
+
+// Expense job selector excludes archived jobs
+const openExpenseFn = extractFn(src, 'openExpenseModal') || '';
+assert('openExpenseModal populates job selector with only non-archived jobs',
+  src.includes("em-job") && src.includes('!j.archived') &&
+  src.match(/em-job[\s\S]{0,200}!j\.archived/) !== null);
+
+// Doc convert dropdown excludes archived estimates
+assert('openNewDoc populates dm-convert with only non-archived estimates',
+  src.includes("dm-convert") &&
+  (src.includes("type==='estimate'&&!d.archived") ||
+   src.includes("type==='estimate' && !d.archived")));
+
 // ─── Summary ──────────────────────────────────────────────────────────────────
 
 console.log(`\n${'─'.repeat(50)}`);

@@ -323,7 +323,7 @@ textarea{resize:vertical;min-height:60px}
 
   /* Modals: full-screen bottom sheet */
   .modal-bg{padding:0;align-items:flex-end}
-  .modal{border-radius:20px 20px 0 0;max-width:100%;width:100%;max-height:94vh;overflow-y:auto;margin:0}
+  .modal{border-radius:20px 20px 0 0;max-width:100%;width:100%;max-height:94vh;overflow-y:auto;margin:0;padding-bottom:max(26px,env(safe-area-inset-bottom))}
 
   /* Guide overlay: bottom sheet on mobile */
   .guide-overlay{padding:0;align-items:flex-end}
@@ -1227,6 +1227,7 @@ textarea{resize:vertical;min-height:60px}
 let DB={clients:[],properties:[],jobs:[],docs:[],expenses:[],activity:[],sentLog:[],contractors:[],catalog:[],
   settings:{bizName:'AEDEXBOOKS',yourName:'',phone:'',email:'',addr:'',license:'',taxRate:0,clientId:'',sheetId:'',logoFileId:'',customClientTypes:[]}};
 let currentClientId=null,currentJobId=null,currentDocId=null,_editingExpenseId=null;
+let _deleteJobPending=false,_deleteJobTimer=null; // two-tap archive confirmation state
 let docLineItems=[],docFilter='all',clientSearch='',jobSearch='',jobPastDueFilter=false,_sendingReminder=false;
 let propFields=[]; // temp property fields in client modal
 let accessToken=null,signedIn=false,gapiReady=false;
@@ -2076,6 +2077,10 @@ function closeModal(id){
     _jobPhotos=[];
     const strips=['jm-before-strip','jm-after-strip','jm-photo-strip'];
     strips.forEach(sid=>{const el=document.getElementById(sid);if(el)el.innerHTML='';});
+    // Reset delete-confirmation pending state
+    _deleteJobPending=false;clearTimeout(_deleteJobTimer);
+    const delBtn=document.getElementById('jm-del');
+    if(delBtn){delBtn.textContent='Archive';delBtn.style.background='';delBtn.style.color='';}
   }
 }
 function toast(msg,type=''){
@@ -2917,7 +2922,18 @@ function saveJob(){
 }
 
 function deleteCurrentJob(){
-  if(!confirm('Archive this job? It will be hidden but data is preserved.'))return;
+  const btn=document.getElementById('jm-del');
+  if(!_deleteJobPending){
+    _deleteJobPending=true;
+    if(btn){btn.textContent='Tap again to confirm';btn.style.background='var(--red)';btn.style.color='#fff';}
+    _deleteJobTimer=setTimeout(()=>{
+      _deleteJobPending=false;
+      if(btn){btn.textContent='Archive';btn.style.background='';btn.style.color='';}
+    },3000);
+    return;
+  }
+  clearTimeout(_deleteJobTimer);_deleteJobPending=false;
+  if(btn){btn.textContent='Archive';btn.style.background='';btn.style.color='';}
   const j=DB.jobs.find(x=>x.id===currentJobId);
   logActivity('Archived','Job',currentJobId,j?`${j.title} — ${clientFullName(getClient(j.clientId))}`:'');
   if(j){j.archived=true;j.updatedAt=new Date().toISOString();}
@@ -3586,7 +3602,7 @@ function openNewDoc(){
   document.getElementById('dm-tax').value=DB.settings.taxRate||0;
   populateClientDropdown('dm-client','');
   document.getElementById('dm-property').innerHTML='<option value="">— select property —</option>';
-  document.getElementById('dm-convert').innerHTML='<option value="">— or start fresh —</option>'+DB.docs.filter(d=>d.type==='estimate').map(d=>`<option value="${d.id}">${clientFullName(getClient(d.clientId))} — ${fmtDate(d.date)} — ${fmt(d.total)}</option>`).join('');
+  document.getElementById('dm-convert').innerHTML='<option value="">— or start fresh —</option>'+DB.docs.filter(d=>d.type==='estimate'&&!d.archived).map(d=>`<option value="${d.id}">${clientFullName(getClient(d.clientId))} — ${fmtDate(d.date)} — ${fmt(d.total)}</option>`).join('');
   toggleDueDate();addLineItem();
   document.getElementById('doc-modal').classList.add('open');
 }
