@@ -156,24 +156,14 @@ textarea{resize:vertical;min-height:72px}
 
     <!-- Materials -->
     <div class="card">
-      <div class="card-title">Materials Estimate</div>
+      <div class="card-title">Materials Estimate (Optional)</div>
       <div class="field">
         <label>Materials total ($)</label>
         <input type="number" id="materials-total" placeholder="0.00" min="0" step="0.01" oninput="updateGrandTotal()">
       </div>
       <div class="field">
         <label>Materials description</label>
-        <textarea id="materials-notes" placeholder="List the materials needed or already purchased…"></textarea>
-      </div>
-      <div style="margin-top:4px">
-        <div class="card-title">Material Quotes / References <span style="font-weight:400;font-size:12px;color:var(--text3)">(optional)</span></div>
-        <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Attach material quotes, supplier references, or other documents to support your estimate.</div>
-        <div id="receipt-preview" style="margin-bottom:10px"></div>
-        <div class="upload-btn-wrap">
-          <input type="file" id="receipt-input" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,.pdf,image/jpeg,image/png,image/heic,image/heif,image/webp,application/pdf" style="display:none" onchange="handleReceipt(this)">
-          <button type="button" id="receipt-btn" class="btn" onclick="document.getElementById('receipt-input').click()">+ Attach Document</button>
-          <span class="type-hint">JPG, PNG, HEIC, WebP, PDF</span>
-        </div>
+        <textarea id="materials-notes" placeholder="If applicable, please estimate materials"></textarea>
       </div>
     </div>
 
