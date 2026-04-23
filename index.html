@@ -4943,7 +4943,7 @@ const IMPORT_TEMPLATES={
     dest:'jobs',
     headers:['clientEmail','propertyAddress','title','status','startDate','endDate','value','notes'],
     sample:[
-      ['jane@example.com','456 Oak St, Austin TX 78704','Replace kitchen faucet','completed','2024-03-01','2024-03-01','250','Moen faucet install'],
+      ['jane@example.com','456 Oak St, Austin TX 78704','Replace kitchen faucet','complete','2024-03-01','2024-03-01','250','Moen faucet install'],
       ['billing@acmeprop.com','','HVAC inspection','in-progress','2024-04-10','','','Annual checkup']
     ],
     previewCols:['Client','Property','Title','Value'],
@@ -4952,10 +4952,10 @@ const IMPORT_TEMPLATES={
     title:'Import Estimates & Invoices',
     noun:'document',
     dest:'documents',
-    headers:['clientEmail','propertyAddress','type','number','date','dueDate','description','amount','taxRate','paid','paymentMethod','notes'],
+    headers:['clientEmail','propertyAddress','type','number','date','dueDate','description','amount','taxRate','paid','paymentMethod','paymentTerms','notes'],
     sample:[
-      ['jane@example.com','456 Oak St, Austin TX 78704','invoice','03701','2024-03-01','2024-03-31','Faucet replacement labor + parts','250.00','0','true','check',''],
-      ['billing@acmeprop.com','','estimate','03702','2024-04-10','','HVAC inspection and tune-up','320.00','8.25','false','','Net 30 terms']
+      ['jane@example.com','456 Oak St, Austin TX 78704','invoice','03701','2024-03-01','2024-03-31','Faucet replacement labor + parts','250.00','0','true','check','',''],
+      ['billing@acmeprop.com','','estimate','03702','2024-04-10','','HVAC inspection and tune-up','320.00','8.25','false','','Net 30','Annual maintenance contract']
     ],
     previewCols:['Client','#','Type','Date','Amount'],
   }
@@ -4992,6 +4992,7 @@ const IMPORT_COL_ALIASES={
   taxrate:['taxrate','tax_rate','tax rate','tax%','taxpercent'],
   paid:['paid','ispaid','is_paid','paymentstatus'],
   paymentmethod:['paymentmethod','payment_method','payment method','method'],
+  paymentterms:['paymentterms','payment_terms','payment terms','terms'],
   // shared
   notes:['notes','note','comments','comment','memo'],
   type:['type','doctype','doc_type','invoicetype']
@@ -5133,7 +5134,8 @@ function parseImportProperties(data,get){
 }
 
 function parseImportJobs(data,get){
-  const VALID_STATUSES=new Set(['unassigned','assigned-for-estimate','estimate-sent','in-progress','complete','approved','invoice-sent','paid','completed','cancelled','progress','awaiting-payment']);
+  const CANONICAL_STATUSES=new Set(['unassigned','assigned-for-estimate','estimate-sent','in-progress','invoice-sent','complete']);
+  const STATUS_ALIASES={'completed':'complete','paid':'complete','approved':'in-progress','progress':'in-progress','awaiting-payment':'invoice-sent','cancelled':'complete'};
   const existingTitles=new Set(DB.jobs.map(j=>j.clientId+'|'+j.title.toLowerCase()));
   return data.map(r=>{
     const clientEmail=get(r,'clientemail'),title=get(r,'title'),propertyAddr=get(r,'propertyaddress');
@@ -5150,7 +5152,8 @@ function parseImportJobs(data,get){
       }
     }
     let rawStatus=get(r,'status').toLowerCase().replace(/\s+/g,'-');
-    if(!VALID_STATUSES.has(rawStatus))rawStatus='in-progress';
+    rawStatus=STATUS_ALIASES[rawStatus]||rawStatus;
+    if(!CANONICAL_STATUSES.has(rawStatus))rawStatus='in-progress';
     const value=parseFloat(get(r,'value').replace(/[$,]/g,''))||0;
     return{clientEmail,clientId,_clientName,propertyId,_propertyAddr:_propertyAddr||propertyAddr||'—',
       title,status:status==='new'?'new':status,statusNote,
@@ -5184,10 +5187,12 @@ function parseImportDocuments(data,get){
     const lineItems=[{desc,qty:1,price:subtotal,total:subtotal}];
     const paidRaw=get(r,'paid').toLowerCase();
     const paid=paidRaw==='true'||paidRaw==='yes'||paidRaw==='1'||paidRaw==='paid';
+    const paymentTermsRaw=get(r,'paymentterms');
+    const notesRaw=get(r,'notes');
     return{clientEmail,clientId,_clientName,propertyId,type:docType==='estimate'?'estimate':'invoice',
       number,date:get(r,'date')||today(),dueDate:get(r,'duedate'),
-      paymentMethod:get(r,'paymentmethod'),paymentTerms:get(r,'notes').startsWith('Net')?get(r,'notes'):'',
-      notes:get(r,'notes').startsWith('Net')?'':get(r,'notes'),
+      paymentMethod:get(r,'paymentmethod'),paymentTerms:paymentTermsRaw||(notesRaw.startsWith('Net')?notesRaw:''),
+      notes:paymentTermsRaw?notesRaw:(notesRaw.startsWith('Net')?'':notesRaw),
       lineItems,taxRate,subtotal,taxAmt,total:amount,paid,status,statusNote};
   });
 }

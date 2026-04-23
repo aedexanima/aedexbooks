@@ -502,6 +502,150 @@ assert('openNewDoc populates dm-convert with only non-archived estimates',
   (src.includes("type==='estimate'&&!d.archived") ||
    src.includes("type==='estimate' && !d.archived")));
 
+// ─── 16. Import templates — column headers match parser field lookups ────────
+
+console.log('\n16. Import templates — column headers match what parsers read');
+
+// Extract IMPORT_TEMPLATES object from source
+const importTemplatesMatch = src.match(/const IMPORT_TEMPLATES=\{[\s\S]*?\n\};/)?.[0] || '';
+
+// Clients template has all columns the parser reads
+assert('Clients template includes firstName column',
+  importTemplatesMatch.includes("'firstName'") || importTemplatesMatch.includes('"firstName"'));
+assert('Clients template includes email column',
+  importTemplatesMatch.includes("'email'") || importTemplatesMatch.includes('"email"'));
+assert('Clients template includes clientType column',
+  importTemplatesMatch.includes("'clientType'") || importTemplatesMatch.includes('"clientType"'));
+assert('Clients template includes company column',
+  importTemplatesMatch.includes("'company'") || importTemplatesMatch.includes('"company"'));
+assert('Clients template includes billingAddr column',
+  importTemplatesMatch.includes("'billingAddr'") || importTemplatesMatch.includes('"billingAddr"'));
+
+// Properties template has clientEmail column (required for matching)
+assert('Properties template includes clientEmail column',
+  importTemplatesMatch.includes("'clientEmail'") || importTemplatesMatch.includes('"clientEmail"'));
+assert('Properties template includes address column',
+  importTemplatesMatch.includes("'address'") || importTemplatesMatch.includes('"address"'));
+assert('Properties template includes type column for properties',
+  importTemplatesMatch.includes("'type'") || importTemplatesMatch.includes('"type"'));
+
+// Jobs template has all required columns
+assert('Jobs template includes clientEmail column',
+  src.match(/jobs:\{[\s\S]{0,500}'clientEmail'/) !== null ||
+  src.match(/jobs:\{[\s\S]{0,500}"clientEmail"/) !== null);
+assert('Jobs template includes title column',
+  src.match(/jobs:\{[\s\S]{0,500}'title'/) !== null ||
+  src.match(/jobs:\{[\s\S]{0,500}"title"/) !== null);
+assert('Jobs template includes status column',
+  src.match(/jobs:\{[\s\S]{0,500}'status'/) !== null ||
+  src.match(/jobs:\{[\s\S]{0,500}"status"/) !== null);
+assert('Jobs template includes value column',
+  src.match(/jobs:\{[\s\S]{0,500}'value'/) !== null ||
+  src.match(/jobs:\{[\s\S]{0,500}"value"/) !== null);
+
+// Jobs sample data uses canonical status values (not legacy aliases like 'completed')
+const jobsSampleMatch = src.match(/jobs:\{[\s\S]{0,800}sample:\[[\s\S]{0,400}\]/)?.[0] || '';
+assert("Jobs sample data uses 'complete' not 'completed' (migrateNames resets 'completed' to unassigned)",
+  jobsSampleMatch.includes("'complete'") && !jobsSampleMatch.includes("'completed'"));
+
+// Documents template has paymentTerms column
+assert('Documents template includes paymentTerms column',
+  src.match(/documents:\{[\s\S]{0,500}'paymentTerms'/) !== null ||
+  src.match(/documents:\{[\s\S]{0,500}"paymentTerms"/) !== null);
+
+// Documents template has description column (for line item)
+assert('Documents template includes description column',
+  src.match(/documents:\{[\s\S]{0,500}'description'/) !== null ||
+  src.match(/documents:\{[\s\S]{0,500}"description"/) !== null);
+
+// ─── 17. Import parser — status normalization ─────────────────────────────────
+
+console.log('\n17. parseImportJobs — status normalization to canonical values');
+
+const parseImportJobsFn = extractFn(src, 'parseImportJobs') || '';
+
+assert('parseImportJobs defines CANONICAL_STATUSES (not VALID_STATUSES with legacy aliases)',
+  parseImportJobsFn.includes('CANONICAL_STATUSES'));
+
+assert('parseImportJobs has STATUS_ALIASES map for legacy values',
+  parseImportJobsFn.includes('STATUS_ALIASES'));
+
+assert("parseImportJobs maps 'completed' → 'complete' via STATUS_ALIASES",
+  parseImportJobsFn.includes("'completed':'complete'") ||
+  parseImportJobsFn.includes('"completed":"complete"') ||
+  parseImportJobsFn.includes("completed:'complete'") ||
+  parseImportJobsFn.includes('completed:\'complete\''));
+
+assert("parseImportJobs maps 'paid' → 'complete' via STATUS_ALIASES",
+  parseImportJobsFn.includes("'paid':'complete'") ||
+  parseImportJobsFn.includes('"paid":"complete"') ||
+  parseImportJobsFn.includes("paid:'complete'") ||
+  parseImportJobsFn.includes("paid:'complete'"));
+
+assert('parseImportJobs applies alias mapping before canonical check',
+  parseImportJobsFn.includes('STATUS_ALIASES[rawStatus]'));
+
+assert('CANONICAL_STATUSES contains all 6 valid statuses',
+  parseImportJobsFn.includes('unassigned') &&
+  parseImportJobsFn.includes('assigned-for-estimate') &&
+  parseImportJobsFn.includes('estimate-sent') &&
+  parseImportJobsFn.includes('in-progress') &&
+  parseImportJobsFn.includes('invoice-sent') &&
+  parseImportJobsFn.includes('complete'));
+
+// ─── 18. parseImportDocuments — paymentTerms read from own column ─────────────
+
+console.log('\n18. parseImportDocuments — paymentTerms from dedicated column');
+
+const parseImportDocsFn = extractFn(src, 'parseImportDocuments') || '';
+
+assert('parseImportDocuments reads paymentTerms via get(r,"paymentterms")',
+  parseImportDocsFn.includes("get(r,'paymentterms')") ||
+  parseImportDocsFn.includes('get(r,"paymentterms")'));
+
+assert('parseImportDocuments falls back to Net-prefix notes for backward compat',
+  parseImportDocsFn.includes("startsWith('Net')") || parseImportDocsFn.includes('startsWith("Net")'));
+
+// ─── 19. Import parser — ID generation and defaults ──────────────────────────
+
+console.log('\n19. confirmImport — IDs generated and defaults set for all types');
+
+assert('confirmImport generates uid() for imported clients',
+  confirmImportFn.includes('uid()') && confirmImportFn.includes("_importType==='clients'") === false &&
+  confirmImportFn.includes("_importType==='clients'")=== false ||
+  (confirmImportFn.includes('uid()') && confirmImportFn.includes('clients')));
+
+assert('confirmImport generates uid() for imported properties',
+  confirmImportFn.includes('uid()') && confirmImportFn.includes('properties'));
+
+assert('confirmImport generates uid() for imported jobs',
+  confirmImportFn.includes('uid()') && confirmImportFn.includes('jobs'));
+
+assert('confirmImport generates uid() for imported documents',
+  confirmImportFn.includes('uid()') && confirmImportFn.includes('documents'));
+
+assert('confirmImport sets createdAt and updatedAt timestamps for all records',
+  confirmImportFn.includes('createdAt:ts') && confirmImportFn.includes('updatedAt:ts'));
+
+assert('confirmImport sets clientType default to handyman for clients',
+  confirmImportFn.includes("clientType:row.clientType||'handyman'") ||
+  confirmImportFn.includes('clientType:row.clientType||"handyman"'));
+
+assert('confirmImport sets laborDisclaimer:true for imported documents',
+  confirmImportFn.includes('laborDisclaimer:true'));
+
+// ─── 20. IMPORT_COL_ALIASES has paymentTerms entry ────────────────────────────
+
+console.log('\n20. IMPORT_COL_ALIASES — paymentTerms alias defined');
+
+const importAliasesMatch = src.match(/const IMPORT_COL_ALIASES=\{[\s\S]*?\n\};/)?.[0] || '';
+
+assert('IMPORT_COL_ALIASES has paymentterms entry',
+  importAliasesMatch.includes('paymentterms'));
+
+assert('paymentterms alias includes "payment terms" variant',
+  importAliasesMatch.includes('payment terms') || importAliasesMatch.includes('paymentterms'));
+
 // ─── Summary ──────────────────────────────────────────────────────────────────
 
 console.log(`\n${'─'.repeat(50)}`);
