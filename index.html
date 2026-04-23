@@ -26,7 +26,8 @@
   --r:10px;--rs:6px;--shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+html{overflow-x:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;overflow-x:hidden}
 .shell{display:flex;min-height:100vh}
 /* SIDEBAR */
 .sidebar{width:230px;background:var(--text);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;overflow-y:auto}
@@ -2677,13 +2678,13 @@ function deleteCurrentClient(){
   const c=DB.clients.find(x=>x.id===currentClientId);
   if(c){c.archived=true;c.updatedAt=new Date().toISOString();}
   logActivity('Archived','Client',currentClientId,clientFullName(c)||'Client');
-  saveAndSync();renderClients();closeModal('client-modal');toast('Client archived');
+  saveAndSync();renderClients();renderDashboard();closeModal('client-modal');toast('Client archived');
 }
 function restoreCurrentClient(){
   const c=DB.clients.find(x=>x.id===currentClientId);
   if(c){c.archived=false;c.updatedAt=new Date().toISOString();}
   logActivity('Restored','Client',currentClientId,clientFullName(c)||'Client');
-  saveAndSync();renderClients();closeModal('client-modal');toast('Client restored');
+  saveAndSync();renderClients();renderDashboard();closeModal('client-modal');toast('Client restored');
 }
 
 // ============================================================
@@ -3398,7 +3399,7 @@ function renderContractors(){
   }
   el.innerHTML=`<table><thead><tr><th>Name</th><th>Trade</th><th>Phone</th><th>Email</th><th>Active Jobs</th><th>Notes</th><th></th></tr></thead><tbody>${
     DB.contractors.map(c=>{
-      const activeJobs=DB.jobs.filter(j=>(j.contractorIds||[]).includes(c.id)&&j.status!=='paid').length;
+      const activeJobs=DB.jobs.filter(j=>(j.contractorIds||[]).includes(c.id)&&j.status!=='complete'&&!j.archived).length;
       return`<tr>
         <td><strong>${c.name}</strong></td>
         <td style="font-size:12px;color:var(--text2)">${c.trade||'—'}</td>
@@ -5238,7 +5239,8 @@ function confirmImport(){
       id:uid(),clientId:row.clientId,propertyId:row.propertyId||'',title:row.title,
       status:row.jobStatus||'in-progress',startDate:row.startDate||'',endDate:row.endDate||'',
       value:row.value||0,materials:'',photoNotes:'',notes:row.notes||'',estRef:'',
-      workDetails:'',contractorIds:[],photos:[],archived:false,createdAt:ts,updatedAt:ts
+      workDetails:'',contractorIds:[],photos:[],archived:false,createdAt:ts,updatedAt:ts,
+      jobNumber:nextNumber()
     }));
     logActivity('Imported','Job','bulk',`${toImport.length} jobs imported from CSV`);
     saveAndSync();renderJobs();closeImportModal();

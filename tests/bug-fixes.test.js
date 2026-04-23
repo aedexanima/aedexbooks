@@ -373,6 +373,55 @@ for (const fn of fns) {
     src.includes(`function ${fn}(`));
 }
 
+// ─── 8. Contractor active-job count uses 'complete' not 'paid' ───────────────
+
+console.log('\n8. renderContractors — active job count excludes complete and archived');
+
+const renderContractorsFn = extractFn(src, 'renderContractors') || '';
+
+assert("renderContractors does NOT filter on status!=='paid' (stale status)",
+  !renderContractorsFn.includes("!=='paid'"));
+
+assert("renderContractors filters on status!=='complete' (correct status)",
+  renderContractorsFn.includes("!=='complete'"));
+
+assert("renderContractors also excludes archived jobs from active count",
+  renderContractorsFn.includes('!j.archived'));
+
+// ─── 9. confirmImport assigns jobNumber to imported jobs ─────────────────────
+
+console.log('\n9. confirmImport — imported jobs get a jobNumber');
+
+const confirmImportFn = extractFn(src, 'confirmImport') || '';
+
+assert('confirmImport function defined',
+  confirmImportFn.length > 0);
+
+assert('confirmImport assigns jobNumber when importing jobs',
+  confirmImportFn.includes('jobNumber') && confirmImportFn.includes('nextNumber()'));
+
+// ─── 10. Archive/restore client calls renderDashboard ────────────────────────
+
+console.log('\n10. deleteCurrentClient / restoreCurrentClient refresh the dashboard');
+
+const deleteClientFn = extractFn(src, 'deleteCurrentClient') || '';
+assert('deleteCurrentClient calls renderDashboard()',
+  deleteClientFn.includes('renderDashboard()'));
+
+const restoreClientFn = extractFn(src, 'restoreCurrentClient') || '';
+assert('restoreCurrentClient calls renderDashboard()',
+  restoreClientFn.includes('renderDashboard()'));
+
+// ─── 11. overflow-x:hidden on html and body ──────────────────────────────────
+
+console.log('\n11. Mobile overflow — html and body have overflow-x:hidden');
+
+assert('html element has overflow-x:hidden',
+  src.includes('html{overflow-x:hidden') || src.includes('html { overflow-x: hidden'));
+
+assert('body element has overflow-x:hidden',
+  /body\{[^}]*overflow-x:hidden/.test(src) || /body \{[^}]*overflow-x: hidden/.test(src));
+
 // ─── Summary ──────────────────────────────────────────────────────────────────
 
 console.log(`\n${'─'.repeat(50)}`);
