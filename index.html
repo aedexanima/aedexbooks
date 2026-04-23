@@ -1843,8 +1843,18 @@ async function ensureSheetTabs(){
 }
 
 let _syncInProgress=false,_loadQueuedDuringSync=false;
+// Write queue: serialises all syncToSheet() calls so they never interleave.
+// Each call chains onto _syncQueue, so rapid saves queue up and run one at a time.
+// The snapshot captured inside _doSyncToSheet always reflects DB state at the time
+// that sync actually starts — meaning the last-queued call always wins (correct).
+let _syncQueue=Promise.resolve();
 
-async function syncToSheet(){
+function syncToSheet(){
+  _syncQueue=_syncQueue.then(()=>_doSyncToSheet()).catch(()=>{});
+  return _syncQueue;
+}
+
+async function _doSyncToSheet(){
   if(!signedIn||!DB.settings.sheetId)return;
   _syncInProgress=true;
   setSyncStatus('⏳ Saving...');

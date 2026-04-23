@@ -203,8 +203,12 @@ assert("jobNumber is the last field in HEADERS.Jobs",
   lastField === 'jobNumber', `last field is '${lastField}'`);
 
 // syncToSheet includes jobNumber
+// syncToSheet was refactored: actual writes now live in _doSyncToSheet
 const syncBody = (() => {
-  const idx = src.indexOf('async function syncToSheet');
+  // Try _doSyncToSheet first (post-queue-refactor), fall back to async syncToSheet (pre-refactor)
+  const idx = src.indexOf('async function _doSyncToSheet') !== -1
+    ? src.indexOf('async function _doSyncToSheet')
+    : src.indexOf('async function syncToSheet');
   if (idx === -1) return '';
   let depth = 0, i = src.indexOf('{', idx), begin = i;
   while (i < src.length) {
@@ -214,7 +218,7 @@ const syncBody = (() => {
   }
   return '';
 })();
-assert('syncToSheet writes jobNumber', syncBody.includes('jobNumber'));
+assert('syncToSheet (or _doSyncToSheet) writes jobNumber', syncBody.includes('jobNumber'));
 
 // loadFromSheet parses jobNumber
 const loadJobsLine = src.match(/(?:DB\.jobs|sheetJobs)\s*=\s*parse\([^;]+;/)?.[0] || '';
@@ -685,6 +689,88 @@ assert('Email body contains "Hold onto your material receipts"',
 // 10. Email body references yourName or bizName from settings
 assert('Email body references yourName or bizName from settings',
   openPreviewFn.includes('yourName') || openPreviewFn.includes('bizName'));
+
+// ─── 22. Concurrent sync protection (write queue) ────────────────────────────
+
+console.log('\n22. Concurrent sync protection — _syncQueue serialises writes');
+
+// syncToSheet must be a thin wrapper that chains onto _syncQueue
+assert('_syncQueue variable declared',
+  src.includes('_syncQueue'));
+
+assert('syncToSheet() chains onto _syncQueue (not doing the work directly)',
+  src.includes('_syncQueue=_syncQueue.then('));
+
+assert('_doSyncToSheet function defined (actual sync body)',
+  src.includes('async function _doSyncToSheet('));
+
+// syncToSheet body must NOT contain the heavy sheet-write loop directly
+// (it should delegate to _doSyncToSheet instead)
+const syncToSheetFn = (() => {
+  const idx = src.indexOf('\nfunction syncToSheet(');
+  if (idx === -1) return '';
+  let depth = 0, i = src.indexOf('{', idx), begin = i;
+  while (i < src.length) {
+    if (src[i] === '{') depth++;
+    else if (src[i] === '}') { depth--; if (depth === 0) return src.slice(begin, i + 1); }
+    i++;
+  }
+  return '';
+})();
+assert('syncToSheet wrapper does not contain gapi.client.sheets calls (delegated to _doSyncToSheet)',
+  !syncToSheetFn.includes('gapi.client.sheets'));
+
+// _doSyncToSheet must set _syncInProgress=true
+const doSyncFn = extractFn(src, '_doSyncToSheet') || '';
+assert('_doSyncToSheet sets _syncInProgress=true',
+  doSyncFn.includes('_syncInProgress=true'));
+
+assert('_doSyncToSheet clears _syncInProgress=false in finally',
+  doSyncFn.includes('_syncInProgress=false'));
+
+// ─── 23. nextNumber() is purely synchronous ───────────────────────────────────
+
+console.log('\n23. nextNumber() is purely synchronous — no async gaps');
+
+const nextNumberFn2 = extractFn(src, 'nextNumber') || '';
+
+assert('nextNumber does not use await',
+  !nextNumberFn2.includes('await'));
+
+assert('nextNumber does not return a Promise explicitly',
+  !nextNumberFn2.includes('new Promise') && !nextNumberFn2.includes('Promise.'));
+
+assert('nextNumber reads only from DB.docs and DB.jobs (in-memory)',
+  nextNumberFn2.includes('DB.docs') && nextNumberFn2.includes('DB.jobs'));
+
+// ─── 24. loadFromSheet checks _syncInProgress at the top ─────────────────────
+
+console.log('\n24. loadFromSheet checks _syncInProgress before doing any work');
+
+const loadFromSheetFn = (() => {
+  // Extract the original function body (not the wrapper), matching 'async function loadFromSheet'
+  const idx = src.indexOf('async function loadFromSheet(');
+  if (idx === -1) return '';
+  let depth = 0, i = src.indexOf('{', idx), begin = i;
+  while (i < src.length) {
+    if (src[i] === '{') depth++;
+    else if (src[i] === '}') { depth--; if (depth === 0) return src.slice(begin, i + 1); }
+    i++;
+  }
+  return '';
+})();
+
+assert('loadFromSheet function body exists',
+  loadFromSheetFn.length > 0);
+
+// The _syncInProgress check must appear before the first await (ensureSheetTabs)
+const syncCheckPos = loadFromSheetFn.indexOf('_syncInProgress');
+const firstAwaitPos = loadFromSheetFn.indexOf('await');
+assert('loadFromSheet checks _syncInProgress before first await',
+  syncCheckPos !== -1 && firstAwaitPos !== -1 && syncCheckPos < firstAwaitPos);
+
+assert('loadFromSheet queues a deferred load when _syncInProgress is true',
+  loadFromSheetFn.includes('_loadQueuedDuringSync=true'));
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
 

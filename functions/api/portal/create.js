@@ -1,9 +1,10 @@
 // POST /api/portal/create
-// Called by aedexbooks (authenticated) when Levi clicks "Send Portal Link".
+// Called by aedexbooks (authenticated) when the user clicks "Send Portal Link".
 // Stores a job snapshot in KV keyed by the portal token.
 // Body: { token, jobId, contractorId, contractorName, contractorEmail,
-//         jobTitle, jobAddress, jobInstructions, jobNotes,
-//         beforeFolderId, receiptsFolderId }
+//         jobTitle, jobAddress, jobInstructions,
+//         beforeFolderId, receiptsFolderId,
+//         bizName, ownerEmail, logoBase64 }
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -18,7 +19,8 @@ export async function onRequestPost(context) {
 
   const { token, jobId, contractorId, contractorName, contractorEmail,
           jobTitle, jobAddress, jobInstructions,
-          beforeFolderId, receiptsFolderId } = body;
+          beforeFolderId, receiptsFolderId,
+          bizName, ownerEmail, logoBase64 } = body;
 
   if (!token || !jobId || !contractorId) {
     return new Response(JSON.stringify({ ok: false, error: 'Missing required fields' }), { headers: CORS, status: 400 });
@@ -34,6 +36,9 @@ export async function onRequestPost(context) {
     jobInstructions: jobInstructions || '',
     beforeFolderId: beforeFolderId || '',
     receiptsFolderId: receiptsFolderId || '',
+    bizName: bizName || '',
+    ownerEmail: ownerEmail || '',
+    logoBase64: logoBase64 || '',
     status: 'pending',
     createdAt: new Date().toISOString(),
   };
