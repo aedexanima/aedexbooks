@@ -204,7 +204,6 @@ textarea{resize:vertical;min-height:72px}
       <div class="preview-card">
         <div class="preview-label">Materials</div>
         <div class="preview-row"><span id="prev-materials-desc">Materials</span><span class="money" id="prev-materials-total">$0.00</span></div>
-        <div id="prev-receipt-name" style="font-size:12px;color:var(--text3);margin-top:4px"></div>
       </div>
 
       <div class="card" style="margin-bottom:0">
@@ -482,7 +481,6 @@ function goToPreview() {
   const matDesc = document.getElementById('materials-notes').value || 'Materials';
   document.getElementById('prev-materials-desc').textContent = matDesc;
   document.getElementById('prev-materials-total').textContent = fmt(mat);
-  document.getElementById('prev-receipt-name').textContent = _receiptFile ? '📎 ' + _receiptFile.name : 'No receipt attached';
 
   document.getElementById('prev-grand').textContent = fmt(grand);
 

@@ -63,39 +63,45 @@ export async function onRequestPost(context) {
 
   // Send notification email via Resend
   const resendKey = context.env.RESEND_API_KEY;
-  if (resendKey) {
-    const portalUrl = `https://aedexbooks.aedexanima.com`;
+  const ownerEmail = entry.ownerEmail;
+
+  if (resendKey && ownerEmail) {
+    const bizName = entry.bizName || 'AEDEXBOOKS';
+    const appUrl = new URL(context.request.url).origin;
+
     const emailBody = [
-      `New contractor estimate submitted`,
+      `${entry.contractorName || 'A contractor'} has submitted an estimate.`,
       ``,
-      `Contractor: ${entry.contractorName || 'Unknown'}`,
-      `Job: ${entry.jobTitle || 'Unknown'}`,
-      `Address: ${entry.jobAddress || '—'}`,
+      `Job:       ${entry.jobTitle || '—'}`,
+      `Address:   ${entry.jobAddress || '—'}`,
       ``,
-      `Labor total:     $${(laborSubtotal || 0).toFixed(2)}`,
-      `Materials total: $${(materialsTotal || 0).toFixed(2)}`,
-      `Grand total:     $${(grandTotal || 0).toFixed(2)}`,
+      `Labor:     $${(laborSubtotal || 0).toFixed(2)}`,
+      `Materials: $${(materialsTotal || 0).toFixed(2)}`,
+      `Total:     $${(grandTotal || 0).toFixed(2)}`,
       ``,
       `Submitted: ${new Date(submittedAt).toLocaleString('en-US', { timeZone: 'America/Chicago' })}`,
       ``,
-      `Open AEDEXBOOKS to review and upload photos to Drive:`,
-      portalUrl,
+      `Open your portal to review:`,
+      appUrl,
     ].join('\n');
 
-    fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'AEDEXBOOKS <notifications@aedexanima.com>',
-        to: ['aedexanima@gmail.com'],
-        subject: `Estimate submitted — ${entry.jobTitle || 'Job'} (${entry.contractorName || 'Contractor'})`,
-        text: emailBody,
-      }),
-    }).catch(e => console.error('Resend notification failed:', e));
-    // Non-blocking — don't fail the submission if email fails
+    // context.waitUntil keeps the Worker context alive after the Response is returned
+    // so the Resend fetch actually completes instead of being cancelled mid-flight
+    context.waitUntil(
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: `${bizName} <notifications@aedexanima.com>`,
+          to: [ownerEmail],
+          subject: `Estimate submitted — ${entry.jobTitle || 'Job'} (${entry.contractorName || 'Contractor'})`,
+          text: emailBody,
+        }),
+      }).catch(e => console.error('Resend notification failed:', e))
+    );
   }
 
   return new Response(JSON.stringify({ ok: true }), { headers: CORS });
