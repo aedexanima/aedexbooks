@@ -1842,8 +1842,11 @@ async function ensureSheetTabs(){
   }catch(e){console.warn('ensureSheetTabs error:',e);}
 }
 
+let _syncInProgress=false,_loadQueuedDuringSync=false;
+
 async function syncToSheet(){
   if(!signedIn||!DB.settings.sheetId)return;
+  _syncInProgress=true;
   setSyncStatus('⏳ Saving...');
   try{
     await ensureSheetTabs();
@@ -1882,10 +1885,15 @@ async function syncToSheet(){
     }
     setSyncStatus('🟢 Saved '+new Date().toLocaleTimeString());
   }catch(e){setSyncStatus('⚠ Sync error: '+e.message);console.error(e);}
+  finally{
+    _syncInProgress=false;
+    if(_loadQueuedDuringSync){_loadQueuedDuringSync=false;loadFromSheet();}
+  }
 }
 
 async function loadFromSheet(){
   if(!signedIn||!DB.settings.sheetId)return;
+  if(_syncInProgress){_loadQueuedDuringSync=true;return;}
   setSyncStatus('⏳ Loading...');
   try{
     await ensureSheetTabs();

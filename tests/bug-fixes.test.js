@@ -284,24 +284,17 @@ assert('portal does NOT have "+ Attach Receipt" button text',
 assert('portal says "Save all material receipts for when the job is complete"',
   portalSrc.includes('Save all material receipts for when the job is complete'));
 
-assert('portal section title contains "Material Quotes"',
-  portalSrc.includes('Material Quotes'));
+// Material Quotes section was intentionally removed — verify it is gone
+assert('portal does NOT have "Material Quotes" section (intentionally removed)',
+  !portalSrc.includes('Material Quotes / References'));
 
-assert('portal description mentions "material quotes" or "supplier references"',
-  portalSrc.toLowerCase().includes('material quotes') || portalSrc.includes('supplier references'));
+// Materials Estimate header updated to include (Optional)
+assert('Materials Estimate header says "(Optional)"',
+  portalSrc.includes('Materials Estimate (Optional)'));
 
-assert('portal attach button says "Attach Document"',
-  portalSrc.includes('+ Attach Document'));
-
-assert('replace button says "Replace Document"',
-  portalSrc.includes('Replace Document'));
-
-// Receipt upload input still present (functionality preserved)
-assert('receipt file input still present (upload functionality preserved)',
-  portalSrc.includes('id="receipt-input"'));
-
-assert('receipt accepts PDF (functionality unchanged)',
-  portalSrc.includes('application/pdf') && portalSrc.includes('receipt-input'));
+// Materials description placeholder updated
+assert('Materials description placeholder updated',
+  portalSrc.includes('If applicable, please estimate materials'));
 
 // email copy in index.html
 assert('sendPortalLink email body does NOT say "submit them with your estimate"',
