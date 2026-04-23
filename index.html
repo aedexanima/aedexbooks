@@ -558,7 +558,7 @@ textarea{resize:vertical;min-height:60px}
         <button class="tab" onclick="filterDocs('estimate',this)">Estimates</button>
         <button class="tab" onclick="filterDocs('invoice',this)">Invoices</button>
         <button class="tab" onclick="filterDocs('unpaid',this)">Unpaid</button>
-        <label class="hide-mobile" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);white-space:nowrap;cursor:pointer;margin-left:auto"><input type="checkbox" id="doc-show-archived" onchange="renderDocs()"> Show archived</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);white-space:nowrap;cursor:pointer;margin-left:auto"><input type="checkbox" id="doc-show-archived" onchange="renderDocs()"> Show archived</label>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 2px;align-items:center">
         <select id="doc-filter-client" onchange="renderDocs()" style="height:36px;border:1px solid var(--border);border-radius:6px;padding:0 8px;font-size:13px;color:var(--text1);background:var(--surface);min-width:140px;max-width:200px">
@@ -1259,6 +1259,7 @@ let DB={clients:[],properties:[],jobs:[],docs:[],expenses:[],activity:[],sentLog
   settings:{bizName:'AEDEXBOOKS',yourName:'',phone:'',email:'',addr:'',license:'',taxRate:0,clientId:'',sheetId:'',logoFileId:'',customClientTypes:[]}};
 let currentClientId=null,currentJobId=null,currentDocId=null,_editingExpenseId=null;
 let _deleteJobPending=false,_deleteJobTimer=null; // two-tap archive confirmation state
+let _deleteDocPending=false,_deleteDocTimer=null;
 let docLineItems=[],docFilter='all',clientSearch='',jobSearch='',jobPastDueFilter=false,_sendingReminder=false;
 let propFields=[]; // temp property fields in client modal
 let accessToken=null,signedIn=false,gapiReady=false;
@@ -2131,6 +2132,11 @@ function closeModal(id){
     const delBtn=document.getElementById('jm-del');
     if(delBtn){delBtn.textContent='Archive';delBtn.style.background='';delBtn.style.color='';}
   }
+  if(id==='doc-modal'){
+    _deleteDocPending=false;clearTimeout(_deleteDocTimer);
+    const docDelBtn=document.getElementById('dm-del');
+    if(docDelBtn){docDelBtn.textContent='Archive';docDelBtn.style.background='';docDelBtn.style.color='';}
+  }
 }
 function toast(msg,type=''){
   const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(type||'');
@@ -2221,7 +2227,7 @@ function renderDashboard(){
   const yr=yearEl?yearEl.value:'all';
 
   // --- Filtered data ---
-  const allInvs=DB.docs.filter(d=>d.type==='invoice');
+  const allInvs=DB.docs.filter(d=>d.type==='invoice'&&!d.archived);
   const invs=allInvs.filter(d=>yr==='all'||d.date?.startsWith(yr));
   const paid=invs.filter(d=>d.paid);
   const unpaidInvs=allInvs.filter(d=>!d.paid&&d.total>0);
@@ -2297,7 +2303,7 @@ function renderDashboard(){
   const monthRows=MONTHS.map((m,i)=>{
     const mo=String(i+1).padStart(2,'0');
     const pfx=`${pnlYear}-${mo}`;
-    const mIncome=DB.docs.filter(d=>d.type==='invoice'&&d.paid&&d.date?.startsWith(pfx)).reduce((a,d)=>a+d.total,0);
+    const mIncome=DB.docs.filter(d=>d.type==='invoice'&&d.paid&&!d.archived&&d.date?.startsWith(pfx)).reduce((a,d)=>a+d.total,0);
     const mExp=DB.expenses.filter(e=>e.date?.startsWith(pfx)).reduce((a,e)=>a+e.amount,0);
     return{m,mIncome,mExp,mProfit:mIncome-mExp,has:mIncome||mExp};
   }).filter(r=>r.has);
@@ -2328,7 +2334,7 @@ function downloadTaxReport(){
   const yr=yearEl?yearEl.value:'all';
   const label=yr==='all'?'All-Time':yr;
 
-  const paidInvs=DB.docs.filter(d=>d.type==='invoice'&&d.paid&&(yr==='all'||d.date?.startsWith(yr)));
+  const paidInvs=DB.docs.filter(d=>d.type==='invoice'&&d.paid&&!d.archived&&(yr==='all'||d.date?.startsWith(yr)));
   const filtExp=DB.expenses.filter(e=>yr==='all'||e.date?.startsWith(yr));
 
   const totalIncome=paidInvs.reduce((a,d)=>a+d.total,0);
@@ -3975,7 +3981,18 @@ function saveDoc(){
 }
 
 function deleteCurrentDoc(){
-  if(!confirm('Archive this document? It will be hidden but data is preserved.'))return;
+  const btn=document.getElementById('dm-del');
+  if(!_deleteDocPending){
+    _deleteDocPending=true;
+    if(btn){btn.textContent='Tap again to confirm';btn.style.background='var(--red)';btn.style.color='#fff';}
+    _deleteDocTimer=setTimeout(()=>{
+      _deleteDocPending=false;
+      if(btn){btn.textContent='Archive';btn.style.background='';btn.style.color='';}
+    },3000);
+    return;
+  }
+  clearTimeout(_deleteDocTimer);_deleteDocPending=false;
+  if(btn){btn.textContent='Archive';btn.style.background='';btn.style.color='';}
   const d=DB.docs.find(x=>x.id===currentDocId);
   logActivity('Archived','Document',currentDocId,d?`${d.type} #${d.number} — ${clientFullName(getClient(d.clientId))}`:'');
   if(d){d.archived=true;d.updatedAt=new Date().toISOString();}
