@@ -1198,16 +1198,47 @@ textarea{resize:vertical;min-height:60px}
   </div>
 </div>
 
-<!-- Portal prompt modal -->
-<div id="portal-prompt-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)skipPortalPrompt()">
-  <div style="background:#fff;border-radius:14px;padding:28px 24px;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18)">
-    <div style="font-size:18px;font-weight:700;margin-bottom:8px">Send Portal Link?</div>
-    <div style="font-size:14px;color:var(--text2);margin-bottom:6px">Would you like to send the contractor portal link to:</div>
-    <div id="portal-prompt-ctr" style="font-size:15px;font-weight:600;margin-bottom:20px"></div>
-    <div style="display:flex;gap:10px">
-      <button class="btn full" onclick="skipPortalPrompt()" style="flex:1">Skip</button>
-      <button class="btn accent full" onclick="confirmSendPortal()" style="flex:2">Send Now</button>
+<!-- Portal email preview modal -->
+<div id="portal-email-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto" onclick="if(event.target===this)closePortalEmailModal()">
+  <div style="background:#fff;border-radius:14px;padding:24px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18);margin:auto;max-height:calc(100vh - 32px);overflow-y:auto;position:relative">
+    <div style="font-size:18px;font-weight:700;margin-bottom:16px">Send Portal Link</div>
+    <!-- No-email warning -->
+    <div id="pem-no-email-warn" style="display:none;background:#fffbea;border:1px solid #f5c842;border-radius:8px;padding:12px;margin-bottom:14px;font-size:14px;color:#7a5c00">
+      <div id="pem-no-email-msg" style="margin-bottom:8px"></div>
+      <input id="pem-email-input" type="email" placeholder="contractor@example.com"
+        style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #ccc;border-radius:7px;font-size:16px;font-family:inherit"
+        oninput="pemEmailChanged(this.value)">
     </div>
+    <!-- To field -->
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">To</div>
+      <div id="pem-to" style="font-size:15px;color:var(--text1);padding:8px 0;border-bottom:1px solid var(--border)"></div>
+    </div>
+    <!-- Subject -->
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Subject</div>
+      <input id="pem-subject" type="text"
+        style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:7px;font-size:16px;font-family:inherit;color:var(--text1)">
+    </div>
+    <!-- Email preview -->
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Preview</div>
+      <div id="pem-preview" style="background:#f7f7f7;border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:14px;line-height:1.6;color:var(--text1);white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto;font-family:inherit"></div>
+    </div>
+    <!-- Editable body -->
+    <div style="margin-bottom:18px">
+      <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Edit Message</div>
+      <textarea id="pem-body" rows="10"
+        style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:7px;font-size:16px;font-family:inherit;line-height:1.6;resize:vertical;color:var(--text1)"
+        oninput="document.getElementById('pem-preview').textContent=this.value"></textarea>
+    </div>
+    <!-- Buttons -->
+    <div style="display:flex;gap:10px">
+      <button class="btn full" onclick="closePortalEmailModal()" style="flex:1">Cancel</button>
+      <button class="btn accent full" id="pem-send-btn" onclick="sendPortalEmail()" disabled style="flex:2">Loading…</button>
+    </div>
+    <!-- Success message -->
+    <div id="pem-success" style="display:none;margin-top:14px;text-align:center;color:var(--green,#2a7a2a);font-size:15px;font-weight:600"></div>
   </div>
 </div>
 
@@ -2917,7 +2948,7 @@ function saveJob(){
   // Prompt to send portal link when a new job is saved with a contractor assigned
   if(isNewJob&&job.contractorIds.length>0&&!job.portalToken){
     const ctr=DB.contractors.find(c=>c.id===job.contractorIds[0]);
-    if(ctr&&ctr.email) showPortalPrompt(job.id,ctr);
+    if(ctr) openPortalEmailPreview(job.id,ctr);
   }
 }
 
@@ -3026,41 +3057,68 @@ function renderPortalSection(job){
     ${cEstHtml}`;
 }
 
-let _portalPromptJobId='';
-function showPortalPrompt(jobId,ctr){
-  _portalPromptJobId=jobId;
-  document.getElementById('portal-prompt-ctr').textContent=ctr.name+(ctr.email?' — '+ctr.email:'');
-  const el=document.getElementById('portal-prompt-overlay');
-  el.style.display='flex';
-}
-function skipPortalPrompt(){
-  document.getElementById('portal-prompt-overlay').style.display='none';
-  _portalPromptJobId='';
-}
-function confirmSendPortal(){
-  const jobId=_portalPromptJobId;
-  skipPortalPrompt();
-  if(!jobId)return;
-  currentJobId=jobId;
-  sendPortalLink();
+// ── Portal email preview modal ────────────────────────────────────────────────
+
+let _pemJobId='';
+let _pemCtrEmail='';  // resolved email (may come from inline input if none on file)
+
+function closePortalEmailModal(){
+  document.getElementById('portal-email-modal').style.display='none';
+  _pemJobId='';
+  _pemCtrEmail='';
 }
 
-async function sendPortalLink(){
-  if(!currentJobId){toast('Save the job first before sending a portal link','error');return;}
-  const job=DB.jobs.find(j=>j.id===currentJobId);
-  if(!job){return;}
-  const ctr=job.contractorIds&&job.contractorIds.length?DB.contractors.find(c=>c.id===job.contractorIds[0]):null;
-  if(!ctr){toast('Assign a contractor to this job first','error');return;}
-  if(!ctr.email){toast('Contractor has no email address — add one in the Contractors page','error');return;}
+function pemEmailChanged(val){
+  _pemCtrEmail=val.trim();
+  const sendBtn=document.getElementById('pem-send-btn');
+  if(sendBtn&&!sendBtn.dataset.loading){
+    sendBtn.disabled=!/\S+@\S+\.\S+/.test(_pemCtrEmail);
+  }
+}
+
+async function openPortalEmailPreview(jobId,ctr){
   if(!signedIn||!accessToken){toast('Sign in to send portal link','error');return;}
-  const btn=document.getElementById('jm-send-portal-btn');
-  if(btn){btn.textContent='Sending…';btn.disabled=true;}
+  const job=DB.jobs.find(j=>j.id===jobId);
+  if(!job){return;}
+  currentJobId=jobId;
+
+  const modal=document.getElementById('portal-email-modal');
+  const sendBtn=document.getElementById('pem-send-btn');
+  const noEmailWarn=document.getElementById('pem-no-email-warn');
+  const noEmailMsg=document.getElementById('pem-no-email-msg');
+  const emailInput=document.getElementById('pem-email-input');
+
+  // Reset modal state
+  sendBtn.textContent='Loading…';
+  sendBtn.disabled=true;
+  sendBtn.dataset.loading='1';
+  document.getElementById('pem-success').style.display='none';
+  document.getElementById('pem-preview').textContent='';
+  document.getElementById('pem-body').value='';
+  document.getElementById('pem-subject').value='';
+
+  // Handle no-email case
+  _pemCtrEmail=ctr.email||'';
+  if(!_pemCtrEmail){
+    noEmailMsg.textContent=`No email on file for ${ctr.name}. Add one to continue:`;
+    emailInput.value='';
+    noEmailWarn.style.display='block';
+  } else {
+    noEmailWarn.style.display='none';
+  }
+
+  // Show To field
+  document.getElementById('pem-to').textContent=ctr.name+(_pemCtrEmail?' <'+_pemCtrEmail+'>':'');
+
+  modal.style.display='flex';
+
+  // Async: create the portal token, then fill preview
+  const prop=getProperty(job.propertyId);
+  const jobAddress=prop?prop.address||'':'';
 
   const token=crypto.randomUUID();
-  const prop=getProperty(job.propertyId);
-  const jobAddress=prop.address||'';
 
-  // Build Drive folder IDs if available
+  // Build Drive folder IDs
   let beforeFolderId='',receiptsFolderId='';
   try{
     const folders=await getJobFolders(currentJobId);
@@ -3068,7 +3126,7 @@ async function sendPortalLink(){
     receiptsFolderId=folders.receiptsFolderId||'';
   }catch(e){console.warn('Could not resolve job folders:',e.message);}
 
-  // Store token in KV via Cloudflare Function
+  // Store token in KV
   const logoBase64=await getLogoBase64().catch(()=>'');
   try{
     const r=await fetch('/api/portal/create',{
@@ -3076,7 +3134,7 @@ async function sendPortalLink(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         token,jobId:currentJobId,
-        contractorId:ctr.id,contractorName:ctr.name,contractorEmail:ctr.email,
+        contractorId:ctr.id,contractorName:ctr.name,contractorEmail:_pemCtrEmail||ctr.email||'',
         jobTitle:job.title,jobAddress,
         jobInstructions:job.contractorInstructions||'',
         beforeFolderId,receiptsFolderId,
@@ -3088,11 +3146,11 @@ async function sendPortalLink(){
     if(!r.ok) throw new Error('Portal create failed');
   }catch(e){
     toast('Could not create portal link: '+e.message,'error');
-    if(btn){btn.textContent='Send to Contractor';btn.disabled=false;}
+    closePortalEmailModal();
     return;
   }
 
-  // Persist token to job record — status stays at assigned-for-estimate until client estimate is sent
+  // Persist token to job
   const idx=DB.jobs.findIndex(j=>j.id===currentJobId);
   if(idx!==-1){
     DB.jobs[idx].portalToken=token;
@@ -3100,27 +3158,58 @@ async function sendPortalLink(){
   }
   saveAndSync();
 
-  // Send email to contractor via Gmail API
+  // Build email content
   const portalUrl=`${location.origin}/contractor?token=${token}`;
-  const subject=`Work order — ${job.title}${jobAddress?' at '+jobAddress:''}`;
-  const message=`Hi ${ctr.name},
+  const senderName=DB.settings.yourName||DB.settings.bizName||'Aedex Anima';
+  const subject=`Estimate Request — ${job.title}${jobAddress?' at '+jobAddress:''}`;
+  const bodyText=`Hi ${ctr.name},
 
-You've been assigned to a job and can submit your labor and materials estimate using the secure link below.
+I'd like to get your estimate for the job below. Please use the link to submit your labor costs, material estimates, and upload any relevant before photos when you're on site.
 
-Job: ${job.title}${jobAddress?'\nAddress: '+jobAddress:''}
-${job.contractorInstructions?'\nInstructions:\n'+job.contractorInstructions:''}
-
-Your portal link:
+Job: ${job.title}
+${jobAddress?'Address: '+jobAddress+'\n':''}
 ${portalUrl}
 
-Important: Save all material receipts for when the job is complete.
+Hold onto your material receipts for when the job wraps up.
 
 Thanks,
-${DB.settings.yourName||DB.settings.bizName||'Aedex Anima'}`;
+${senderName}`;
+
+  // Fill modal fields
+  document.getElementById('pem-subject').value=subject;
+  document.getElementById('pem-body').value=bodyText;
+  document.getElementById('pem-preview').textContent=bodyText;
+
+  // Enable send button (unless no-email and still empty)
+  delete sendBtn.dataset.loading;
+  if(!_pemCtrEmail){
+    sendBtn.textContent='Send';
+    sendBtn.disabled=true;
+  } else {
+    sendBtn.textContent='Send';
+    sendBtn.disabled=false;
+  }
+}
+
+async function sendPortalEmail(){
+  const sendBtn=document.getElementById('pem-send-btn');
+  if(!currentJobId)return;
+  const job=DB.jobs.find(j=>j.id===currentJobId);
+  if(!job||!job.portalToken)return;
+
+  const toEmail=_pemCtrEmail;
+  if(!toEmail){toast('Add a contractor email to send','error');return;}
+  if(!signedIn||!accessToken){toast('Sign in to send portal link','error');return;}
+
+  const subject=document.getElementById('pem-subject').value.trim()||'Portal Link';
+  const message=document.getElementById('pem-body').value;
+
+  sendBtn.textContent='Sending…';
+  sendBtn.disabled=true;
 
   const boundary='----=_aedex_portal_'+Date.now();
   const mime=[
-    'MIME-Version: 1.0','From: me',`To: ${ctr.email}`,
+    'MIME-Version: 1.0','From: me',`To: ${toEmail}`,
     `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
     `Content-Type: multipart/mixed; boundary="${boundary}"`,
     '',`--${boundary}`,
@@ -3135,15 +3224,38 @@ ${DB.settings.yourName||DB.settings.bizName||'Aedex Anima'}`;
       body:JSON.stringify({raw})
     });
     if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||'Send failed');}
-    toast(`Portal link sent to ${ctr.email}`,'success');
-    logActivity('Sent','Job',currentJobId,`Portal link → ${ctr.name}`);
+
+    // Show success, then close
+    const successEl=document.getElementById('pem-success');
+    successEl.textContent=`✓ Portal link sent to ${toEmail}`;
+    successEl.style.display='block';
+    sendBtn.style.display='none';
+    logActivity('Sent','Job',currentJobId,`Portal link → ${toEmail}`);
+
+    // Re-render portal section
+    const updatedJob=DB.jobs.find(j=>j.id===currentJobId);
+    renderPortalSection(updatedJob);
+
+    setTimeout(()=>{
+      closePortalEmailModal();
+      sendBtn.style.display='';
+    },2000);
   }catch(e){
     toast('Email failed: '+e.message+' — link created, copy it manually','error');
+    sendBtn.textContent='Send';
+    sendBtn.disabled=false;
   }
+}
 
-  // Re-render portal section with new token
-  const updatedJob=DB.jobs.find(j=>j.id===currentJobId);
-  renderPortalSection(updatedJob);
+// sendPortalLink — called from "Send to Contractor" button inside job modal
+// Opens the email preview modal so user can review/edit before sending
+async function sendPortalLink(){
+  if(!currentJobId){toast('Save the job first before sending a portal link','error');return;}
+  const job=DB.jobs.find(j=>j.id===currentJobId);
+  if(!job){return;}
+  const ctr=job.contractorIds&&job.contractorIds.length?DB.contractors.find(c=>c.id===job.contractorIds[0]):null;
+  if(!ctr){toast('Assign a contractor to this job first','error');return;}
+  openPortalEmailPreview(currentJobId,ctr);
 }
 
 // Check KV for a submission that hasn't been pulled into the job record yet.

@@ -307,8 +307,8 @@ assert('receipt accepts PDF (functionality unchanged)',
 assert('sendPortalLink email body does NOT say "submit them with your estimate"',
   !src.includes('submit them with your estimate'));
 
-assert('sendPortalLink email body says "for when the job is complete"',
-  src.includes('for when the job is complete'));
+assert('sendPortalLink email body mentions material receipts',
+  src.includes('Hold onto your material receipts') || src.includes('for when the job is complete') || src.includes('material receipts'));
 
 // ─── 6. Archive/restore actions call renderDashboard ─────────────────────────
 
@@ -645,6 +645,53 @@ assert('IMPORT_COL_ALIASES has paymentterms entry',
 
 assert('paymentterms alias includes "payment terms" variant',
   importAliasesMatch.includes('payment terms') || importAliasesMatch.includes('paymentterms'));
+
+// ─── 21. Contractor portal email preview modal ────────────────────────────────
+
+console.log('\n21. Contractor portal email preview modal');
+
+// 1. Modal element exists in source
+assert('portal-email-modal exists in source',
+  src.includes('id="portal-email-modal"'));
+
+// 2. openPortalEmailPreview function defined
+assert('openPortalEmailPreview function defined',
+  src.includes('function openPortalEmailPreview('));
+
+// 3. sendPortalEmail function defined
+assert('sendPortalEmail function defined',
+  src.includes('function sendPortalEmail('));
+
+// 4. Subject input is editable (has id pem-subject, no readonly attribute)
+const pemSubjectHtml = src.match(/id="pem-subject"[^>]*/)?.[0] || '';
+assert('Portal email subject input is editable (has id pem-subject, not readonly)',
+  pemSubjectHtml.includes('id="pem-subject"') && !pemSubjectHtml.includes('readonly'));
+
+// 5. Send button has disabled attribute (disabled state mechanism)
+const pemSendBtnHtml = src.match(/id="pem-send-btn"[^>]*/)?.[0] || '';
+assert('Send button has disabled attribute (disabled state mechanism)',
+  pemSendBtnHtml.includes('disabled'));
+
+// 6. No-email warning logic present in openPortalEmailPreview
+const openPreviewFn = extractFn(src, 'openPortalEmailPreview') || '';
+assert('openPortalEmailPreview contains no-email warning logic',
+  openPreviewFn.includes('No email on file for') && openPreviewFn.includes('pem-no-email-warn'));
+
+// 7. Success confirmation text present in source
+assert('Success confirmation text present in source (✓ Portal link sent to)',
+  src.includes('✓ Portal link sent to'));
+
+// 8. Email subject uses new template "Estimate Request —"
+assert('Email subject uses new template "Estimate Request —"',
+  src.includes('Estimate Request —'));
+
+// 9. Email body contains "Hold onto your material receipts"
+assert('Email body contains "Hold onto your material receipts"',
+  src.includes('Hold onto your material receipts'));
+
+// 10. Email body references yourName or bizName from settings
+assert('Email body references yourName or bizName from settings',
+  openPreviewFn.includes('yourName') || openPreviewFn.includes('bizName'));
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
 
