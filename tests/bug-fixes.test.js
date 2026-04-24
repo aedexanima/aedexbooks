@@ -772,6 +772,42 @@ assert('loadFromSheet checks _syncInProgress before first await',
 assert('loadFromSheet queues a deferred load when _syncInProgress is true',
   loadFromSheetFn.includes('_loadQueuedDuringSync=true'));
 
+// ─── 25. Domain migration — www.aedexbooks.com ───────────────────────────────
+
+console.log('\n25. Domain migration — www.aedexbooks.com');
+
+// No hardcoded old subdomain in app source files
+assert('index.html has no reference to aedexbooks.aedexanima.com',
+  !src.includes('aedexbooks.aedexanima.com'));
+
+assert('contractor.html has no reference to aedexbooks.aedexanima.com',
+  !portalSrc.includes('aedexbooks.aedexanima.com'));
+
+// Access gate "Buy" button must point to www.aedexbooks.com
+assert('Access gate Buy button href is www.aedexbooks.com',
+  src.includes('href="https://www.aedexbooks.com"'));
+
+// Portal link URL is dynamic (uses location.origin — no hardcoded domain)
+assert('Portal link URL uses location.origin (not hardcoded domain)',
+  src.includes('location.origin') &&
+  !src.includes('"https://www.aedexbooks.com/contractor') &&
+  !src.includes('"https://aedexbooks.aedexanima.com/contractor'));
+
+// Notification email appUrl is dynamic (uses context.request.url origin)
+const submitSrc = require('fs').readFileSync(
+  require('path').join(__dirname, '../functions/api/portal/submit.js'), 'utf8');
+assert('submit.js appUrl derived from context.request.url (not hardcoded)',
+  submitSrc.includes('new URL(context.request.url).origin') &&
+  !submitSrc.includes('aedexbooks.aedexanima.com') &&
+  !submitSrc.includes('www.aedexbooks.com'));
+
+// Privacy and terms links stay at aedexanima.com (pages still hosted there)
+assert('Privacy link correctly points to aedexanima.com/privacy',
+  src.includes('https://aedexanima.com/privacy'));
+
+assert('Terms link correctly points to aedexanima.com/terms',
+  src.includes('https://aedexanima.com/terms'));
+
 // ─── Summary ──────────────────────────────────────────────────────────────────
 
 console.log(`\n${'─'.repeat(50)}`);
