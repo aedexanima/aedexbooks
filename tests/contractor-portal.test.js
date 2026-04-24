@@ -22,7 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const src = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+const src = fs.readFileSync(path.join(__dirname, '../app.html'), 'utf8');
 const portalSrc = fs.readFileSync(path.join(__dirname, '../contractor.html'), 'utf8');
 const createFn = fs.readFileSync(path.join(__dirname, '../functions/api/portal/create.js'), 'utf8');
 const getFn    = fs.readFileSync(path.join(__dirname, '../functions/api/portal/get.js'), 'utf8');

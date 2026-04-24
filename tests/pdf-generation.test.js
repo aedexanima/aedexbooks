@@ -13,7 +13,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const src = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+const src = fs.readFileSync(path.join(__dirname, '../app.html'), 'utf8');
 
 let passed = 0;
 let failed = 0;

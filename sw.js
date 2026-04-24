@@ -1,7 +1,7 @@
-const CACHE = 'aedexbooks-v3';
+const CACHE = 'aedexbooks-v4';
 const APP_SHELL = [
-  '/',
-  '/index.html',
+  '/app',
+  '/app.html',
   '/manifest.json',
   'https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
@@ -40,7 +40,7 @@ self.addEventListener('fetch', e => {
   }
 
   // Network-first for HTML (always get latest app), cache-first for other assets
-  const isDocument = e.request.destination === 'document' || url.endsWith('/') || url.endsWith('/index.html');
+  const isDocument = e.request.destination === 'document' || url.endsWith('/') || url.endsWith('/index.html') || url.endsWith('/app') || url.endsWith('/app.html');
 
   if (isDocument) {
     e.respondWith(
@@ -65,7 +65,7 @@ self.addEventListener('fetch', e => {
       });
     }).catch(() => {
       if (e.request.destination === 'document') {
-        return caches.match('/index.html');
+        return caches.match('/app.html');
       }
     })
   );

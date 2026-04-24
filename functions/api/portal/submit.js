@@ -67,7 +67,7 @@ export async function onRequestPost(context) {
 
   if (resendKey && ownerEmail) {
     const bizName = entry.bizName || 'AEDEXBOOKS';
-    const appUrl = new URL(context.request.url).origin;
+    const appUrl = `${new URL(context.request.url).origin}/app`;
 
     const emailBody = [
       `${entry.contractorName || 'A contractor'} has submitted an estimate.`,

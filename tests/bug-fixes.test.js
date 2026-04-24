@@ -11,7 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const src = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+const src = fs.readFileSync(path.join(__dirname, '../app.html'), 'utf8');
 const portalSrc = fs.readFileSync(path.join(__dirname, '../contractor.html'), 'utf8');
 
 let passed = 0;
@@ -300,7 +300,7 @@ assert('Materials Estimate header says "(Optional)"',
 assert('Materials description placeholder updated',
   portalSrc.includes('If applicable, please estimate materials'));
 
-// email copy in index.html
+// email copy in app.html
 assert('sendPortalLink email body does NOT say "submit them with your estimate"',
   !src.includes('submit them with your estimate'));
 
@@ -777,7 +777,7 @@ assert('loadFromSheet queues a deferred load when _syncInProgress is true',
 console.log('\n25. Domain migration — www.aedexbooks.com');
 
 // No hardcoded old subdomain in app source files
-assert('index.html has no reference to aedexbooks.aedexanima.com',
+assert("app.html has no reference to aedexbooks.aedexanima.com",
   !src.includes('aedexbooks.aedexanima.com'));
 
 assert('contractor.html has no reference to aedexbooks.aedexanima.com',
