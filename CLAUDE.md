@@ -22,7 +22,7 @@
 ## What this is
 Single-file HTML/JS PWA for Aedex Anima LLC (handyman business). Business manager: clients, properties, jobs, estimates, invoices, expenses, contractors, service catalog.
 
-**Live URL:** https://aedexbooks.aedexanima.com  
+**Live URL:** https://www.aedexbooks.com  
 **Deploy:** `npx wrangler pages deploy . --project-name aedexbooks` (from this dir)
 
 ---

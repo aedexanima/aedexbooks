@@ -4,7 +4,7 @@ Business management app for small contractors and handyman businesses. Manage cl
 
 Built for [Aedex Anima LLC](https://aedexanima.com) (Austin, TX).
 
-**Live app:** https://aedexbooks.aedexanima.com
+**Live app:** https://www.aedexbooks.com
 
 ---
 
