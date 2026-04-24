@@ -2219,10 +2219,12 @@ function renderDashboard(){
     ...DB.expenses.map(e=>e.date?.substring(0,4))
   ].filter(Boolean))].sort().reverse();
   const curY=new Date().getFullYear().toString();
-  if(yearEl&&yearEl.options.length===0){
+  if(yearEl&&(yearEl.options.length===0||(yearEl.options.length===1&&allYears.length>0))){
+    const prev=yearEl.value;
+    yearEl.innerHTML='';
     yearEl.add(new Option('All time','all'));
     allYears.forEach(y=>yearEl.add(new Option(y,y)));
-    yearEl.value=allYears.includes(curY)?curY:'all';
+    yearEl.value=allYears.includes(prev)?prev:allYears.includes(curY)?curY:'all';
   }
   const yr=yearEl?yearEl.value:'all';
 
