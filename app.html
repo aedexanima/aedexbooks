@@ -1200,7 +1200,7 @@ textarea{resize:vertical;min-height:60px}
 
 <!-- Portal email preview modal -->
 <div id="portal-email-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto" onclick="if(event.target===this)closePortalEmailModal()">
-  <div style="background:#fff;border-radius:14px;padding:24px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18);margin:auto;max-height:calc(100vh - 32px);overflow-y:auto;position:relative">
+  <div style="background:#fff;border-radius:14px;padding:24px;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18);margin:auto;max-height:calc(100vh - 32px);overflow-y:auto;position:relative" onclick="event.stopPropagation()">
     <div style="font-size:18px;font-weight:700;margin-bottom:16px">Send Portal Link</div>
     <!-- No-email warning -->
     <div id="pem-no-email-warn" style="display:none;background:#fffbea;border:1px solid #f5c842;border-radius:8px;padding:12px;margin-bottom:14px;font-size:14px;color:#7a5c00">
@@ -3040,6 +3040,7 @@ function renderPortalSection(job){
     <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <input type="text" value="${portalUrl}" readonly style="flex:1;min-width:180px;font-size:11px;font-family:'DM Mono',monospace;padding:5px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text2)">
       <button class="btn sm" onclick="navigator.clipboard.writeText('${portalUrl}').then(()=>toast('Link copied','success'))">Copy</button>
+      ${!est?`<button class="btn sm accent" onclick="sendPortalLink()">Resend Email</button>`:''}
     </div>`;
   }
 
@@ -3142,7 +3143,9 @@ async function openPortalEmailPreview(jobId,ctr){
   const prop=getProperty(job.propertyId);
   const jobAddress=prop?prop.address||'':'';
 
-  const token=crypto.randomUUID();
+  // Reuse existing token if job already has one, otherwise create a new one
+  const existingToken=job.portalToken||'';
+  const token=existingToken||crypto.randomUUID();
 
   // Build Drive folder IDs
   let beforeFolderId='',receiptsFolderId='';
@@ -3152,37 +3155,39 @@ async function openPortalEmailPreview(jobId,ctr){
     receiptsFolderId=folders.receiptsFolderId||'';
   }catch(e){console.warn('Could not resolve job folders:',e.message);}
 
-  // Store token in KV
-  const logoBase64=await getLogoBase64().catch(()=>'');
-  try{
-    const r=await fetch('/api/portal/create',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        token,jobId:currentJobId,
-        contractorId:ctr.id,contractorName:ctr.name,contractorEmail:_pemCtrEmail||ctr.email||'',
-        jobTitle:job.title,jobAddress,
-        jobInstructions:job.contractorInstructions||'',
-        beforeFolderId,receiptsFolderId,
-        bizName:DB.settings.bizName||'',
-        ownerEmail:DB.settings.email||DB.settings.userEmail||'',
-        logoBase64
-      })
-    });
-    if(!r.ok) throw new Error('Portal create failed');
-  }catch(e){
-    toast('Could not create portal link: '+e.message,'error');
-    closePortalEmailModal();
-    return;
-  }
+  if(!existingToken){
+    // Store token in KV (only needed for new tokens)
+    const logoBase64=await getLogoBase64().catch(()=>'');
+    try{
+      const r=await fetch('/api/portal/create',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          token,jobId:currentJobId,
+          contractorId:ctr.id,contractorName:ctr.name,contractorEmail:_pemCtrEmail||ctr.email||'',
+          jobTitle:job.title,jobAddress,
+          jobInstructions:job.contractorInstructions||'',
+          beforeFolderId,receiptsFolderId,
+          bizName:DB.settings.bizName||'',
+          ownerEmail:DB.settings.email||DB.settings.userEmail||'',
+          logoBase64
+        })
+      });
+      if(!r.ok) throw new Error('Portal create failed');
+    }catch(e){
+      toast('Could not create portal link: '+e.message,'error');
+      closePortalEmailModal();
+      return;
+    }
 
-  // Persist token to job
-  const idx=DB.jobs.findIndex(j=>j.id===currentJobId);
-  if(idx!==-1){
-    DB.jobs[idx].portalToken=token;
-    DB.jobs[idx].updatedAt=now();
+    // Persist token to job
+    const idx=DB.jobs.findIndex(j=>j.id===currentJobId);
+    if(idx!==-1){
+      DB.jobs[idx].portalToken=token;
+      DB.jobs[idx].updatedAt=now();
+    }
+    saveAndSync();
   }
-  saveAndSync();
 
   // Build email content
   const portalUrl=`${location.origin}/contractor?token=${token}`;
