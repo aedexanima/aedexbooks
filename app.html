@@ -3145,8 +3145,8 @@ function openMergeJobsModal(){
       const invLabel=inv?` — Invoice #${inv.number} ($${(+inv.total||0).toFixed(2)})`:'';
       const border=i<eligible.length-1?'border-bottom:1px solid var(--border)':'';
       return `<label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer;${border}">
-        <input type="checkbox" style="margin-top:3px;flex-shrink:0" onchange="toggleMergeSelection('${j.id}')">
-        <div>
+        <input type="checkbox" style="width:auto;margin-top:3px;flex-shrink:0" onchange="toggleMergeSelection('${j.id}')">
+        <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:600">#${j.jobNumber||j.id} — ${j.title}</div>
           <div style="font-size:12px;color:var(--text2)">${clientName}${invLabel}</div>
         </div>
