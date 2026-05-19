@@ -533,6 +533,7 @@ textarea{resize:vertical;min-height:60px}
         <div><div class="pg-title">Jobs</div></div>
         <div style="display:flex;gap:8px;align-items:center">
           <button class="btn guide-btn" onclick="openGuide('jobs')" title="How to use this page" aria-label="Guide">?</button>
+          <button class="btn" onclick="openMergeJobsModal()">Merge Jobs</button>
           <button class="btn accent" onclick="openJobModal()">+ New Job</button>
         </div>
       </div>
@@ -1194,6 +1195,39 @@ textarea{resize:vertical;min-height:60px}
     <div class="guide-body" id="guide-body"></div>
     <div class="guide-foot">
       <a onclick="closeGuide();goto('help')">Send Feedback →</a>
+    </div>
+  </div>
+</div>
+
+<!-- Merge Jobs modal -->
+<div id="merge-jobs-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto" onclick="if(event.target===this)closeMergeJobsModal()">
+  <div style="background:#fff;border-radius:14px;padding:24px;max-width:520px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18);margin:auto;max-height:calc(100vh - 32px);overflow-y:auto;position:relative" onclick="event.stopPropagation()">
+    <div style="font-size:18px;font-weight:700;margin-bottom:4px">Merge Jobs</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Select 2 or more jobs to combine into one invoice. Originals will be archived.</div>
+    <!-- Job checklist -->
+    <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Select Jobs</div>
+    <div id="merge-job-list" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px"></div>
+    <!-- Validation warning -->
+    <div id="merge-warn" style="display:none;background:#fff5f5;border:1px solid #fca5a5;border-radius:8px;padding:10px 12px;font-size:13px;color:#b91c1c;margin-bottom:14px"></div>
+    <!-- New job title -->
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Merged Job Title</div>
+      <input id="merge-title" type="text" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:7px;font-size:16px;font-family:inherit;color:var(--text1)">
+    </div>
+    <!-- Payment method -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Payment Method</div>
+      <input id="merge-payment" type="text" placeholder="e.g. Zelle, Check, Cash" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:7px;font-size:16px;font-family:inherit;color:var(--text1)">
+    </div>
+    <!-- Line items preview -->
+    <div id="merge-preview-wrap" style="display:none;margin-bottom:18px">
+      <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Combined Invoice Preview</div>
+      <div id="merge-preview-items" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px"></div>
+    </div>
+    <!-- Buttons -->
+    <div style="display:flex;gap:10px">
+      <button class="btn full" onclick="closeMergeJobsModal()" style="flex:1">Cancel</button>
+      <button class="btn accent full" id="merge-confirm-btn" onclick="confirmMergeJobs()" disabled style="flex:2">Select 2+ jobs to merge</button>
     </div>
   </div>
 </div>
@@ -3082,6 +3116,255 @@ function renderPortalSection(job){
     ${portalHtml}
     ${estHtml}
     ${cEstHtml}`;
+}
+
+// ── Merge Jobs ────────────────────────────────────────────────────────────────
+
+let _mergeSelected=new Set();
+
+function openMergeJobsModal(){
+  _mergeSelected=new Set();
+  const modal=document.getElementById('merge-jobs-modal');
+  const list=document.getElementById('merge-job-list');
+  document.getElementById('merge-warn').style.display='none';
+  document.getElementById('merge-preview-wrap').style.display='none';
+  document.getElementById('merge-confirm-btn').disabled=true;
+  document.getElementById('merge-confirm-btn').textContent='Select 2+ jobs to merge';
+  document.getElementById('merge-title').value='';
+  document.getElementById('merge-payment').value='';
+
+  // Build job list — non-archived jobs that have a linked invoice
+  const eligible=DB.jobs.filter(j=>!j.archived&&j.clientEstimate&&j.clientEstimate.docId);
+  if(!eligible.length){
+    list.innerHTML='<div style="padding:14px;font-size:13px;color:var(--text2)">No jobs with invoices found.</div>';
+  } else {
+    list.innerHTML=eligible.map((j,i)=>{
+      const client=DB.clients.find(c=>c.id===j.clientId);
+      const clientName=client?(client.firstName||'')+' '+(client.lastName||''):j.clientId;
+      const inv=DB.docs.find(d=>d.id===j.clientEstimate.docId);
+      const invLabel=inv?` — Invoice #${inv.number} ($${(+inv.total||0).toFixed(2)})`:'';
+      const border=i<eligible.length-1?'border-bottom:1px solid var(--border)':'';
+      return `<label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer;${border}">
+        <input type="checkbox" style="margin-top:3px;flex-shrink:0" onchange="toggleMergeSelection('${j.id}')">
+        <div>
+          <div style="font-size:13px;font-weight:600">#${j.jobNumber||j.id} — ${j.title}</div>
+          <div style="font-size:12px;color:var(--text2)">${clientName}${invLabel}</div>
+        </div>
+      </label>`;
+    }).join('');
+  }
+  modal.style.display='flex';
+}
+
+function closeMergeJobsModal(){
+  document.getElementById('merge-jobs-modal').style.display='none';
+  _mergeSelected=new Set();
+}
+
+function toggleMergeSelection(jobId){
+  if(_mergeSelected.has(jobId)) _mergeSelected.delete(jobId);
+  else _mergeSelected.add(jobId);
+  renderMergePreview();
+}
+
+function renderMergePreview(){
+  const warn=document.getElementById('merge-warn');
+  const previewWrap=document.getElementById('merge-preview-wrap');
+  const previewItems=document.getElementById('merge-preview-items');
+  const confirmBtn=document.getElementById('merge-confirm-btn');
+  const titleInput=document.getElementById('merge-title');
+  const paymentInput=document.getElementById('merge-payment');
+
+  warn.style.display='none';
+  previewWrap.style.display='none';
+  confirmBtn.disabled=true;
+  confirmBtn.textContent='Select 2+ jobs to merge';
+
+  if(_mergeSelected.size<2) return;
+
+  const jobs=Array.from(_mergeSelected).map(id=>DB.jobs.find(j=>j.id===id)).filter(Boolean);
+
+  // Validate: all same client
+  const clientIds=[...new Set(jobs.map(j=>j.clientId))];
+  if(clientIds.length>1){
+    warn.textContent='All selected jobs must belong to the same client.';
+    warn.style.display='block';
+    return;
+  }
+
+  // Collect line items from each job's invoice
+  let allItems=[];
+  let missingInvoice=false;
+  let paymentMethod='';
+  jobs.forEach(j=>{
+    const inv=DB.docs.find(d=>d.id===j.clientEstimate?.docId&&!d.archived);
+    if(!inv){missingInvoice=true;return;}
+    (inv.lineItems||[]).forEach(li=>allItems.push({...li,id:uid()}));
+    if(!paymentMethod&&inv.paymentMethod) paymentMethod=inv.paymentMethod;
+  });
+
+  if(missingInvoice){
+    warn.textContent='One or more selected jobs has no active invoice. Archive or check those jobs first.';
+    warn.style.display='block';
+    return;
+  }
+
+  // Pre-fill title and payment if empty
+  if(!titleInput.value) titleInput.value=jobs.map(j=>j.title).join(' + ');
+  if(!paymentInput.value) paymentInput.value=paymentMethod;
+
+  // Calculate totals
+  const taxRate=+DB.settings.taxRate||0;
+  const subtotal=allItems.reduce((s,li)=>{
+    const price=+li.price||0;
+    const qty=+li.qty||1;
+    return s+price*qty;
+  },0);
+  const taxAmt=subtotal*(taxRate/100);
+  const total=subtotal+taxAmt;
+
+  // Render preview
+  const rows=allItems.map(li=>`<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)">
+    <span style="color:var(--text2)">${li.desc||'—'}<span style="font-size:11px;color:var(--text3);margin-left:6px">${li.type||''}</span></span>
+    <strong style="font-family:'DM Mono',monospace;flex-shrink:0;margin-left:8px">$${((+li.price||0)*(+li.qty||1)).toFixed(2)}</strong>
+  </div>`).join('');
+  previewItems.innerHTML=`${rows}
+    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:12px;color:var(--text2)"><span>Subtotal</span><span style="font-family:'DM Mono',monospace">$${subtotal.toFixed(2)}</span></div>
+    ${taxRate?`<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px;color:var(--text2)"><span>Tax (${taxRate}%)</span><span style="font-family:'DM Mono',monospace">$${taxAmt.toFixed(2)}</span></div>`:''}
+    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px;font-weight:700;border-top:2px solid var(--border)"><span>Total</span><span style="font-family:'DM Mono',monospace;color:var(--accent)">$${total.toFixed(2)}</span></div>`;
+  previewWrap.style.display='block';
+  confirmBtn.disabled=false;
+  confirmBtn.textContent=`Merge ${jobs.length} Jobs & Archive Originals`;
+}
+
+async function confirmMergeJobs(){
+  const confirmBtn=document.getElementById('merge-confirm-btn');
+  if(confirmBtn.disabled) return;
+  const jobs=Array.from(_mergeSelected).map(id=>DB.jobs.find(j=>j.id===id)).filter(Boolean);
+  if(jobs.length<2) return;
+
+  // Re-validate
+  const clientIds=[...new Set(jobs.map(j=>j.clientId))];
+  if(clientIds.length>1){toast('All jobs must share the same client','error');return;}
+
+  const title=document.getElementById('merge-title').value.trim()||jobs.map(j=>j.title).join(' + ');
+  const paymentMethod=document.getElementById('merge-payment').value.trim();
+  const taxRate=+DB.settings.taxRate||0;
+
+  // Collect all line items from source invoices
+  let allItems=[];
+  let propertyId=jobs[0].propertyId||'';
+  jobs.forEach(j=>{
+    const inv=DB.docs.find(d=>d.id===j.clientEstimate?.docId&&!d.archived);
+    if(inv)(inv.lineItems||[]).forEach(li=>allItems.push({...li,id:uid()}));
+    if(!propertyId&&j.propertyId) propertyId=j.propertyId;
+  });
+
+  const subtotal=allItems.reduce((s,li)=>(s+(+li.price||0)*(+li.qty||1)),0);
+  const taxAmt=subtotal*(taxRate/100);
+  const total=subtotal+taxAmt;
+
+  // Combine contractor estimates for reference
+  let combinedLaborItems=[];
+  let combinedLaborSubtotal=0;
+  let combinedMaterialsTotal=0;
+  let combinedGrandTotal=0;
+  jobs.forEach(j=>{
+    if(j.contractorEstimate){
+      (j.contractorEstimate.laborItems||[]).forEach(li=>combinedLaborItems.push(li));
+      combinedLaborSubtotal+=(+j.contractorEstimate.laborSubtotal||0);
+      combinedMaterialsTotal+=(+j.contractorEstimate.materialsTotal||0);
+      combinedGrandTotal+=(+j.contractorEstimate.grandTotal||0);
+    }
+  });
+
+  // 1. Create merged job
+  const mergedJobId=uid();
+  const mergedJobNumber=nextNumber();
+  const mergedJob={
+    id:mergedJobId,
+    clientId:jobs[0].clientId,
+    propertyId,
+    title,
+    status:'invoice-sent',
+    startDate:'',endDate:'',
+    value:total,
+    materials:'',photoNotes:'',notes:'',estRef:'',
+    createdAt:now(),updatedAt:now(),
+    workDetails:'',
+    contractorIds:[],
+    archived:false,
+    photos:[],
+    afterFolderId:'',
+    portalToken:'',
+    contractorEstimate:combinedLaborItems.length?{
+      laborItems:combinedLaborItems,
+      laborSubtotal:combinedLaborSubtotal,
+      materialsTotal:combinedMaterialsTotal,
+      materialsNotes:'Combined from merged jobs',
+      grandTotal:combinedGrandTotal,
+      submittedAt:now(),
+      photoFileIds:[],
+      receiptFileId:null
+    }:null,
+    clientEstimate:null,
+    contractorInstructions:'',
+    jobNumber:mergedJobNumber
+  };
+  DB.jobs.push(mergedJob);
+
+  // 2. Create merged invoice (nextNumber called AFTER job pushed — sees new job number)
+  const mergedDocId=uid();
+  const mergedDocNumber=nextNumber();
+  const today=new Date().toISOString().slice(0,10);
+  const mergedDoc={
+    id:mergedDocId,
+    number:mergedDocNumber,
+    estRef:'',
+    type:'invoice',
+    clientId:jobs[0].clientId,
+    propertyId,
+    date:today,
+    dueDate:'',
+    paymentMethod,
+    notes:'',
+    lineItems:allItems,
+    taxRate,
+    subtotal,
+    taxAmt,
+    total,
+    paid:false,
+    createdAt:now(),updatedAt:now(),
+    paymentTerms:'',
+    laborDisclaimer:true,
+    archived:false,
+    jobId:mergedJobId
+  };
+  DB.docs.push(mergedDoc);
+
+  // 3. Link invoice back to merged job
+  const mji=DB.jobs.findIndex(j=>j.id===mergedJobId);
+  if(mji!==-1) DB.jobs[mji].clientEstimate={docId:mergedDocId,createdAt:now()};
+
+  // 4. Archive original jobs and their invoices
+  jobs.forEach(j=>{
+    const ji=DB.jobs.findIndex(x=>x.id===j.id);
+    if(ji!==-1){DB.jobs[ji].archived=true;DB.jobs[ji].updatedAt=now();}
+    if(j.clientEstimate?.docId){
+      const di=DB.docs.findIndex(d=>d.id===j.clientEstimate.docId);
+      if(di!==-1){DB.docs[di].archived=true;DB.docs[di].updatedAt=now();}
+    }
+  });
+
+  // 5. Log activity
+  const sourceNums=jobs.map(j=>j.jobNumber||j.id).join(', ');
+  logActivity('merge','Job',mergedJobId,`Merged jobs ${sourceNums} into #${mergedJobNumber}`);
+
+  saveAndSync();
+  closeMergeJobsModal();
+  toast(`Merged into job #${mergedJobNumber} — invoice #${mergedDocNumber}`,'success');
+  goto('documents');
+  setTimeout(()=>editDoc(mergedDocId),300);
 }
 
 // ── Portal email preview modal ────────────────────────────────────────────────
