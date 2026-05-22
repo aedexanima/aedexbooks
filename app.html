@@ -655,6 +655,7 @@ textarea{resize:vertical;min-height:60px}
           <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Your data syncs automatically to Google Sheets in your Drive.</div>
           <div id="sheet-link-area" style="margin-bottom:14px"></div>
           <button class="btn success" onclick="loadFromSheet()" style="margin-bottom:8px;width:100%;justify-content:center">Force sync from Sheet</button>
+          <button id="recover-cedrus-btn" class="btn" onclick="recoverCedrusJob()" style="margin-bottom:8px;width:100%;justify-content:center;background:#fff8e1;border-color:#f5c842;color:#7a5c00">⚠ Recover lost job (Cedrus Rd)</button>
           <button class="btn" onclick="reconfigure()" style="margin-bottom:16px;width:100%;justify-content:center">Disconnect sheet</button>
           <div style="border-top:1px solid var(--border);padding-top:14px">
             <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">CONNECT EXISTING SHEET</div>
@@ -5838,6 +5839,54 @@ function deleteCatalogItem(){
   renderCatalogSettings();
   closeModal('catalog-modal');
   toast('Service deleted');
+}
+
+function recoverCedrusJob(){
+  const TOKEN='46239378-72d9-406e-a8c6-93b51d31d438';
+  const JOB_ID='mpfr3fvjmnq';
+  if(DB.jobs.find(j=>j.id===JOB_ID)){
+    toast('Job already exists — no action needed','success');
+    document.getElementById('recover-cedrus-btn').style.display='none';
+    return;
+  }
+  if(!DB.jobs.length){toast('Load your data first (sign in and wait for sync)','error');return;}
+  const jobNumber=nextNumber();
+  const job={
+    id:JOB_ID,
+    clientId:'CLT-007',
+    propertyId:'PRP-010',
+    title:'3 pipe leaks in back yard',
+    status:'assigned-for-estimate',
+    startDate:'2026-05-21',endDate:'',
+    value:306,
+    materials:'',photoNotes:'',notes:'',estRef:'',
+    createdAt:'2026-05-21T22:00:00.000Z',
+    updatedAt:'2026-05-21T22:16:17.066Z',
+    workDetails:'',
+    contractorIds:['ctr-001'],
+    archived:false,photos:[],
+    afterFolderId:'',
+    portalToken:TOKEN,
+    contractorEstimate:{
+      laborItems:[{desc:'4 leak pipe',total:285}],
+      laborSubtotal:285,
+      materialsTotal:21,
+      materialsNotes:'',
+      grandTotal:306,
+      submittedAt:'2026-05-21T22:16:17.066Z',
+      photoFileIds:[],
+      receiptFileId:null
+    },
+    clientEstimate:null,
+    contractorInstructions:'',
+    jobNumber
+  };
+  DB.jobs.push(job);
+  logActivity('create','Job',JOB_ID,'Recovered: 3 pipe leaks in back yard — Merav & Eran / 1511 Cedrus Rd');
+  saveAndSync();
+  renderAll();
+  toast('Job recovered! #'+jobNumber+' — tap "Upload Photos to Drive" inside the job to pull in the 4 photos','success');
+  document.getElementById('recover-cedrus-btn').style.display='none';
 }
 
 function reconfigure(){
