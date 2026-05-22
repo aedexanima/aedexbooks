@@ -94,10 +94,9 @@ export async function onRequestPost(context) {
       ``,
       `Open your app to review:`,
       appUrl,
-      ``,
-      `Contractor portal link (save for recovery):`,
-      portalUrl,
     ].join('\n');
+
+    const bcc = entry.contractorEmail ? [entry.contractorEmail] : [];
 
     // context.waitUntil keeps the Worker context alive after the Response is returned
     // so the Resend fetch actually completes instead of being cancelled mid-flight
@@ -111,6 +110,7 @@ export async function onRequestPost(context) {
         body: JSON.stringify({
           from: `${bizName} <notifications@aedexanima.com>`,
           to: [ownerEmail],
+          ...(bcc.length ? { bcc } : {}),
           subject: `Estimate submitted — ${entry.jobTitle || 'Job'} (${entry.contractorName || 'Contractor'})`,
           text: emailBody,
         }),
