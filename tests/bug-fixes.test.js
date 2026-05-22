@@ -50,12 +50,12 @@ const resizeFn = extractFn(portalSrc, 'resizeImage') || '';
 assert('resizeImage creates a canvas element',
   resizeFn.includes('createElement(\'canvas\')') || resizeFn.includes('createElement("canvas")'));
 
-// 1920 and 0.85 appear in the function signature (default params), so search full source
+// 1200 and 0.75 appear in the function signature (default params), so search full source
 assert('resizeImage targets 1920px max edge (default parameter)',
-  portalSrc.includes('1920'));
+  portalSrc.includes('1200'));
 
 assert('resizeImage uses quality 0.85',
-  portalSrc.includes('0.85'));
+  portalSrc.includes('0.75'));
 
 assert('resizeImage skips resize when image fits within maxEdge',
   resizeFn.includes('resolve({ blob: file') || resizeFn.includes("resolve({blob:file"));
