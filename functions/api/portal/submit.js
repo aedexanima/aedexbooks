@@ -79,6 +79,7 @@ export async function onRequestPost(context) {
     const bizName = entry.bizName || 'AEDEXBOOKS';
     const appUrl = `${new URL(context.request.url).origin}/app`;
 
+    const portalUrl = `${new URL(context.request.url).origin}/contractor?token=${token}`;
     const emailBody = [
       `${entry.contractorName || 'A contractor'} has submitted an estimate.`,
       ``,
@@ -91,8 +92,11 @@ export async function onRequestPost(context) {
       ``,
       `Submitted: ${new Date(submittedAt).toLocaleString('en-US', { timeZone: 'America/Chicago' })}`,
       ``,
-      `Open your portal to review:`,
+      `Open your app to review:`,
       appUrl,
+      ``,
+      `Contractor portal link (save for recovery):`,
+      portalUrl,
     ].join('\n');
 
     // context.waitUntil keeps the Worker context alive after the Response is returned

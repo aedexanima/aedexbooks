@@ -518,11 +518,6 @@ async function submitEstimate() {
       receiptDataB64 = { name: _receiptFile.name, type, data };
     }
 
-    // Warn if payload is unusually large after resize (photos still processed, not blocked)
-    const payloadSize = JSON.stringify({ beforePhotosB64, receiptDataB64 }).length;
-    if (payloadSize > 20 * 1024 * 1024) {
-      showToast('Photos are very large — submission may be slow. Please wait…', 'warning');
-    }
 
     const body = {
       token: _token,
