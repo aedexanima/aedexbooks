@@ -33,7 +33,8 @@ export async function onRequestPost(context) {
   }
 
   if (entry.status === 'submitted') {
-    return new Response(JSON.stringify({ ok: false, error: 'Already submitted' }), { headers: CORS, status: 409 });
+    // Treat as success — a previous attempt worked but the response may not have reached the contractor
+    return new Response(JSON.stringify({ ok: true }), { headers: CORS });
   }
 
   const submittedAt = new Date().toISOString();
@@ -50,16 +51,25 @@ export async function onRequestPost(context) {
     submittedAt,
   };
 
-  await context.env.PORTAL_TOKENS.put(
-    `submission:${token}`,
-    JSON.stringify(submission),
-    { expirationTtl: 60 * 60 * 24 * 30 }
-  );
+  try {
+    await context.env.PORTAL_TOKENS.put(
+      `submission:${token}`,
+      JSON.stringify(submission),
+      { expirationTtl: 60 * 60 * 24 * 30 }
+    );
+  } catch (e) {
+    return new Response(JSON.stringify({ ok: false, error: 'Submission too large — try with smaller photos' }), { headers: CORS, status: 413 });
+  }
 
   // Mark portal token as submitted
   entry.status = 'submitted';
   entry.submittedAt = submittedAt;
-  await context.env.PORTAL_TOKENS.put(`portal:${token}`, JSON.stringify(entry), { expirationTtl: 60 * 60 * 24 * 30 });
+  try {
+    await context.env.PORTAL_TOKENS.put(`portal:${token}`, JSON.stringify(entry), { expirationTtl: 60 * 60 * 24 * 30 });
+  } catch (e) {
+    // Submission was stored — still treat as success even if token update fails
+    console.error('Failed to mark token as submitted:', e);
+  }
 
   // Send notification email via Resend
   const resendKey = context.env.RESEND_API_KEY;
