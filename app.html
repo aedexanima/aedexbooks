@@ -432,6 +432,7 @@ textarea{resize:vertical;min-height:60px}
       <button class="mob-more-item" onclick="goto('expenses');closeMoreDrawer()"><span class="ico">↓</span>Expenses</button>
       <button class="mob-more-item" onclick="goto('contractors');closeMoreDrawer()"><span class="ico">👷</span>Contractors</button>
       <button class="mob-more-item" onclick="goto('activity');closeMoreDrawer()"><span class="ico">◷</span>Activity Log</button>
+      <button class="mob-more-item" onclick="goto('photos');closeMoreDrawer()"><span class="ico">🖼</span>Photos</button>
       <button class="mob-more-item" onclick="goto('settings');closeMoreDrawer()"><span class="ico">⚙</span>Settings</button>
       <button class="mob-more-item" onclick="goto('help');closeMoreDrawer()"><span class="ico">?</span>Help & Feedback</button>
       <div class="mob-more-divider"></div>
@@ -461,6 +462,7 @@ textarea{resize:vertical;min-height:60px}
       <button class="nav-item" onclick="goto('expenses')" id="nav-expenses"><span class="ico">↓</span>Expenses</button>
       <div class="nav-sec">Records</div>
       <button class="nav-item" onclick="goto('activity')" id="nav-activity"><span class="ico">◷</span>Activity Log</button>
+      <button class="nav-item" onclick="goto('photos')" id="nav-photos"><span class="ico">🖼</span>Photos</button>
       <div class="nav-sec">Settings</div>
       <button class="nav-item" onclick="goto('settings')" id="nav-settings"><span class="ico">⚙</span>Settings</button>
       <div class="nav-sec">Support</div>
@@ -726,6 +728,12 @@ textarea{resize:vertical;min-height:60px}
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- PHOTOS -->
+    <div class="page" id="page-photos">
+      <div class="topbar"><div class="pg-title">Photos</div></div>
+      <div id="photos-content"></div>
     </div>
 
     <!-- HELP CENTER -->
@@ -2185,7 +2193,7 @@ function logActivity(action,recordType,recordId,detail){
 // ============================================================
 // NAVIGATION
 // ============================================================
-const PAGE_TITLES={dashboard:'Dashboard',pipeline:'Pipeline',clients:'Clients',jobs:'Jobs',documents:'Documents',expenses:'Expenses',contractors:'Contractors',activity:'Activity',settings:'Settings',help:'Help & Feedback'};
+const PAGE_TITLES={dashboard:'Dashboard',pipeline:'Pipeline',clients:'Clients',jobs:'Jobs',documents:'Documents',expenses:'Expenses',contractors:'Contractors',activity:'Activity',photos:'Photos',settings:'Settings',help:'Help & Feedback'};
 const MOB_TABS=['dashboard','jobs','clients','documents'];
 let _currentPage='dashboard';
 
@@ -2213,6 +2221,7 @@ function goto(page){
   if(page==='expenses')renderExpenses();
   if(page==='contractors')renderContractors();
   if(page==='activity')renderActivity();
+  if(page==='photos')renderPhotosPage();
   if(page==='settings'){loadSettingsForm();showSheetLink();renderCatalogSettings();}
   if(page==='help')renderHelpPage();
   closeSidebar();
@@ -4682,6 +4691,56 @@ async function handleJobPhotoUpload(input,category='general'){
 function removeJobPhoto(i){
   _jobPhotos.splice(i,1);
   renderJobPhotoStrip();
+}
+
+// View-only thumbnail (no delete button) used in Photos gallery page
+function _galleryThumb(p){
+  return`<div style="width:80px;height:80px;border-radius:7px;overflow:hidden;background:var(--surface2);border:1px solid var(--border);cursor:pointer;flex-shrink:0" onclick="openPhotoLightbox('${p.fileId}','${(p.name||'').replace(/'/g,'\u0027')}')" title="${(p.name||'').replace(/"/g,'&quot;')}">
+    <img data-fid="${p.fileId}" src="${_BLANK}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+  </div>`;
+}
+
+function renderPhotosPage(){
+  const container=document.getElementById('photos-content');
+  if(!container)return;
+  const jobsWithPhotos=DB.jobs.filter(j=>!j.archived&&(j.photos||[]).length>0);
+  if(!jobsWithPhotos.length){
+    container.innerHTML='<div style="text-align:center;padding:60px 24px;color:var(--text3);font-size:14px">No photos uploaded yet.<br><span style="font-size:12px;margin-top:6px;display:block">Open a job and use the Before / After / General upload buttons.</span></div>';
+    return;
+  }
+  const cats=['before','after','general'];
+  const catLabel={before:'Before',after:'After',general:'General'};
+  let html='';
+  for(const j of jobsWithPhotos){
+    const client=getClient(j.clientId);
+    const clientName=client?clientFullName(client):'Unknown Client';
+    const subtitle=[esc(clientName),j.jobNumber?'#'+j.jobNumber:''].filter(Boolean).join(' · ');
+    html+=`<div style="padding:16px 16px 0">
+      <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div>
+          <div style="font-size:15px;font-weight:600">${esc(j.title||'Untitled Job')}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:1px">${subtitle}</div>
+        </div>
+        <button class="btn sm" onclick="editJob('${j.id}')" style="flex-shrink:0">Open Job</button>
+      </div>`;
+    for(const cat of cats){
+      const photos=(j.photos||[]).filter(p=>(p.category||'general')===cat);
+      if(!photos.length)continue;
+      const stripId=`gstrip-${j.id}-${cat}`;
+      html+=`<div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:6px">${catLabel[cat]}</div>
+        <div id="${stripId}" style="display:flex;flex-wrap:wrap;gap:6px">${photos.map(p=>_galleryThumb(p)).join('')}</div>
+      </div>`;
+    }
+    html+=`<div style="border-top:1px solid var(--border);margin-top:4px"></div></div>`;
+  }
+  container.innerHTML=html;
+  // Lazy-load all Drive thumbnails
+  for(const j of jobsWithPhotos){
+    for(const cat of cats){
+      loadStripImages(`#gstrip-${j.id}-${cat}`);
+    }
+  }
 }
 
 // ---- Expense receipts ----
