@@ -4349,13 +4349,12 @@ async function showDocPreview(d){
   if(s.payAchRouting&&s.payAchAccount)payParts.push(`ACH: Routing ${s.payAchRouting} / Acct ****${s.payAchAccount}`);
   const payLine=payParts.join(' · ');
   document.getElementById('preview-content').innerHTML=`
-  <div style="position:relative;font-family:'DM Sans',sans-serif;max-width:620px;margin:0 auto;background:#fff;padding:36px 40px 32px">
-
-    <!-- PAID STAMP (invoices only, when marked paid) -->
-    ${d.type==='invoice'&&d.paid?`<div style="position:absolute;top:14px;right:10px;transform:rotate(-12deg);border:3px double #2D6A4F;border-radius:6px;padding:8px 18px;color:#2D6A4F;font-size:22px;font-weight:800;letter-spacing:3px;text-transform:uppercase;opacity:0.82;pointer-events:none;z-index:5">PAID</div>`:''}
+  <div style="font-family:'DM Sans',sans-serif;max-width:620px;margin:0 auto;background:#fff;padding:36px 40px 32px">
 
     <!-- HEADER -->
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+    <div style="position:relative;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+      <!-- PAID STAMP (invoices only, when marked paid) — centered in header whitespace -->
+      ${d.type==='invoice'&&d.paid?`<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-6deg);border:3px double #2D6A4F;border-radius:6px;padding:5px 18px;color:#2D6A4F;font-size:17px;font-weight:800;letter-spacing:3px;text-transform:uppercase;opacity:0.85;pointer-events:none;white-space:nowrap">PAID</div>`:''}
       <div>
 ${s.logoFileId&&_blobCache[s.logoFileId] ? '<img src="'+_blobCache[s.logoFileId]+'" style="height:52px;width:auto">' : '<div style="font-size:22px;font-weight:700;letter-spacing:-0.5px;color:#2D6A4F">'+(s.bizName||'AEDEXBOOKS').split(' ')[0]+'</div>'}
         <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:#555;text-transform:uppercase;margin-top:6px">${s.bizName||'AEDEXBOOKS'}</div>
