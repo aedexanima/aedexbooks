@@ -5083,45 +5083,22 @@ async function sendInvoiceEmail(){
     // Auto-save to Drive and send email in parallel
     const driveUpload=uploadPdfToDrive(pdfBlob,filename,d.type).catch(e=>console.warn('Drive auto-save failed:',e));
 
-    // Build MIME email
-    const boundary='----=_aedex_'+Date.now();
-    const mime=[
-      `MIME-Version: 1.0`,
-      `From: me`,
-      `To: ${toEmail}`,
-      ccEmail?`Cc: ${ccEmail}`:null,
-      bccEmail?`Bcc: ${bccEmail}`:null,
-      `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
-      `Content-Type: multipart/mixed; boundary="${boundary}"`,
-      ``,
-      `--${boundary}`,
-      `Content-Type: text/plain; charset="UTF-8"`,
-      `Content-Transfer-Encoding: 7bit`,
-      ``,
-      message,
-      ``,
-      `--${boundary}`,
-      `Content-Type: application/pdf; name="${filename}"`,
-      `Content-Disposition: attachment; filename="${filename}"`,
-      `Content-Transfer-Encoding: base64`,
-      ``,
-      pdfB64,
-      `--${boundary}--`
-    ].filter(l=>l!==null&&l!==undefined).join('\r\n');
-
-    // Base64url encode
-    const raw=btoa(unescape(encodeURIComponent(mime))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-
     const [emailResp]=await Promise.all([
-      fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{
+      fetch('/api/send-doc-email',{
         method:'POST',
-        headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
-        body:JSON.stringify({raw})
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          userEmail:DB.settings.userEmail,
+          bizName:DB.settings.bizName,
+          fromEmail:DB.settings.email||DB.settings.userEmail,
+          to:toEmail,cc:ccEmail||undefined,bcc:bccEmail||undefined,
+          subject,message,pdf:pdfB64,filename
+        })
       }),
       driveUpload
     ]);
     const result=await emailResp.json();
-    if(!emailResp.ok) throw new Error(result.error?.message||'Send failed');
+    if(!emailResp.ok||!result.ok) throw new Error(result.error||'Send failed');
 
     // Log it
     const entry={
