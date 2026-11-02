@@ -2153,7 +2153,7 @@ function getClient(id){return DB.clients.find(c=>c.id===id)||{firstName:'Unknown
 function clientFullName(c){return c?.company?.trim()||[c?.firstName,c?.lastName].filter(Boolean).join(' ')||'Unknown';}
 function clientContactName(c){return[c?.firstName,c?.lastName].filter(Boolean).join(' ')||'';}
 function tenantFullName(p){return[p.tenantFirstName,p.tenantLastName].filter(Boolean).join(' ');}
-function getProperty(id){return DB.properties.find(p=>p.id===id)||{address:'Unknown property'};}
+function getProperty(id){return DB.properties.find(p=>p.id===id)||{address:''};}
 function docPropertyLabel(d){
   const prop=DB.properties.find(p=>p.id===d.propertyId);
   if(prop) return prop.address||'No property';
