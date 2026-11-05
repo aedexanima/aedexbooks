@@ -5161,7 +5161,7 @@ function renderExpenses(){
       <td class="ts">${fmtDate(e.date)}</td>
       <td>${e.desc||'—'}${e.receiptWebViewLink?` <a href="${e.receiptWebViewLink}" target="_blank" style="font-size:10px;color:var(--accent);text-decoration:none" title="View receipt">📎</a>`:''}</td>
       <td><span style="background:var(--surface2);padding:2px 7px;border-radius:4px;font-size:11px">${e.category}</span></td>
-      <td style="font-size:12px;color:var(--text2)">${job?job.title:'—'}</td>
+      <td style="font-size:12px;color:var(--text2)">${job?`#${jobRef(job)} · ${job.title}`:'—'}</td>
       <td><strong style="font-family:'DM Mono',monospace">${fmt(e.amount)}</strong></td>
       <td class="ts">${fmtTs(e.createdAt)}</td>
       <td style="white-space:nowrap"><button class="btn sm" onclick="openExpenseModal('${e.id}')">Edit</button> <button class="btn sm danger" onclick="deleteExpense('${e.id}')">Delete</button></td>
@@ -5183,9 +5183,23 @@ function openExpenseModal(id=''){
   const _catVal=exp?exp.category:'Materials & Supplies';
   _catSel.value=_catVal;
   if(_catVal&&_catSel.value!==_catVal){const _opt=document.createElement('option');_opt.value=_catVal;_opt.textContent=_catVal;_catSel.appendChild(_opt);_catSel.value=_catVal;}
-  document.getElementById('em-job').innerHTML='<option value="">— none —</option>'+DB.jobs.filter(j=>!j.archived).map(j=>`<option value="${j.id}"${j.id===(exp?.jobId||'')?'selected':''}>${clientFullName(getClient(j.clientId))}: ${j.title}</option>`).join('');
+  document.getElementById('em-job').innerHTML=expenseJobOptions(exp?.jobId||'');
   renderExpenseReceiptDisplay();
   document.getElementById('expense-modal').classList.add('open');
+}
+
+// Job number shown to the user; matches the invoice number for most jobs.
+function jobRef(j){return j.jobNumber||j.estRef||j.id;}
+
+// Newest first, so recent jobs are at the top. Archived jobs stay pickable in
+// their own group — otherwise an expense linked to one loses its link on save.
+function expenseJobOptions(selectedId){
+  const newestFirst=(a,b)=>(b.startDate||b.createdAt||'').localeCompare(a.startDate||a.createdAt||'');
+  const opt=j=>`<option value="${j.id}"${j.id===selectedId?' selected':''}>#${jobRef(j)} · ${clientFullName(getClient(j.clientId))}: ${j.title} · ${fmtDate(j.startDate||j.createdAt)}</option>`;
+  const active=DB.jobs.filter(j=>!j.archived).sort(newestFirst);
+  const archived=DB.jobs.filter(j=>j.archived).sort(newestFirst);
+  return '<option value="">— none —</option>'+active.map(opt).join('')
+    +(archived.length?`<optgroup label="Archived jobs">${archived.map(opt).join('')}</optgroup>`:'');
 }
 
 function saveExpense(){

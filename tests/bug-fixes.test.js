@@ -487,11 +487,12 @@ assert('renderDashboard computes income from paid invoices (docs), not raw jobs'
 assert('renderDashboard recent-jobs section filters !j.archived',
   renderDashboardFn.includes('!j.archived'));
 
-// Expense job selector excludes archived jobs
-const openExpenseFn = extractFn(src, 'openExpenseModal') || '';
-assert('openExpenseModal populates job selector with only non-archived jobs',
-  src.includes("em-job") && src.includes('!j.archived') &&
-  src.match(/em-job[\s\S]{0,200}!j\.archived/) !== null);
+// Expense job selector keeps archived jobs out of the main list; they're only
+// offered in a separate "Archived jobs" group (see Expense job picker tests)
+const expenseOptionsFn = extractFn(src, 'expenseJobOptions') || '';
+assert('Expense job selector lists only non-archived jobs outside the Archived group',
+  src.includes("getElementById('em-job').innerHTML=expenseJobOptions(") &&
+  expenseOptionsFn.includes('DB.jobs.filter(j=>!j.archived)'));
 
 // Doc convert dropdown excludes archived estimates
 assert('openNewDoc populates dm-convert with only non-archived estimates',
@@ -807,6 +808,42 @@ assert('Privacy link correctly points to aedexanima.com/privacy',
 
 assert('Terms link correctly points to aedexanima.com/terms',
   src.includes('https://aedexanima.com/terms'));
+
+// ─── Expense job picker ──────────────────────────────────────────────────────
+
+console.log('\nExpense job picker — job numbers, newest first, archived jobs pickable');
+
+const pickerFns = ['jobRef', 'expenseJobOptions', 'fmtDate', 'clientFullName', 'getClient'];
+const buildPicker = new Function('DB',
+  pickerFns.map(n => `function ${n}(${n === 'expenseJobOptions' ? 'selectedId' : n === 'getClient' ? 'id' : n === 'fmtDate' ? 'd' : n === 'clientFullName' ? 'c' : 'j'})${extractFn(src, n)}`).join('\n')
+  + '\nreturn expenseJobOptions;');
+const pickerDB = {
+  clients: [{ id: 'c1', firstName: 'Paul and Padmini Kao' }, { id: 'c2', company: 'Mila Wholesale' }],
+  jobs: [
+    { id: 'old', clientId: 'c1', title: 'General Repairs', startDate: '2023-06-01', jobNumber: '00167', archived: false },
+    { id: 'new', clientId: 'c2', title: 'Job #03828', startDate: '2026-11-02', jobNumber: '03828', archived: false },
+    { id: 'legacy', clientId: 'c1', title: 'General Repairs', startDate: '2024-01-01', estRef: '03300', archived: false },
+    { id: 'arch', clientId: 'c1', title: 'Sink leak', startDate: '2026-05-19', jobNumber: '03804', archived: true },
+  ],
+};
+const pickerHtml = buildPicker(pickerDB)('arch');
+
+assert('Picker shows the job number for each job',
+  pickerHtml.includes('#03828 · Mila Wholesale: Job #03828') && pickerHtml.includes('#00167 · Paul and Padmini Kao: General Repairs'));
+assert('Picker falls back to estRef when a job has no jobNumber',
+  pickerHtml.includes('#03300 · '));
+assert('Picker shows the job date',
+  pickerHtml.includes('· 11/02/2026'));
+assert('Picker lists newest jobs first',
+  pickerHtml.indexOf('value="new"') < pickerHtml.indexOf('value="legacy"') &&
+  pickerHtml.indexOf('value="legacy"') < pickerHtml.indexOf('value="old"'));
+assert('Archived jobs are still pickable, grouped after active jobs',
+  pickerHtml.includes('<optgroup label="Archived jobs">') &&
+  pickerHtml.indexOf('value="arch"') > pickerHtml.indexOf('<optgroup'));
+assert('Expense linked to an archived job keeps its job selected (link not lost on save)',
+  /value="arch" selected/.test(pickerHtml));
+assert('Expenses table shows the job number in the Linked job column',
+  src.includes('`#${jobRef(job)} · ${job.title}`'));
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
 
